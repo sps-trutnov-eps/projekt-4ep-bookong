@@ -1,0 +1,123 @@
+:root {
+  --bs-primary: #323C8D;
+}
+
+/* Font */
+body {
+  font-family: "Segoe UI", Calibri, Arial, sans-serif;
+}
+
+/* Barvy ze školního manuálu */
+.bg-primary {
+  background-color: #323C8D !important; /* tmavší modrá */
+}
+
+.bg-secondary {
+  background-color: #051640 !important; /* oranžová */
+}
+
+.text-primary {
+  color: #0A8CCC !important; /* světlejší modrá */
+}
+
+a.nav-link.active {
+  font-weight: bold;
+  color: #FFD208 !important; /* žlutá zvýraznění */
+}
+
+a.nav-link:hover {
+  color: #a5c3fa !important; /* oranžová hover */
+}
+
+.btn-primary {
+  background-color: #0A8CCC;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #323C8D;
+}
+
+
+/* Logo */
+.navbar-brand img {
+  max-height: 40px;
+}
+
+/* Hide close button on desktop */
+@media (min-width: 992px) {
+  .close-btn {
+    display: none;
+  }
+}
+
+/* Mobile full-screen menu styles */
+@media (max-width: 991px) {
+  .navbar-collapse {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 100%;
+    height: 100%;
+    background-color: #323C8D; /* same as bg-primary */
+    z-index: 1050; /* above bootstrap navbar */
+    transition: right 0.3s ease-in-out;
+    padding-top: 60px;
+    overflow-y: auto;
+  }
+
+  .navbar-collapse.show {
+    right: 0;
+  }
+
+  .navbar-collapse .navbar-nav {
+    flex-direction: column;
+    padding-left: 0;
+    margin: 0;
+  }
+
+  .navbar-collapse .nav-link {
+    font-size: 1.5rem;
+    padding: 1rem 2rem;
+  }
+
+  .navbar-collapse .nav-link:hover,
+  .navbar-collapse .nav-link.active {
+    color: #a5c3fa !important; /* lighter blue on hover */
+  }
+
+  /* Close button styles */
+  .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 2rem;
+    color: #FFD208; /* yellow highlight */
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 1100;
+  }
+}
+
+/* Tabulka */
+.custom-table {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.card {
+  border-radius: 10px;
+  border: none;
+}
+
+.card-body {
+  background-color: #f8f9fa; /* světlý podklad */
+}
+
+.form-label {
+  font-weight: 600;
+  color: #323C8D;
+}
+  
