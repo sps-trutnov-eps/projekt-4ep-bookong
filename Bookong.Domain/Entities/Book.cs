@@ -13,13 +13,14 @@ namespace Bookong.Domain.Entities
         [Required]
         public required string Name { get; set; }
 
+        public string? ISBN { get; set; }
+
         [Required]
         public required int AuthorId { get; set; }
         [Required]
         public required Author Author { get; set; }
 
-        [Required]
-        public DateTime ?DateRelease { get; set; }
+        public DateTime? DateRelease { get; set; }
 
         [Required]
         public required int GenreId { get; set; }
