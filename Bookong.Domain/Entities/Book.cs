@@ -41,8 +41,8 @@ namespace Bookong.Domain.Entities
         public required Period Period { get; set; }
 
         [Required]
-        public required int WarehouseId { get; set; }
+        public int? WarehouseId { get; set; }
         [Required]
-        public required Warehouse Warehouse { get; set; }
+        public Warehouse? Warehouse { get; set; }
     }
 }
