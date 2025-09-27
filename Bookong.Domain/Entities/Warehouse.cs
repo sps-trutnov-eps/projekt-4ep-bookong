@@ -7,16 +7,11 @@ namespace Bookong.Domain.Entities
         [Key]
         public int Id { get; set; }
 
-        [Required]
-        public required Guid PublicId { get; set; } = Guid.NewGuid();
+        public Guid PublicId { get; set; } = Guid.NewGuid();
 
-        [Required]
         public required string Name { get; set; }
 
-        [Required]
-        public required int AddressId { get; set; }
-
-        [Required]
+        public int AddressId { get; set; }
         public required Address Address { get; set; }
     }
 }

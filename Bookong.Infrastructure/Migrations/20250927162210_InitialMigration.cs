@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Bookong.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -88,12 +88,34 @@ namespace Bookong.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Publishers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PublicId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RegistrationNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TaxId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Website = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Publishers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PublicId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SamAccountName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ObjectGuid = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
@@ -124,7 +146,7 @@ namespace Bookong.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Books",
+                name: "MaturitaBooks",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -132,12 +154,57 @@ namespace Bookong.Infrastructure.Migrations
                     PublicId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AuthorId = table.Column<int>(type: "int", nullable: false),
-                    DateRelease = table.Column<DateTime>(type: "datetime2", nullable: false),
                     GenreId = table.Column<int>(type: "int", nullable: false),
                     KindId = table.Column<int>(type: "int", nullable: false),
-                    Pages = table.Column<int>(type: "int", nullable: false),
+                    PeriodId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MaturitaBooks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MaturitaBooks_Authors_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "Authors",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MaturitaBooks_Genres_GenreId",
+                        column: x => x.GenreId,
+                        principalTable: "Genres",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MaturitaBooks_Kinds_KindId",
+                        column: x => x.KindId,
+                        principalTable: "Kinds",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MaturitaBooks_Periods_PeriodId",
+                        column: x => x.PeriodId,
+                        principalTable: "Periods",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Books",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PublicId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ISBN = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AuthorId = table.Column<int>(type: "int", nullable: false),
+                    GenreId = table.Column<int>(type: "int", nullable: false),
+                    KindId = table.Column<int>(type: "int", nullable: false),
                     PeriodId = table.Column<int>(type: "int", nullable: false),
-                    WarehouseId = table.Column<int>(type: "int", nullable: false)
+                    Pages = table.Column<int>(type: "int", nullable: false),
+                    PublisherId = table.Column<int>(type: "int", nullable: true),
+                    DateRelease = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    WarehouseId = table.Column<int>(type: "int", nullable: true),
+                    Borrowable = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -167,11 +234,15 @@ namespace Bookong.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
+                        name: "FK_Books_Publishers_PublisherId",
+                        column: x => x.PublisherId,
+                        principalTable: "Publishers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
                         name: "FK_Books_Warehouses_WarehouseId",
                         column: x => x.WarehouseId,
                         principalTable: "Warehouses",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -197,6 +268,32 @@ namespace Bookong.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_BookLoans_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MaturitaBookSelections",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    BookId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MaturitaBookSelections", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MaturitaBookSelections_Books_BookId",
+                        column: x => x.BookId,
+                        principalTable: "Books",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MaturitaBookSelections_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -234,9 +331,44 @@ namespace Bookong.Infrastructure.Migrations
                 column: "PeriodId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Books_PublisherId",
+                table: "Books",
+                column: "PublisherId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Books_WarehouseId",
                 table: "Books",
                 column: "WarehouseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MaturitaBooks_AuthorId",
+                table: "MaturitaBooks",
+                column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MaturitaBooks_GenreId",
+                table: "MaturitaBooks",
+                column: "GenreId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MaturitaBooks_KindId",
+                table: "MaturitaBooks",
+                column: "KindId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MaturitaBooks_PeriodId",
+                table: "MaturitaBooks",
+                column: "PeriodId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MaturitaBookSelections_BookId",
+                table: "MaturitaBookSelections",
+                column: "BookId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MaturitaBookSelections_UserId",
+                table: "MaturitaBookSelections",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Warehouses_AddressId",
@@ -249,6 +381,12 @@ namespace Bookong.Infrastructure.Migrations
         {
             migrationBuilder.DropTable(
                 name: "BookLoans");
+
+            migrationBuilder.DropTable(
+                name: "MaturitaBooks");
+
+            migrationBuilder.DropTable(
+                name: "MaturitaBookSelections");
 
             migrationBuilder.DropTable(
                 name: "Books");
@@ -267,6 +405,9 @@ namespace Bookong.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Periods");
+
+            migrationBuilder.DropTable(
+                name: "Publishers");
 
             migrationBuilder.DropTable(
                 name: "Warehouses");

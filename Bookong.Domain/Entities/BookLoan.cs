@@ -7,21 +7,15 @@ namespace Bookong.Domain.Entities
         [Key]
         public int Id { get; set; }
 
-        [Required]
-        public required Guid PublicId { get; set; } = Guid.NewGuid();
+        public Guid PublicId { get; set; } = Guid.NewGuid();
 
-        [Required]
-        public required int UserId { get; set; }
-        [Required]
+        public int UserId { get; set; }
         public required User User { get; set; }
 
-        [Required]
-        public required int BookId { get; set; }
-        [Required]
+        public int BookId { get; set; }
         public required Book Book { get; set; }
 
-        [Required]
-        public required DateTime LoanDate { get; set; } = DateTime.UtcNow;
+        public DateTime LoanDate { get; set; } = DateTime.UtcNow;
 
         public DateTime? ReturnDate { get; set; }
     }

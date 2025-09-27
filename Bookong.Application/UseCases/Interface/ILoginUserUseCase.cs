@@ -4,6 +4,6 @@ namespace Bookong.Application.UseCases.Interface
 {
     public interface ILoginUserUseCase
     {
-        public Task<LoginUserResponse> Handle(LoginUserRequest request);
+        Task<LoginUserResponse> HandleAsync(LoginUserRequest request);
     }
 }

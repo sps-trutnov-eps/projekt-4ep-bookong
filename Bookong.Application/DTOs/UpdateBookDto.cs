@@ -2,8 +2,11 @@
 
 namespace Bookong.Application.DTOs
 {
-    public class CreateBookDto
+    public class UpdateBookDto
     {
+        [Required]
+        public Guid Id { get; set; }
+
         [Required(ErrorMessage = "Zadejte název knihy.")]
         public string? Title { get; set; }
 
@@ -25,7 +28,5 @@ namespace Bookong.Application.DTOs
         public ushort? Pages { get; set; }
 
         public DateTime? DateRelease { get; set; }
-
-        public int? WarehouseId { get; set; }
     }
 }

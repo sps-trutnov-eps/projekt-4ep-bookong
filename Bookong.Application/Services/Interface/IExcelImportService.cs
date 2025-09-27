@@ -1,6 +1,6 @@
 ﻿using Bookong.Application.DTOs;
 
-namespace Bookong.Application.Interfaces
+namespace Bookong.Application.Services.Interface
 {
     public interface IExcelImportService
     {

@@ -1,4 +1,4 @@
-﻿namespace Bookong.Application.Interfaces
+﻿namespace Bookong.Application.Services.Interface
 {
     public interface IActiveDirectoryService
     {

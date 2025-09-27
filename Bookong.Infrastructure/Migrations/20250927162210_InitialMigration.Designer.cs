@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bookong.Infrastructure.Migrations
 {
     [DbContext(typeof(BookongDbContext))]
-    [Migration("20250923183945_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250927162210_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -99,11 +99,17 @@ namespace Bookong.Infrastructure.Migrations
                     b.Property<int>("AuthorId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("DateRelease")
+                    b.Property<bool>("Borrowable")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("DateRelease")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("GenreId")
                         .HasColumnType("int");
+
+                    b.Property<string>("ISBN")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("KindId")
                         .HasColumnType("int");
@@ -121,7 +127,10 @@ namespace Bookong.Infrastructure.Migrations
                     b.Property<Guid>("PublicId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("WarehouseId")
+                    b.Property<int?>("PublisherId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("WarehouseId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -133,6 +142,8 @@ namespace Bookong.Infrastructure.Migrations
                     b.HasIndex("KindId");
 
                     b.HasIndex("PeriodId");
+
+                    b.HasIndex("PublisherId");
 
                     b.HasIndex("WarehouseId");
 
@@ -211,6 +222,69 @@ namespace Bookong.Infrastructure.Migrations
                     b.ToTable("Kinds");
                 });
 
+            modelBuilder.Entity("Bookong.Domain.Entities.MaturitaBook", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AuthorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GenreId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("KindId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PeriodId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("PublicId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("GenreId");
+
+                    b.HasIndex("KindId");
+
+                    b.HasIndex("PeriodId");
+
+                    b.ToTable("MaturitaBooks");
+                });
+
+            modelBuilder.Entity("Bookong.Domain.Entities.MaturitaBookSelection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BookId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("MaturitaBookSelections");
+                });
+
             modelBuilder.Entity("Bookong.Domain.Entities.Period", b =>
                 {
                     b.Property<int>("Id")
@@ -231,6 +305,44 @@ namespace Bookong.Infrastructure.Migrations
                     b.ToTable("Periods");
                 });
 
+            modelBuilder.Entity("Bookong.Domain.Entities.Publisher", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("PublicId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RegistrationNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TaxId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Website")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Publishers");
+                });
+
             modelBuilder.Entity("Bookong.Domain.Entities.User", b =>
                 {
                     b.Property<int>("Id")
@@ -247,8 +359,15 @@ namespace Bookong.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("ObjectGuid")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("PublicId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SamAccountName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -306,9 +425,69 @@ namespace Bookong.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bookong.Domain.Entities.Publisher", "Publisher")
+                        .WithMany()
+                        .HasForeignKey("PublisherId");
+
                     b.HasOne("Bookong.Domain.Entities.Warehouse", "Warehouse")
                         .WithMany()
-                        .HasForeignKey("WarehouseId")
+                        .HasForeignKey("WarehouseId");
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Genre");
+
+                    b.Navigation("Kind");
+
+                    b.Navigation("Period");
+
+                    b.Navigation("Publisher");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("Bookong.Domain.Entities.BookLoan", b =>
+                {
+                    b.HasOne("Bookong.Domain.Entities.Book", "Book")
+                        .WithMany()
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookong.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Bookong.Domain.Entities.MaturitaBook", b =>
+                {
+                    b.HasOne("Bookong.Domain.Entities.Author", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookong.Domain.Entities.Genre", "Genre")
+                        .WithMany()
+                        .HasForeignKey("GenreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookong.Domain.Entities.Kind", "Kind")
+                        .WithMany()
+                        .HasForeignKey("KindId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookong.Domain.Entities.Period", "Period")
+                        .WithMany()
+                        .HasForeignKey("PeriodId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -319,11 +498,9 @@ namespace Bookong.Infrastructure.Migrations
                     b.Navigation("Kind");
 
                     b.Navigation("Period");
-
-                    b.Navigation("Warehouse");
                 });
 
-            modelBuilder.Entity("Bookong.Domain.Entities.BookLoan", b =>
+            modelBuilder.Entity("Bookong.Domain.Entities.MaturitaBookSelection", b =>
                 {
                     b.HasOne("Bookong.Domain.Entities.Book", "Book")
                         .WithMany()
