@@ -5,6 +5,6 @@ namespace Bookong.Application.UseCases.Interfaces
 {
     public interface ICreateBookUseCase
     {
-        Task<Book> HandleAsync(CreateBookDto dto);
+        Task<Book> ExecuteAsync(CreateBookDto dto);
     }
 }

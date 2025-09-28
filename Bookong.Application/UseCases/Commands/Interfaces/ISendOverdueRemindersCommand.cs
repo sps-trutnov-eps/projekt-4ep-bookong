@@ -2,6 +2,6 @@
 {
     public interface ISendOverdueRemindersCommand
     {
-        Task HandleAsync();
+        Task ExecuteAsync();
     }
 }

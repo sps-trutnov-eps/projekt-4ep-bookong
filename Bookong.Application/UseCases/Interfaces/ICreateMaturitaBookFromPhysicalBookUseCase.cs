@@ -4,6 +4,6 @@ namespace Bookong.Application.UseCases.Interfaces
 {
     public interface ICreateMaturitaBookFromPhysicalBookUseCase
     {
-        Task<GenericResponse> HandleAsync(int physicalBookId);
+        Task<GenericResponse> ExecuteAsync(int physicalBookId);
     }
 }

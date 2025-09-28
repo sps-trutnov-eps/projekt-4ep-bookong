@@ -4,6 +4,6 @@ namespace Bookong.Application.UseCases.Interfaces
 {
     public interface IImportBooksFromExcelUseCase
     {
-         Task<GenericResponse> HandleAsync(Stream excelStream);
+         Task<GenericResponse> ExecuteAsync(Stream excelStream);
     }
 }

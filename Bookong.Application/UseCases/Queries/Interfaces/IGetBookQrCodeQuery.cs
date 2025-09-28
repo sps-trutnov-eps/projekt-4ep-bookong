@@ -4,6 +4,6 @@ namespace Bookong.Application.UseCases.Queries.Interfaces
 {
     public interface IGetBookQrCodeQuery
     {
-        Task<BookQrCodeRequestDto> HandleAsync(int[] id);
+        Task<BookQrCodeRequestDto> ExecuteAsync(int[] id);
     }
 }

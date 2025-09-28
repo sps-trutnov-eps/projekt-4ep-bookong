@@ -4,6 +4,6 @@ namespace Bookong.Application.UseCases.Interfaces
 {
     public interface IUpdateWarehouseUseCase
     {
-        Task<GenericResponse> HandleAsync(UpdateWarehouseDto dto);
+        Task<GenericResponse> ExecuteAsync(UpdateWarehouseDto dto);
     }
 }

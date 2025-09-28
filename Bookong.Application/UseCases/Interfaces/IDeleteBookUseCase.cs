@@ -4,6 +4,6 @@ namespace Bookong.Application.UseCases.Interfaces
 {
     public interface IDeleteBookUseCase
     {
-        Task<GenericResponse> HandleAsync(int id);
+        Task<GenericResponse> ExecuteAsync(int id);
     }
 }

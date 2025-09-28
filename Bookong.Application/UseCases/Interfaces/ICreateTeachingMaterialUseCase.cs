@@ -4,6 +4,6 @@ namespace Bookong.Application.UseCases.Interfaces
 {
     public interface ICreateTeachingMaterialUseCase
     {
-        Task<GenericResponse> HandleAsync(CreateTeachingMaterialDto dto);
+        Task<GenericResponse> ExecuteAsync(CreateTeachingMaterialDto dto);
     }
 }

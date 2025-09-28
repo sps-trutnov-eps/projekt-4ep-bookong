@@ -4,6 +4,6 @@ namespace Bookong.Application.UseCases.Interfaces
 {
     public interface ICreateMaturitaBookAssignmentRequestUseCase
     {
-        Task<GenericResponse> HandleAsync(CreateMaturitaBookAssignmentRequestDto dto);
+        Task<GenericResponse> ExecuteAsync(CreateMaturitaBookAssignmentRequestDto dto);
     }
 }
