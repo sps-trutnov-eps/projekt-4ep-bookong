@@ -1,6 +1,6 @@
 ﻿using Bookong.Application.DTOs;
 
-namespace Bookong.Application.UseCases.Interface
+namespace Bookong.Application.UseCases.Interfaces
 {
     public interface ICreateMaturitaBookAssignmentRequestUseCase
     {
