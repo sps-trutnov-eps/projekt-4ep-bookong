@@ -1,1 +1,67 @@
-<!--Zde bude stránka pro odstranění knih-->
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Přihlášení - BooKong</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+  <!-- Header -->
+  <header>
+    <nav class="navbar navbar-dark bg-primary">
+      <div class="container-fluid">
+        <!-- Logo only, no navigation -->
+        <a class="navbar-brand fw-bold d-flex align-items-center" href="index.html">
+          <img src="/src/img/logo.png" alt="Logo BooKong" height="40" class="me-2" />
+          BooKong
+        </a>  
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main: Buttons -->
+  <main class="container my-5 flex-grow-1 d-flex justify-content-center align-items-start">
+    <div class="w-100" style="max-width: 900px;">
+      <h2 class="mb-4 text-primary text-center">Odstranění knihy</h2>
+
+      <!-- Search form -->
+      <form id="search-form" class="mb-4" role="search" aria-label="Vyhledávání knih">
+        <div class="row g-2">
+          <div class="col-md-4">
+            <select class="form-select" name="field" aria-label="Vyberte pole pro vyhledávání">
+              <option value="title" selected>Podle názvu</option>
+              <option value="author">Podle autora</option>
+              <option value="isbn">Podle ISBN</option>
+              <option value="literature">Podle literatury</option>
+              <option value="century">Podle století</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <input type="search" name="query" class="form-control" placeholder="Zadejte hledaný výraz" aria-label="Hledaný výraz" required />
+          </div>
+
+          <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary">Hledat</button>
+          </div>
+        </div>
+      </form>
+        <!-- Results -->
+      <section id="search-results" aria-live="polite">
+        <p class="text-muted">Sem se zobrazí výsledky po provedení vyhledávání.</p>
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-secondary text-light text-center py-3 mt-auto">
+    <p class="mb-0">&copy; 2025 BooKong | Školní knihovní systém</p>
+  </footer>
+
+  <script src="mobile-menu.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
