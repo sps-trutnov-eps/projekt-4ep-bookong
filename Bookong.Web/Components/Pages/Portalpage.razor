@@ -1,0 +1,109 @@
+﻿@using Bookong.Web.Components.Layout
+
+@page "/portalpage"
+@layout MainLayout
+
+<!-- Main Body -->
+<main class="flex-grow-1">
+    <!-- Hero Section -->
+    <div class="position-relative d-flex align-items-start justify-content-center bg-white" style="min-height: 95vh; padding-top: 20vh;">
+        <div class="container px-4 text-center position-relative" style="z-index: 10;">
+            <!-- Logo/Title -->
+            <h1 class="fw-black text-primary mb-4" style="font-size: 5rem; letter-spacing: -0.02em;">
+                BooKong
+            </h1>
+
+            <!-- Search Bar -->
+            <div class="row justify-content-center mt-5">
+                <div class="col-12 col-md-10 col-lg-8">
+                    <div class="position-relative">
+                        <input type="search"
+                               class="form-control ps-5 pe-4 rounded-pill border-2 shadow"
+                               style="height: 3.5rem; font-size: 1rem;"
+                               placeholder="text" />
+                        <span class="material-symbols-outlined position-absolute top-50 start-0 translate-middle-y ms-4 text-muted" style="font-size: 1.5rem;">icon</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wave Container - na spodku hero sekce -->
+        <div class="position-absolute bottom-0 start-0 w-100 overflow-hidden" style="line-height: 0; z-index: 5;">
+            <!-- Vlna 1 (lighter) -->
+            <svg class="position-relative w-100 d-block" style="height: 8rem;" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M0,0 C300,100 900,0 1200,100 L1200,120 L0,120 Z" fill="#3B82F6"></path>
+            </svg>
+
+            <!-- Vlna 2 (darker) - překrývá první vlnu -->
+            <svg class="position-relative w-100 d-block" style="height: 8rem; margin-top: -0.25rem; background-color: #3B82F6;" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M0,0 C400,80 800,0 1200,80 L1200,120 L0,120 Z" fill="#1D4ED8"></path>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Features Section (after scroll) -->
+    <section class="py-5 bg-primary" style="background-color: #1D4ED8;">
+        <div class="container px-4 py-5">
+            <div class="row g-4 justify-content-center">
+
+                <!-- Card 1 -->
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 text-center border-0 shadow">
+                        <div class="card-body d-flex flex-column align-items-center p-4">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-4"
+                                 style="width: 4rem; height: 4rem; background-color: rgba(13, 127, 242, 0.1);">
+                                <span class="material-symbols-outlined" style="font-size: 2.5rem; color: #0d7ff2;">menu_book</span>
+                            </div>
+                            <h3 class="card-title h5 fw-bold mb-3">Rent a Book</h3>
+                            <p class="card-text flex-grow-1 mb-4 text-muted">
+                                Browse our extensive collection and find your next favorite read.
+                            </p>
+                            <a href="#" class="btn rounded-pill px-4 py-2 fw-semibold mt-auto text-white" style="background-color: #0d7ff2;">
+                                Start Renting
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 text-center border-0 shadow">
+                        <div class="card-body d-flex flex-column align-items-center p-4">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-4"
+                                 style="width: 4rem; height: 4rem; background-color: rgba(13, 127, 242, 0.1);">
+                                <span class="material-symbols-outlined" style="font-size: 2.5rem; color: #0d7ff2;">school</span>
+                            </div>
+                            <h3 class="card-title h5 fw-bold mb-3">Make a Graduation Book List</h3>
+                            <p class="card-text flex-grow-1 mb-4 text-muted">
+                                Curate a special list of books for your graduation milestone.
+                            </p>
+                            <a href="#" class="btn rounded-pill px-4 py-2 fw-semibold mt-auto text-white" style="background-color: #0d7ff2;">
+                                Create a List
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card h-100 text-center border-0 shadow">
+                        <div class="card-body d-flex flex-column align-items-center p-4">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-4"
+                                 style="width: 4rem; height: 4rem; background-color: rgba(13, 127, 242, 0.1);">
+                                <span class="material-symbols-outlined" style="font-size: 2.5rem; color: #0d7ff2;">library_books</span>
+                            </div>
+                            <h3 class="card-title h5 fw-bold mb-3">View All Books</h3>
+                            <p class="card-text flex-grow-1 mb-4 text-muted">
+                                Explore the entirety of our library's collection at a glance.
+                            </p>
+                            <a href="#" class="btn rounded-pill px-4 py-2 fw-semibold mt-auto text-white" style="background-color: #0d7ff2;">
+                                Explore Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+</main>

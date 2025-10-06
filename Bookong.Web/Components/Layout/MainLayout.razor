@@ -1,21 +1,15 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
+<div class="d-flex flex-column min-vh-100">
+    <HeaderLayout />
+    <main class="flex-grow-1">
 
-
-    <main>
-
-        <HeaderLayout />
-
-
-        <article class="content px-4">
-            @Body
-        </article>
-
-
-        <FooterLayout />
+        @Body
 
     </main>
+
+    <FooterLayout />
+
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>
