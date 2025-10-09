@@ -1,0 +1,12 @@
+footer {
+    background: #0a4db8 !important; /* Darker blue to match header - overrides Bootstrap bg-primary */
+}
+
+/* Note: All other styling is handled by Bootstrap classes in the Razor component:
+   - min-height: Bootstrap utility classes
+   - position: Bootstrap utility classes  
+   - text alignment: Bootstrap text-* classes
+   - spacing: Bootstrap padding/margin classes
+   - responsive text sizing: Bootstrap fs-* classes
+   - z-index for content: Bootstrap utility or inline styles where needed
+*/

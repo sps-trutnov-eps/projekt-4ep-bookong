@@ -1,46 +1,86 @@
 ﻿<header class="sticky-top bg-primary">
-    <nav class="navbar navbar-expand-md navbar-dark container-fluid px-0">
-        <div class="container d-flex justify-content-between align-items-center">
+    <nav class="navbar navbar-dark container-fluid px-2 px-md-3">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
             <!-- Logo + Název -->
-            <a href="#" class="navbar-brand d-flex align-items-center gap-2">
-                <img src="bookong-monke-book.png" alt="BooKong Logo" height="48" width="auto" />
-                <span class="fw-bold h5 mb-0 text-white">BooKong</span>
+            <a href="#" class="navbar-brand d-flex align-items-center gap-2 me-auto">
+                <img src="bookong-monke-book.png" alt="BooKong Logo" 
+                     class="d-inline-block align-text-top" 
+                     style="height: 32px; width: auto;" />
+                <span class="fw-bold fs-5 mb-0 text-white d-none d-sm-inline">BooKong</span>
+                <span class="fw-bold fs-6 mb-0 text-white d-inline d-sm-none">BK</span>
             </a>
 
-            <!-- Tlačítko burger menu pro malé obrazovky -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
-                    aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <!-- Desktop Navigation (hidden on mobile) -->
+            <ul class="navbar-nav d-none d-lg-flex flex-row gap-3 mb-0">
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Domů</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Uživatelé</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Knihy</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Seznamy</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Statistiky</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Výpůjčky</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Materiály</a>
+                </li>
+            </ul>
+
+            <!-- Burger menu button (visible on mobile/tablet) -->
+            <button class="navbar-toggler d-lg-none border-0 p-2" type="button" id="menuToggle"
+                    aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
-            <!-- Navigation Links -->
-            <div class="collapse navbar-collapse" id="navbarContent">
-                <ul class="navbar-nav ms-auto d-flex flex-column flex-md-row gap-3 mb-0">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white fw-medium">Domů</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white fw-medium">Uživatelé</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white fw-medium">Knihy</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white fw-medium">Seznamy</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white fw-medium">Statistiky</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white fw-medium">Výpůjčky</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white fw-medium">Materiály</a>
-                    </li>
-                </ul>
-            </div>
         </div>
     </nav>
+
+    <!-- Full-screen overlay menu -->
+    <div class="overlay-menu" id="overlayMenu">
+        <!-- Header with BooKong title and close button -->
+        <div class="overlay-header">
+            <div class="overlay-title">
+                <img src="bookong-monke-book.png" alt="BooKong Logo" />
+                <span>BooKong</span>
+            </div>
+            <button class="close-btn" id="closeMenu" aria-label="Close menu">
+                <span>&times;</span>
+            </button>
+        </div>
+        
+        <div class="overlay-content">
+            <!-- Welcome text -->
+            <div class="overlay-welcome">
+                Vítejte v našem školním knihovním systému
+            </div>
+            
+            <!-- Navigation Links -->
+            <nav class="overlay-nav">
+                <ul class="overlay-nav-list">
+                    <li><a href="#" class="overlay-nav-link">Domů</a></li>
+                    <li><a href="#" class="overlay-nav-link">Uživatelé</a></li>
+                    <li><a href="#" class="overlay-nav-link">Knihy</a></li>
+                    <li><a href="#" class="overlay-nav-link">Seznamy</a></li>
+                    <li><a href="#" class="overlay-nav-link">Statistiky</a></li>
+                    <li><a href="#" class="overlay-nav-link">Výpůjčky</a></li>
+                    <li><a href="#" class="overlay-nav-link">Materiály</a></li>
+                </ul>
+            </nav>
+        </div>
+        
+        <!-- Footer decoration -->
+        <div class="overlay-footer">
+            <div>Školní knihovna • 2025</div>
+        </div>
+    </div>
 </header>
 
 
