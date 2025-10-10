@@ -6,103 +6,118 @@
 <!-- Main Body -->
 <main class="flex-grow-1">
     <!-- Hero Section -->
-    <div class="position-relative d-flex align-items-start justify-content-center bg-white" style="min-height: 95vh; padding-top: 20vh;">
+    <div class="position-relative d-flex align-items-center justify-content-center bg-white" style="min-height: 80vh;">
         <div class="container px-4 text-center position-relative" style="z-index: 10;">
-            <!-- Logo/Title -->
-            <h1 class="fw-black text-primary mb-4" style="font-size: 5rem; letter-spacing: -0.02em;">
-                BooKong
+            <!-- Welcome Message -->
+            <h1 class="fw-bold text-primary mb-3" style="font-size: 3.5rem; letter-spacing: -0.02em;">
+                Vítejte v BooKongu
             </h1>
+            <p class="lead text-muted mb-5" style="font-size: 1.25rem;">
+                Váš školní knihovní systém pro snadnou správu knih a výpůjček
+            </p>
 
-            <!-- Search Bar -->
-            <div class="row justify-content-center mt-5">
-                <div class="col-12 col-md-10 col-lg-8">
+            <!-- Quick Search Bar -->
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 col-lg-6">
                     <div class="position-relative">
                         <input type="search"
-                               class="form-control ps-5 pe-4 rounded-pill border-2 shadow"
-                               style="height: 3.5rem; font-size: 1rem;"
-                               placeholder="text" />
-                        <span class="material-symbols-outlined position-absolute top-50 start-0 translate-middle-y ms-4 text-muted" style="font-size: 1.5rem;">icon</span>
+                               class="form-control ps-5 pe-4 rounded-pill border-2 shadow-sm"
+                               placeholder="Hledejte knihy, autory nebo ISBN..." />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="position-absolute top-50 start-0 translate-middle-y ms-4 text-muted" viewBox="0 0 16 16">
+                            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                        </svg>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Wave Container - na spodku hero sekce -->
+        <!-- Wave Container -->
         <div class="position-absolute bottom-0 start-0 w-100 overflow-hidden" style="line-height: 0; z-index: 5;">
-            <!-- Vlna 1 (lighter) -->
-            <svg class="position-relative w-100 d-block" style="height: 8rem;" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                <path d="M0,0 C300,100 900,0 1200,100 L1200,120 L0,120 Z" fill="#3B82F6"></path>
+            <!-- Primary Wave -->
+            <svg class="position-relative w-100 d-block" style="height: 6rem;" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M0,0 C300,80 900,0 1200,80 L1200,120 L0,120 Z" fill="#0a4db8"></path>
             </svg>
-
-            <!-- Vlna 2 (darker) - překrývá první vlnu -->
-            <svg class="position-relative w-100 d-block" style="height: 8rem; margin-top: -0.25rem; background-color: #3B82F6;" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                <path d="M0,0 C400,80 800,0 1200,80 L1200,120 L0,120 Z" fill="#1D4ED8"></path>
+            <!-- Secondary Wave -->
+            <svg class="position-relative w-100 d-block" style="height: 4rem; margin-top: -0.25rem; background-color: #0a4db8;" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M0,0 C400,60 800,0 1200,60 L1200,120 L0,120 Z" fill="#083d96"></path>
             </svg>
         </div>
     </div>
 
-    <!-- Features Section (after scroll) -->
-    <section class="py-5 bg-primary" style="background-color: #1D4ED8;">
-        <div class="container px-4 py-5">
+    <!-- Main Features Section -->
+    <section class="py-5" style="background: linear-gradient(135deg, #0a4db8 0%, #083d96 100%);">
+        <div class="container px-4 py-4">
+            <!-- Section Header -->
+            <div class="text-center mb-5">
+                <h2 class="fw-bold text-white mb-3">Hlavní funkce systému</h2>
+                <p class="text-light opacity-75">Rychlý přístup k nejdůležitějším částem aplikace</p>
+            </div>
+
             <div class="row g-4 justify-content-center">
-
-                <!-- Card 1 -->
-                <div class="col-12 col-sm-6 col-lg-4">
-                    <div class="card h-100 text-center border-0 shadow">
+                <!-- Quick Book Search & Rent -->
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
                         <div class="card-body d-flex flex-column align-items-center p-4">
                             <div class="d-flex align-items-center justify-content-center rounded-circle mb-4"
-                                 style="width: 4rem; height: 4rem; background-color: rgba(13, 127, 242, 0.1);">
-                                <span class="material-symbols-outlined" style="font-size: 2.5rem; color: #0d7ff2;">menu_book</span>
+                                 style="width: 4.5rem; height: 4.5rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="white" viewBox="0 0 16 16">
+                                    <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492V2.687zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z"/>
+                                </svg>
                             </div>
-                            <h3 class="card-title h5 fw-bold mb-3">Rent a Book</h3>
+                            <h3 class="card-title h5 fw-bold mb-3 text-primary">Vypůjčit knihu</h3>
                             <p class="card-text flex-grow-1 mb-4 text-muted">
-                                Browse our extensive collection and find your next favorite read.
+                                Procházejte naši rozsáhlou sbírku a najděte svou další oblíbenou knihu k vypůjčení.
                             </p>
-                            <a href="#" class="btn rounded-pill px-4 py-2 fw-semibold mt-auto text-white" style="background-color: #0d7ff2;">
-                                Start Renting
+                            <a href="/books" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold mt-auto">
+                                Procházet knihy
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Card 2 -->
-                <div class="col-12 col-sm-6 col-lg-4">
-                    <div class="card h-100 text-center border-0 shadow">
+                <!-- Manage Rentals -->
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
                         <div class="card-body d-flex flex-column align-items-center p-4">
                             <div class="d-flex align-items-center justify-content-center rounded-circle mb-4"
-                                 style="width: 4rem; height: 4rem; background-color: rgba(13, 127, 242, 0.1);">
-                                <span class="material-symbols-outlined" style="font-size: 2.5rem; color: #0d7ff2;">school</span>
+                                 style="width: 4.5rem; height: 4.5rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="white" viewBox="0 0 16 16">
+                                    <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                                </svg>
                             </div>
-                            <h3 class="card-title h5 fw-bold mb-3">Make a Graduation Book List</h3>
+                            <h3 class="card-title h5 fw-bold mb-3 text-primary">Moje výpůjčky</h3>
                             <p class="card-text flex-grow-1 mb-4 text-muted">
-                                Curate a special list of books for your graduation milestone.
+                                Spravujte své aktuální výpůjčky, prodlužte je nebo vraťte knihy.
                             </p>
-                            <a href="#" class="btn rounded-pill px-4 py-2 fw-semibold mt-auto text-white" style="background-color: #0d7ff2;">
-                                Create a List
+                            <a href="/rentals" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold mt-auto">
+                                Zobrazit výpůjčky
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Card 3 -->
-                <div class="col-12 col-sm-6 col-lg-4">
-                    <div class="card h-100 text-center border-0 shadow">
+                <!-- Reading Lists -->
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
                         <div class="card-body d-flex flex-column align-items-center p-4">
                             <div class="d-flex align-items-center justify-content-center rounded-circle mb-4"
-                                 style="width: 4rem; height: 4rem; background-color: rgba(13, 127, 242, 0.1);">
-                                <span class="material-symbols-outlined" style="font-size: 2.5rem; color: #0d7ff2;">library_books</span>
+                                 style="width: 4.5rem; height: 4.5rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="white" viewBox="0 0 16 16">
+                                    <path d="M2.5 3A1.5 1.5 0 0 0 1 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0 1 15 5.293V4.5A1.5 1.5 0 0 0 13.5 3h-11Z"/>
+                                    <path d="M15 6.954 8.978 9.86a2.25 2.25 0 0 1-1.956 0L1 6.954V11.5A1.5 1.5 0 0 0 2.5 13h11a1.5 1.5 0 0 0 1.5-1.5V6.954Z"/>
+                                </svg>
                             </div>
-                            <h3 class="card-title h5 fw-bold mb-3">View All Books</h3>
+                            <h3 class="card-title h5 fw-bold mb-3 text-primary">Moje seznamy</h3>
                             <p class="card-text flex-grow-1 mb-4 text-muted">
-                                Explore the entirety of our library's collection at a glance.
+                                Vytvářejte a spravujte své osobní seznamy knih pro různé příležitosti.
                             </p>
-                            <a href="#" class="btn rounded-pill px-4 py-2 fw-semibold mt-auto text-white" style="background-color: #0d7ff2;">
-                                Explore Now
+                            <a href="/lists" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold mt-auto">
+                                Spravovat seznamy
                             </a>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </section>

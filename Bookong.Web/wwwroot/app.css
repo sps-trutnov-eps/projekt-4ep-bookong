@@ -58,3 +58,20 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* Portal Page Styles */
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0a4db8, #083d96);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #083d96, #0a4db8);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(10, 77, 184, 0.3);
+}
