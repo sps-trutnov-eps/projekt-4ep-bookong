@@ -2,36 +2,36 @@
     <nav class="navbar navbar-dark container-fluid px-2 px-md-3">
         <div class="container-fluid d-flex justify-content-between align-items-center">
             <!-- Logo + Název -->
-            <a href="#" class="navbar-brand d-flex align-items-center gap-2 me-auto">
+            <NavLink href="/" class="navbar-brand d-flex align-items-center gap-2 me-auto" Match="NavLinkMatch.All">
                 <img src="bookong-monke-book.png" alt="BooKong Logo" 
                      class="d-inline-block align-text-top" 
                      style="height: 32px; width: auto;" />
                 <span class="fw-bold fs-5 mb-0 text-white d-none d-sm-inline">BooKong</span>
                 <span class="fw-bold fs-6 mb-0 text-white d-inline d-sm-none">BK</span>
-            </a>
+            </NavLink>
 
             <!-- Desktop Navigation (hidden on mobile) -->
             <ul class="navbar-nav d-none d-lg-flex flex-row gap-3 mb-0">
                 <li class="nav-item">
-                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Domů</a>
+                    <NavLink href="/" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light" Match="NavLinkMatch.All">Domů</NavLink>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Uživatelé</a>
+                    <NavLink href="/uzivatele" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Uživatelé</NavLink>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Knihy</a>
+                    <NavLink href="/knihy" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Knihy</NavLink>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Seznamy</a>
+                    <NavLink href="/seznamy" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Seznamy</NavLink>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Statistiky</a>
+                    <NavLink href="/statistiky" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Statistiky</NavLink>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Výpůjčky</a>
+                    <NavLink href="/vypujcky" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Výpůjčky</NavLink>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Materiály</a>
+                    <NavLink href="/materialy" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Materiály</NavLink>
                 </li>
             </ul>
 
@@ -64,14 +64,14 @@
             
             <!-- Navigation Links -->
             <nav class="overlay-nav">
-                <ul class="overlay-nav-list">
-                    <li><a href="#" class="overlay-nav-link">Domů</a></li>
-                    <li><a href="#" class="overlay-nav-link">Uživatelé</a></li>
-                    <li><a href="#" class="overlay-nav-link">Knihy</a></li>
-                    <li><a href="#" class="overlay-nav-link">Seznamy</a></li>
-                    <li><a href="#" class="overlay-nav-link">Statistiky</a></li>
-                    <li><a href="#" class="overlay-nav-link">Výpůjčky</a></li>
-                    <li><a href="#" class="overlay-nav-link">Materiály</a></li>
+                <ul class="overlay-nav-list nav flex-column text-center">
+                    <li class="nav-item"><NavLink href="/" class="nav-link text-white fw-medium py-2" Match="NavLinkMatch.All">Domů</NavLink></li>
+                    <li class="nav-item"><NavLink href="/uzivatele" class="nav-link text-white fw-medium py-2">Uživatelé</NavLink></li>
+                    <li class="nav-item"><NavLink href="/knihy" class="nav-link text-white fw-medium py-2">Knihy</NavLink></li>
+                    <li class="nav-item"><NavLink href="/seznamy" class="nav-link text-white fw-medium py-2">Seznamy</NavLink></li>
+                    <li class="nav-item"><NavLink href="/statistiky" class="nav-link text-white fw-medium py-2">Statistiky</NavLink></li>
+                    <li class="nav-item"><NavLink href="/vypujcky" class="nav-link text-white fw-medium py-2">Výpůjčky</NavLink></li>
+                    <li class="nav-item"><NavLink href="/materialy" class="nav-link text-white fw-medium py-2">Materiály</NavLink></li>
                 </ul>
             </nav>
         </div>
@@ -82,5 +82,3 @@
         </div>
     </div>
 </header>
-
-
