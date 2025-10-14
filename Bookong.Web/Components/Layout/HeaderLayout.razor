@@ -1,11 +1,11 @@
 ﻿<header class="sticky-top bg-primary">
     <nav class="navbar navbar-dark container-fluid px-2 px-md-3">
         <div class="container-fluid d-flex justify-content-between align-items-center">
-            <!-- Logo + Název -->
-            <NavLink href="/" class="navbar-brand d-flex align-items-center gap-2 me-auto" Match="NavLinkMatch.All">
-                <img src="bookong-monke-book.png" alt="BooKong Logo" 
+            <!-- Logo + Name -->
+            <NavLink href="/" class="navbar-brand d-flex align-items-center gap-2 me-auto">
+                <img src="img/bookong-monke-book.png" alt="BooKong Logo" 
                      class="d-inline-block align-text-top" 
-                     style="height: 32px; width: auto;" />
+                     style="height: 50px; width: auto; margin-top: -8px; margin-bottom: -8px;" />
                 <span class="fw-bold fs-5 mb-0 text-white d-none d-sm-inline">BooKong</span>
                 <span class="fw-bold fs-6 mb-0 text-white d-inline d-sm-none">BK</span>
             </NavLink>
@@ -13,25 +13,25 @@
             <!-- Desktop Navigation (hidden on mobile) -->
             <ul class="navbar-nav d-none d-lg-flex flex-row gap-3 mb-0">
                 <li class="nav-item">
-                    <NavLink href="/" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light" Match="NavLinkMatch.All">Domů</NavLink>
+                    <NavLink href="/portalpage" ActiveClass="active-link" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Domů</NavLink>
                 </li>
                 <li class="nav-item">
-                    <NavLink href="/uzivatele" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Uživatelé</NavLink>
+                    <NavLink href="/users" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Uživatelé</NavLink>
                 </li>
                 <li class="nav-item">
-                    <NavLink href="/knihy" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Knihy</NavLink>
+                    <NavLink href="/books" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Knihy</NavLink>
                 </li>
                 <li class="nav-item">
-                    <NavLink href="/seznamy" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Seznamy</NavLink>
+                    <NavLink href="/lists" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Seznamy</NavLink>
                 </li>
                 <li class="nav-item">
-                    <NavLink href="/statistiky" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Statistiky</NavLink>
+                    <NavLink href="/statistics" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Statistiky</NavLink>
                 </li>
                 <li class="nav-item">
-                    <NavLink href="/vypujcky" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Výpůjčky</NavLink>
+                    <NavLink href="/loans" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Výpůjčky</NavLink>
                 </li>
                 <li class="nav-item">
-                    <NavLink href="/materialy" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Materiály</NavLink>
+                    <NavLink href="/materials" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Materiály</NavLink>
                 </li>
             </ul>
 
@@ -48,7 +48,7 @@
         <!-- Header with BooKong title and close button -->
         <div class="overlay-header">
             <div class="overlay-title">
-                <img src="bookong-monke-book.png" alt="BooKong Logo" />
+                <img src="img/bookong-monke-book.png" alt="BooKong Logo" />
                 <span>BooKong</span>
             </div>
             <button class="close-btn" id="closeMenu" aria-label="Close menu">
@@ -64,14 +64,14 @@
             
             <!-- Navigation Links -->
             <nav class="overlay-nav">
-                <ul class="overlay-nav-list nav flex-column text-center">
-                    <li class="nav-item"><NavLink href="/" class="nav-link text-white fw-medium py-2" Match="NavLinkMatch.All">Domů</NavLink></li>
-                    <li class="nav-item"><NavLink href="/uzivatele" class="nav-link text-white fw-medium py-2">Uživatelé</NavLink></li>
-                    <li class="nav-item"><NavLink href="/knihy" class="nav-link text-white fw-medium py-2">Knihy</NavLink></li>
-                    <li class="nav-item"><NavLink href="/seznamy" class="nav-link text-white fw-medium py-2">Seznamy</NavLink></li>
-                    <li class="nav-item"><NavLink href="/statistiky" class="nav-link text-white fw-medium py-2">Statistiky</NavLink></li>
-                    <li class="nav-item"><NavLink href="/vypujcky" class="nav-link text-white fw-medium py-2">Výpůjčky</NavLink></li>
-                    <li class="nav-item"><NavLink href="/materialy" class="nav-link text-white fw-medium py-2">Materiály</NavLink></li>
+                <ul class="overlay-nav-list">
+                    <li><NavLink href="/portalpage" class="overlay-nav-link">Domů</NavLink></li>
+                    <li><NavLink href="/users" class="overlay-nav-link">Uživatelé</NavLink></li>
+                    <li><NavLink href="/books" class="overlay-nav-link">Knihy</NavLink></li>
+                    <li><NavLink href="/lists" class="overlay-nav-link">Seznamy</NavLink></li>
+                    <li><NavLink href="/statistics" class="overlay-nav-link">Statistiky</NavLink></li>
+                    <li><NavLink href="/loans" class="overlay-nav-link">Výpůjčky</NavLink></li>
+                    <li><NavLink href="/materials" class="overlay-nav-link">Materiály</NavLink></li>
                 </ul>
             </nav>
         </div>
