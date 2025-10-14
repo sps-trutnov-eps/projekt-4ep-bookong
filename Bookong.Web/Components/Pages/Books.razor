@@ -1,0 +1,177 @@
+﻿@page "/books"
+
+<section class="books-container">
+    <h2>📚 Seznam knih (maturitní knihy)</h2>
+
+    <!-- 🔍 Filtr -->
+    <div class="filter-bar">
+        <input type="text" placeholder="Hledat knihu nebo autora..." class="filter-input" />
+        <select class="filter-select">
+            <option>Všechny žánry</option>
+            <option>Fantasy</option>
+            <option>Sci-fi</option>
+            <option>Detektivka</option>
+            <option>Román</option>
+        </select>
+        <button class="filter-button">Hledat</button>
+    </div>
+
+    <!-- 📖 Seznam knih -->
+    <table class="books-table">
+        <thead>
+            <tr>
+                <th style="width: 60px;">#</th>
+                <th style="width: 35%;">Název</th>
+                <th style="width: 30%;">Autor</th>
+                <th style="width: 120px;">Rok vydání</th>
+                <th style="width: 120px;">Žánr</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 1; i <= 12; i++)
+            {
+                <tr>
+                    <td colspan="5" class="book-row">
+                        <details>
+                            <summary class="book-summary">
+                                <span class="col id">@i</span>
+                                <span class="col title">Kniha @i</span>
+                                <span class="col author">Autor @i</span>
+                                <span class="col year">@(2020 + (i % 5))</span>
+                                <span class="col genre">@(i % 3 == 0 ? "Fantasy" : i % 3 == 1 ? "Sci-fi" : "Román")</span>
+                            </summary>
+                            <div class="book-details">
+                                <p><strong>Autor:</strong> Autor @i</p>
+                                <p><strong>Rok vydání:</strong> @(2020 + (i % 5))</p>
+                                <p><strong>Žánr:</strong> @(i % 3 == 0 ? "Fantasy" : i % 3 == 1 ? "Sci-fi" : "Román")</p>
+                                <p><strong>Počet stran:</strong> @(250 + i * 10)</p>
+                                <p><strong>Popis:</strong> Ukázkový popis knihy číslo @i, maturitní literatura.</p>
+                            </div>
+                        </details>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+<style>
+    .books-container {
+        padding: 2rem;
+        max-width: 1600px;
+        margin: 0 auto;
+        font-family: system-ui, sans-serif;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    /* 🔍 Filtr */
+    .filter-bar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-input, .filter-select, .filter-button {
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .filter-input, .filter-select {
+        border: 1px solid #ccc;
+    }
+
+    .filter-button {
+        background-color: #4f46e5;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+        .filter-button:hover {
+            background-color: #4338ca;
+        }
+
+    /* 📖 Tabulka knih */
+    .books-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+        .books-table th {
+            background-color: #f0f0f0;
+            padding: 0.6rem;
+            border: 1px solid #ddd;
+            text-align: left;
+            font-weight: 600;
+        }
+
+    /* --- Opravené zarovnání pomocí Grid --- */
+    .book-summary {
+        display: grid;
+        grid-template-columns: 60px 35% 30% 120px 120px;
+        align-items: center;
+        padding: 0.6rem;
+        border-bottom: 1px solid #ddd;
+        cursor: pointer;
+        font-size: 0.95rem;
+        box-sizing: border-box;
+    }
+
+        .book-summary span {
+            padding-right: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .book-summary:hover {
+            background-color: #f9f9f9;
+        }
+
+    details[open] .book-summary {
+        background-color: #eef;
+    }
+
+    .book-details {
+        padding: 1rem 2rem;
+        background-color: #fafafa;
+        border-top: 1px solid #ddd;
+    }
+
+    details summary::-webkit-details-marker {
+        display: none;
+    }
+
+    /* 📱 Responzivní verze (mobilní zobrazení) */
+    @@media (max-width: 800px) {
+        .book-summary
+
+    {
+        grid-template-columns: 50px 1fr;
+        grid-row-gap: 0.3rem;
+    }
+
+    .book-summary .col.author,
+    .book-summary .col.year,
+    .book-summary .col.genre {
+        display: none;
+    }
+
+    .books-table th:nth-child(3),
+    .books-table th:nth-child(4),
+    .books-table th:nth-child(5) {
+        display: none;
+    }
+
+    }
+</style>
