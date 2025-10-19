@@ -1,0 +1,56 @@
+﻿@page "/login"
+
+@using System.ComponentModel.DataAnnotations
+
+<div class="login-wrapper d-flex flex-column align-items-center justify-content-center text-center">
+
+   <div class="card shadow-sm p-4 login-card">
+        <h3 class="mb-4">Přihlášení do systému</h3>
+
+        <EditForm Model="loginModel" OnValidSubmit="LoginUserAsync">
+            @if (showError)
+            {
+                <div class="alert alert-danger" role="alert">
+                    Neplatné přihlašovací údaje. Zkuste to prosím znovu.
+                </div>
+            }
+
+            <div class="mb-3 text-start">
+                <label class="form-label">Uživatelské jméno</label>
+                <InputText @bind-Value="loginModel.Username" class="form-control" />
+                <ValidationMessage For="@(() => loginModel.Username)" />
+            </div>
+
+            <div class="mb-3 text-start">
+                <label class="form-label">Heslo</label>
+                <InputText @bind-Value="loginModel.Password" class="form-control" type="password" />
+                <ValidationMessage For="@(() => loginModel.Password)" />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Přihlásit se</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel { get; set; } = new();
+    private bool showError = false;
+
+    private async Task LoginUserAsync()
+    {
+        // TODO: AD authentication
+        // bool isValid = await authService.LoginAsync(loginModel.Username, loginModel.Password);
+        // if (!isValid) { showError = true; return; }
+
+        showError = false;
+    }
+
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "Uživatelské jméno je povinné.")]
+        public string Username { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Heslo je povinné.")]
+        public string Password { get; set; } = string.Empty;
+    }
+}

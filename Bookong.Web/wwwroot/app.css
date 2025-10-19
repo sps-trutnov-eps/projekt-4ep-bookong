@@ -85,3 +85,15 @@ h1:focus {
     background-color: #007bff;
     border-radius: 5px;
 }
+
+.login-wrapper {
+    min-height: calc(100vh - 150px);
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 380px;
+    transform: none !important;
+}
