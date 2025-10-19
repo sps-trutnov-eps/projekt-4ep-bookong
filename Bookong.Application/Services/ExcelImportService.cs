@@ -1,5 +1,6 @@
 ﻿using Bookong.Application.DTOs;
 using Bookong.Application.Services.Interfaces;
+using ClosedXML.Excel;
 
 namespace Bookong.Application.Services
 {
@@ -7,11 +8,34 @@ namespace Bookong.Application.Services
     {
         public List<ImportBookDto> ParseBooks(Stream excelStream)
         {
-            // This service will handle parsing the excel file and returning list of ImportBookDto
+            var books = new List<ImportBookDto>();
 
-            // This needs to be implemented in order for the ImportBooksFromExcelUseCase to work
+            using var workbook = new XLWorkbook(excelStream);
+            var worksheet = workbook.Worksheets.First();
 
-            throw new NotImplementedException();
+            // Assuming first row is header
+            var rows = worksheet.RowsUsed().Skip(1);
+
+            foreach (var row in rows)
+            {
+                var book = new ImportBookDto
+                {
+                    Title = row.Cell(1).GetString(),
+                    ISBN = row.Cell(2).GetString(),
+                    AuthorName = row.Cell(3).GetString(),
+                    GenreName = row.Cell(4).GetString(),
+                    KindName = row.Cell(5).GetString(),
+                    PeriodName = row.Cell(6).GetString(),
+                    Pages = ushort.TryParse(row.Cell(7).GetString(), out var pages) ? pages : (ushort)0,
+                    PublisherName = row.Cell(8).GetString(),
+                    DateRelease = DateTime.TryParse(row.Cell(9).GetString(), out var date) ? date : null,
+                    WarehouseName = row.Cell(10).GetString()
+                };
+
+                books.Add(book);
+            }
+
+            return books;
         }
     }
 }
