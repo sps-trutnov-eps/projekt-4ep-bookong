@@ -1,0 +1,32 @@
+@using Bookong.Web.Components.Layout
+
+@page "/my-books"
+@layout MainLayout
+
+<PageTitle>Moje knihy - BooKong</PageTitle>
+
+<!-- Main: Buttons -->
+<main class="container my-5 flex-grow-1 d-flex justify-content-center align-items-center">
+  <div class="w-100" style="max-width: 900px;">
+    <h2 class="mb-4 text-primary text-center">Moje knihy</h2>
+
+    <div class="table-responsive mt-4">
+      <table class="table table-striped table-bordered align-middle">
+        <caption class="text-muted">Historie vypůjčených knih</caption>
+        <thead class="table-primary">
+          <tr>
+            <th scope="col">Název</th>
+            <th scope="col">Autor</th>
+            <th scope="col">Století</th>
+            <th scope="col">Literatura</th>
+            <th scope="col">ISBN</th>
+          </tr>
+        </thead>
+        <tbody id="borrow-history">
+          <!-- Zde se budou dynamicky vkládat řádky historie -->
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</main>
