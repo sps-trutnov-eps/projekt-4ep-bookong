@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\SharedUI\Layout\FooterLayout.razor.css" />
+    <Content Remove="wwwroot\SharedUI\Layout\HeaderLayout.razor.css" />
+    <Content Remove="wwwroot\SharedUI\Layout\MainLayout.razor.css" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -18,6 +24,12 @@
     <ProjectReference Include="..\Bookong.Application\Bookong.Application.csproj" />
     <ProjectReference Include="..\Bookong.Domain\Bookong.Domain.csproj" />
     <ProjectReference Include="..\Bookong.Infrastructure\Bookong.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\SharedUI\Layout\FooterLayout.razor.css" />
+    <None Include="wwwroot\SharedUI\Layout\HeaderLayout.razor.css" />
+    <None Include="wwwroot\SharedUI\Layout\MainLayout.razor.css" />
   </ItemGroup>
 
 </Project>
