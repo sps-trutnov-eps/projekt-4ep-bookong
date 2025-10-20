@@ -1,4 +1,6 @@
-﻿namespace Bookong.Domain.Common.Models
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Bookong.Domain.Common.Models
 {
     public record PagedResult<T>
     {
@@ -12,6 +14,7 @@
         public bool HasPreviousPage => PageNumber > 1;
         public bool HasNextPage => PageNumber < TotalPages;
 
+        [SetsRequiredMembers]
         public PagedResult(IEnumerable<T> items, int totalCount, int pageNumber, int pageSize)
         {
             Items = items ?? [];
