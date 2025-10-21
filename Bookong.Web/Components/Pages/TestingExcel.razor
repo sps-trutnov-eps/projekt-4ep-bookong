@@ -4,3 +4,24 @@
 
 <h1>Testing Excel</h1>
 <p>This is a blank page for testing Excel import.</p>
+
+<InputFile OnChange="HandleFileSelected" accept=".xlsm" multiple="false" />
+
+@if (selectedFileName != null)
+{
+    <p>Selected file: @selectedFileName</p>
+}
+
+@code {
+    private string? selectedFileName;
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            selectedFileName = file.Name;
+            // Here you can add logic to process the file, e.g. upload or read its contents
+        }
+    }
+}
