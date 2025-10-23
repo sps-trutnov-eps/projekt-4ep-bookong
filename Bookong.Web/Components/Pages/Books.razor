@@ -1,34 +1,37 @@
-@page "/books"
+Ôªø@page "/books"
 @using Bookong.Application.UseCases.Queries.Interfaces
 @using Bookong.Application.DTOs
+@using Bookong.Web.Services
 @inject IGetAvailableBooksQuery GetAvailableBooks
+@inject MaturitaService MaturitaService
+@inject IJSRuntime JS
 
 <div class="container my-4">
     <h1 class="display-6 fw-semibold mb-4">Seznam knih</h1>
 
-    <!-- Placeholder filters (disabled) for future implementation -->
+    <!-- Placeholder filtry (zat√≠m nefunkƒçn√≠) -->
     <div class="border rounded-3 shadow-sm bg-body mb-4 p-3">
         <div class="row g-3 align-items-end">
             <div class="col-12 col-md-6 col-lg-4">
-                <label class="form-label">Vyhled·v·nÌ</label>
-                <input class="form-control" placeholder="Zadejte n·zev nebo autora" disabled />
+                <label class="form-label">Vyhled√°v√°n√≠</label>
+                <input class="form-control" placeholder="Zadejte n√°zev nebo autora" disabled />
             </div>
             <div class="col-6 col-md-3 col-lg-2">
                 <label class="form-label">Autor</label>
                 <select class="form-select" disabled>
-                    <option>Vöichni</option>
+                    <option>V≈°ichni</option>
                 </select>
             </div>
             <div class="col-6 col-md-3 col-lg-2">
-                <label class="form-label">é·nr</label>
+                <label class="form-label">≈Ω√°nr</label>
                 <select class="form-select" disabled>
-                    <option>Vöe</option>
+                    <option>V≈°e</option>
                 </select>
             </div>
             <div class="col-6 col-md-3 col-lg-2">
                 <label class="form-label">Typ</label>
                 <select class="form-select" disabled>
-                    <option>Vöe</option>
+                    <option>V≈°e</option>
                 </select>
             </div>
             <div class="col-6 col-md-3 col-lg-2 d-grid d-md-flex gap-2">
@@ -37,7 +40,7 @@
             </div>
         </div>
         <div class="mt-2">
-            <small class="text-muted">Pozn·mka: vyhled·v·nÌ a filtry jsou zatÌm nefunkËnÌ a budou implementov·ny pozdÏji.</small>
+            <small class="text-muted">Pozn√°mka: vyhled√°v√°n√≠ a filtry jsou zat√≠m nefunkƒçn√≠.</small>
         </div>
     </div>
 
@@ -45,12 +48,12 @@
     {
         <div class="d-flex align-items-center gap-2 text-muted">
             <div class="spinner-border spinner-border-sm" role="status"></div>
-            <span>NaËÌt·nÌÖ</span>
+            <span>Naƒç√≠t√°n√≠‚Ä¶</span>
         </div>
     }
     else if (items.Count == 0)
     {
-        <p class="text-muted">é·dnÈ knihy k zobrazenÌ.</p>
+        <p class="text-muted">≈Ω√°dn√© knihy k zobrazen√≠.</p>
     }
     else
     {
@@ -59,9 +62,9 @@
                 <table class="table table-striped table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>N·zev knihy</th>
+                            <th>N√°zev knihy</th>
                             <th>Autor</th>
-                            <th>é·nr</th>
+                            <th>≈Ω√°nr</th>
                             <th>Typ</th>
                             <th class="text-end">Akce</th>
                         </tr>
@@ -72,10 +75,14 @@
                             <tr>
                                 <td class="fw-medium">@b.Title</td>
                                 <td>@b.AuthorFullName</td>
-                                <td><span>@b.Genre</span></td>
-                                <td><span>@b.Kind</span></td>
+                                <td>@b.Genre</td>
+                                <td>@b.Kind</td>
                                 <td class="text-end">
-                                    <a class="btn btn-sm btn-outline-primary" href="@($"/books/{b.PublicId}")">Detail</a>
+                                    <button class="btn btn-sm btn-outline-success"
+                                            @onclick="() => AddToMaturitaAsync(b)">
+                                        P≈ôidat do maturita
+                                    </button>
+                                    <a class="btn btn-sm btn-outline-primary ms-1" href="@($"/books/{b.PublicId}")">Detail</a>
                                 </td>
                             </tr>
                         }
@@ -92,5 +99,14 @@
     protected override async Task OnInitializedAsync()
     {
         items = (await GetAvailableBooks.ExecuteAsync()).ToList();
+    }
+
+    private async Task AddToMaturitaAsync(BookListItemDto book)
+    {
+        MaturitaService.AddBook(book);
+
+        // Log do prohl√≠≈æeƒçe
+        await JS.InvokeVoidAsync("console.log", $"Kliknuto na P≈ôidat: {book.Title}");
+        await JS.InvokeVoidAsync("console.log", $"Poƒçet knih v MaturitaService: {MaturitaService.GetBooks().Count}");
     }
 }
