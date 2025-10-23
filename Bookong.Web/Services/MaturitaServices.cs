@@ -1,46 +1,26 @@
 ﻿using Bookong.Application.DTOs;
-using Bookong.Domain.Entities;
-using Bookong.Infrastructure.Data;
+using System.Collections.Generic;
+using System.Linq;
 
-public class MaturitaService
+namespace Bookong.Web.Services
 {
-    private readonly BookongDbContext _context;
-
-    public MaturitaService(BookongDbContext context)
+    public class MaturitaService
     {
-        _context = context;
-    }
+        private readonly List<BookListItemDto> _maturitaBooks = new();
 
-    public async Task<List<BookListItemDto>> GetBooksAsync()
-    {
-        // join s knihami podle PublicId
-        return await _context.MaturitaBooks
-                             .Include(m => m.Book)
-                             .Select(m => new BookListItemDto
-                             {
-                                 PublicId = m.Book.PublicId,
-                                 Title = m.Book.Title,
-                                 AuthorFullName = m.Book.AuthorFullName,
-                                 Genre = m.Book.Genre,
-                                 Kind = m.Book.Kind
-                             }).ToListAsync();
-    }
+        public IReadOnlyList<BookListItemDto> GetBooks() => _maturitaBooks;
 
-    public async Task AddBookAsync(BookListItemDto book)
-    {
-        if (!await _context.MaturitaBooks.AnyAsync(m => m.Book.PublicId == book.PublicId))
+        public void AddBook(BookListItemDto book)
         {
-            _context.MaturitaBooks.Add(new MaturitaBook { BookPublicId = book.PublicId });
-            await _context.SaveChangesAsync();
+            if (!_maturitaBooks.Any(b => b.PublicId == book.PublicId))
+            {
+                _maturitaBooks.Add(book);
+            }
+        }
+
+        public void RemoveBook(BookListItemDto book)
+        {
+            _maturitaBooks.RemoveAll(b => b.PublicId == book.PublicId);
         }
     }
-}
-
-public class MaturitaBook
-{
-    public int Id { get; set; }
-    public Guid BookPublicId { get; set; }
-
-    // navigační vlastnost
-    public Book? Book { get; set; }
 }
