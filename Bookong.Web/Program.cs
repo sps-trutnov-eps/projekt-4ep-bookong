@@ -1,4 +1,6 @@
-﻿using Bookong.Application.UseCases.Queries;
+﻿using Bookong.Application.UseCases.Commands;
+using Bookong.Application.UseCases.Commands.Interfaces;
+using Bookong.Application.UseCases.Queries;
 using Bookong.Application.UseCases.Queries.Interfaces;
 using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
@@ -15,6 +17,8 @@ builder.Services.AddDbContext<BookongDbContext>(options =>
 // Unit of Work a Queries
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IGetAvailableBooksQuery, GetAvailableBooksQuery>();
+builder.Services.AddScoped<IAddBookToMaturitaSelectionCommand, AddBookToMaturitaSelectionCommand>();
+builder.Services.AddScoped<IGetMaturitaBookSelectionQuery, GetMaturitaBookSelectionQuery>();
 
 // Blazor komponenty
 builder.Services.AddRazorComponents()

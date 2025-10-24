@@ -1,6 +1,18 @@
 ﻿@page "/maturita"
+@using Bookong.Application.UseCases.Queries.Interfaces
+@using Bookong.Application.DTOs
+@inject IGetMaturitaBookSelectionQuery GetMaturitaBookSelection
+@inject ILogger<Maturita> Logger
 
 <div class="container-fluid py-4 px-0">
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+        </div>
+    }
+
     <!-- 🔍 Filtr -->
     <div class="row justify-content-center mb-5 mx-0">
         <div class="col-12 col-md-8 col-lg-6">
@@ -17,39 +29,84 @@
     </div>
 
     <!-- 📖 Seznam knih -->
-    <div class="px-3">
-        <div class="row bg-light p-3 border-bottom fw-bold mb-2 mx-0">
-            <div class="col-1">#</div>
-            <div class="col-md-4 col-5">Název</div>
-            <div class="col-md-3 d-none d-md-block">Autor</div>
-            <div class="col-md-2 d-none d-lg-block">Rok vydání</div>
-            <div class="col-md-2 d-none d-xl-block">Žánr</div>
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Načítání...</span>
+            </div>
         </div>
+    }
+    else if (books == null || !books.Any())
+    {
+        <div class="text-center">
+            <p class="text-muted mb-3">Zatím nemáte vybrané žádné knihy k maturitě.</p>
+            <a href="/books" class="btn btn-primary">Přejít na výběr knih</a>
+        </div>
+    }
+    else
+    {
+        <div class="px-3">
+            <div class="row bg-light p-3 border-bottom fw-bold mb-2 mx-0">
+                <div class="col-1">#</div>
+                <div class="col-md-4 col-5">Název</div>
+                <div class="col-md-3 d-none d-md-block">Autor</div>
+                <div class="col-md-2 d-none d-lg-block">Žánr</div>
+                <div class="col-md-2 d-none d-xl-block">Typ</div>
+            </div>
 
-        @for (int i = 1; i <= 20; i++)
-        {
-           <details class="border-bottom">
-               <summary class="row p-3 bg-white user-select-none mx-0">
-                          <div class="col-1">@i</div>
-                          <div class="col-md-4 col-5">Kniha @i</div>
-                          <div class="col-md-3 d-none d-md-block">Autor @i</div>
-                          <div class="col-md-2 d-none d-lg-block">@(2020 + (i % 5))</div>
-                          <div class="col-md-2 d-none d-xl-block">@(i % 3 == 0 ? "Fantasy" : i % 3 == 1 ? "Sci-fi" : "Román")</div>
-               </summary>
-               <div class="p-4 bg-light">
-                   <div class="row mx-0">
-                       <div class="col-md-6">
-                           <p class="mb-2"><strong>Autor:</strong> Autor @i</p>
-                            <p class="mb-2"><strong>Rok vydání:</strong> @(2020 + (i % 5))</p>
-                            <p class="mb-2"><strong>Žánr:</strong> @(i % 3 == 0 ? "Fantasy" : i % 3 == 1 ? "Sci-fi" : "Román")</p>
-                           <p class="mb-2"><strong>Počet stran:</strong> @(250 + i * 10)</p>
-                       </div>
-                       <div class="col-md-6">
-                           <p class="mb-0"><strong>Popis:</strong>Ukázkový popis knihy číslo @i, maturitní literatura.</p>
-                       </div>
-                   </div>
-               </div>
-           </details>
-        }
-    </div>
+            @for (int i = 0; i < books.Count; i++)
+            {
+                var book = books[i];
+                <details class="border-bottom">
+                    <summary class="row p-3 bg-white user-select-none mx-0">
+                        <div class="col-1">@(i + 1)</div>
+                        <div class="col-md-4 col-5">@book.Title</div>
+                        <div class="col-md-3 d-none d-md-block">@book.AuthorFullName</div>
+                        <div class="col-md-2 d-none d-lg-block">@book.Genre</div>
+                        <div class="col-md-2 d-none d-xl-block">@book.Kind</div>
+                    </summary>
+                    <div class="p-4 bg-light">
+                        <div class="row mx-0">
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Autor:</strong> @book.AuthorFullName</p>
+                                <p class="mb-2"><strong>Žánr:</strong> @book.Genre</p>
+                                <p class="mb-2"><strong>Typ:</strong> @book.Kind</p>
+                                <p class="mb-2"><strong>K zapůjčení:</strong> @(book.Borrowable ? "Ano" : "Ne")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex gap-2">
+                                    <a href="/books/@book.PublicId" class="btn btn-outline-primary">Zobrazit detail</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            }
+        </div>
+    }
 </div>
+
+@code {
+    private List<BookListItemDto>? books;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            books = (await GetMaturitaBookSelection.ExecuteAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading maturita book selection");
+            errorMessage = "Nepodařilo se načíst seznam vybraných knih. Zkuste to prosím později.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

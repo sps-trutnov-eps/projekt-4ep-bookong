@@ -1,45 +1,14 @@
 ﻿@page "/books"
 @using Bookong.Application.UseCases.Queries.Interfaces
+@using Bookong.Application.UseCases.Commands.Interfaces
 @using Bookong.Application.DTOs
 @inject IGetAvailableBooksQuery GetAvailableBooks
+@inject IAddBookToMaturitaSelectionCommand AddToMaturitaSelection
+@inject NavigationManager NavigationManager
+@inject ILogger<Books> Logger
 
 <div class="container my-4">
     <h1 class="display-6 fw-semibold mb-4">Seznam knih</h1>
-
-    <!-- Placeholder filtry (zatím nefunkční) -->
-    <div class="border rounded-3 shadow-sm bg-body mb-4 p-3">
-        <div class="row g-3 align-items-end">
-            <div class="col-12 col-md-6 col-lg-4">
-                <label class="form-label">Vyhledávání</label>
-                <input class="form-control" placeholder="Zadejte název nebo autora" disabled />
-            </div>
-            <div class="col-6 col-md-3 col-lg-2">
-                <label class="form-label">Autor</label>
-                <select class="form-select" disabled>
-                    <option>Všichni</option>
-                </select>
-            </div>
-            <div class="col-6 col-md-3 col-lg-2">
-                <label class="form-label">Žánr</label>
-                <select class="form-select" disabled>
-                    <option>Vše</option>
-                </select>
-            </div>
-            <div class="col-6 col-md-3 col-lg-2">
-                <label class="form-label">Typ</label>
-                <select class="form-select" disabled>
-                    <option>Vše</option>
-                </select>
-            </div>
-            <div class="col-6 col-md-3 col-lg-2 d-grid d-md-flex gap-2">
-                <button class="btn btn-primary" disabled>Filtrovat</button>
-                <button class="btn btn-outline-secondary" disabled>Vymazat filtr</button>
-            </div>
-        </div>
-        <div class="mt-2">
-            <small class="text-muted">Poznámka: vyhledávání a filtry jsou zatím nefunkční.</small>
-        </div>
-    </div>
 
     @if (items is null)
     {
@@ -67,15 +36,32 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var b in items)
+                        @foreach (var book in items)
                         {
+                            var bookId = book.PublicId;
                             <tr>
-                                <td class="fw-medium">@b.Title</td>
-                                <td>@b.AuthorFullName</td>
-                                <td><span>@b.Genre</span></td>
-                                <td><span>@b.Kind</span></td>
+                                <td class="fw-medium">@book.Title</td>
+                                <td>@book.AuthorFullName</td>
+                                <td><span>@book.Genre</span></td>
+                                <td><span>@book.Kind</span></td>
                                 <td class="text-end">
-                                    <a class="btn btn-sm btn-outline-primary" href="@($"/books/{b.PublicId}")">Detail</a>
+                                    <div class="btn-group">
+                                        <a class="btn btn-sm btn-outline-primary" href="@($"/books/{book.PublicId}")">Detail</a>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-success"
+                                                @onclick="() => OnAddToSelection(bookId)"
+                                                disabled="@(isProcessing)">
+                                            @if (isProcessing && processingBookId == bookId)
+                                            {
+                                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                                <span>Přidávám...</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Přidat do seznamu</span>
+                                            }
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -88,9 +74,47 @@
 
 @code {
     private List<BookListItemDto>? items;
+    private bool isProcessing;
+    private Guid processingBookId;
 
     protected override async Task OnInitializedAsync()
     {
-        items = (await GetAvailableBooks.ExecuteAsync()).ToList();
+        try
+        {
+            Logger.LogInformation("Loading books...");
+            items = (await GetAvailableBooks.ExecuteAsync()).ToList();
+            Logger.LogInformation($"Loaded {items.Count} books");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading books");
+        }
+    }
+
+    private async Task OnAddToSelection(Guid bookId)
+    {
+        if (isProcessing) return;
+
+        try
+        {
+            Logger.LogInformation($"Starting to add book {bookId} to selection");
+            isProcessing = true;
+            processingBookId = bookId;
+            StateHasChanged();
+
+            await AddToMaturitaSelection.ExecuteAsync(bookId);
+            Logger.LogInformation($"Book {bookId} added to selection successfully");
+            
+            NavigationManager.NavigateTo("/maturita", true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, $"Error adding book {bookId} to selection");
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
     }
 }
