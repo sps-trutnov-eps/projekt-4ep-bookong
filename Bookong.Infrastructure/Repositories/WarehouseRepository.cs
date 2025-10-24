@@ -2,6 +2,7 @@
 using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bookong.Infrastructure.Repositories
 {
@@ -11,37 +12,58 @@ namespace Bookong.Infrastructure.Repositories
 
         public void Add(Warehouse warehouse)
         {
-            throw new NotImplementedException();
+            _context.Warehouses.Add(warehouse);
         }
 
         public void Delete(Warehouse warehouse)
         {
-            throw new NotImplementedException();
+            _context.Warehouses.Remove(warehouse);
         }
 
-        public Task<IEnumerable<Warehouse>> GetAllAsync()
+        public async Task<IEnumerable<Warehouse>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _context.Warehouses
+                .AsNoTracking()
+                .Include(w => w.Address)
+                .OrderBy(w => w.Name)
+                .ToListAsync();
         }
 
-        public Task<Warehouse?> GetByIdAsync(int id)
+        public async Task<Warehouse?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _context.Warehouses
+                .AsNoTracking()
+                .Include(w => w.Address)
+                .FirstOrDefaultAsync(w => w.Id == id);
         }
 
-        public Task<Warehouse?> GetByPublicIdAsync(Guid publicId)
+        public async Task<Warehouse?> GetByPublicIdAsync(Guid publicId)
         {
-            throw new NotImplementedException();
+            return await _context.Warehouses
+                .AsNoTracking()
+                .Include(w => w.Address)
+                .FirstOrDefaultAsync(w => w.PublicId == publicId);
         }
 
-        public Task<PagedResult<Warehouse>> GetPagedAsync(int pageNumber = 1, int pageSize = 25)
+        public async Task<PagedResult<Warehouse>> GetPagedAsync(int pageNumber = 1, int pageSize = 25)
         {
-            throw new NotImplementedException();
+            var query = _context.Warehouses
+                .AsNoTracking()
+                .Include(w => w.Address)
+                .OrderBy(w => w.Name);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<Warehouse>(items, totalCount, pageNumber, pageSize);
         }
 
         public void Update(Warehouse warehouse)
         {
-            throw new NotImplementedException();
+            _context.Warehouses.Update(warehouse);
         }
     }
 }
