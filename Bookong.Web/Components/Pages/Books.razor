@@ -1,10 +1,7 @@
 ﻿@page "/books"
 @using Bookong.Application.UseCases.Queries.Interfaces
 @using Bookong.Application.DTOs
-@using Bookong.Web.Services
 @inject IGetAvailableBooksQuery GetAvailableBooks
-@inject MaturitaService MaturitaService
-@inject IJSRuntime JS
 
 <div class="container my-4">
     <h1 class="display-6 fw-semibold mb-4">Seznam knih</h1>
@@ -75,14 +72,10 @@
                             <tr>
                                 <td class="fw-medium">@b.Title</td>
                                 <td>@b.AuthorFullName</td>
-                                <td>@b.Genre</td>
-                                <td>@b.Kind</td>
+                                <td><span>@b.Genre</span></td>
+                                <td><span>@b.Kind</span></td>
                                 <td class="text-end">
-                                    <button class="btn btn-sm btn-outline-success"
-                                            @onclick="() => AddToMaturitaAsync(b)">
-                                        Přidat do maturita
-                                    </button>
-                                    <a class="btn btn-sm btn-outline-primary ms-1" href="@($"/books/{b.PublicId}")">Detail</a>
+                                    <a class="btn btn-sm btn-outline-primary" href="@($"/books/{b.PublicId}")">Detail</a>
                                 </td>
                             </tr>
                         }
@@ -99,14 +92,5 @@
     protected override async Task OnInitializedAsync()
     {
         items = (await GetAvailableBooks.ExecuteAsync()).ToList();
-    }
-
-    private async Task AddToMaturitaAsync(BookListItemDto book)
-    {
-        MaturitaService.AddBook(book);
-
-        // Log do prohlížeče
-        await JS.InvokeVoidAsync("console.log", $"Kliknuto na Přidat: {book.Title}");
-        await JS.InvokeVoidAsync("console.log", $"Počet knih v MaturitaService: {MaturitaService.GetBooks().Count}");
     }
 }

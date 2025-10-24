@@ -1,40 +1,55 @@
 ﻿@page "/maturita"
-@using Bookong.Web.Services
-@inject MaturitaService MaturitaService
 
 <div class="container-fluid py-4 px-0">
-    <h1 class="display-6 fw-semibold mb-4 text-center">Maturitní knihy</h1>
+    <!-- 🔍 Filtr -->
+    <div class="row justify-content-center mb-5 mx-0">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="position-relative">
+                <input type="search"
+                       class="form-control ps-5 pe-4 rounded-pill border-2 shadow-sm"
+                       style="height: 3.2rem; font-size: 1rem; border-color: #0a4db8;"
+                       placeholder="Hledejte knihy..." />
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="position-absolute top-50 start-0 translate-middle-y ms-4 text-muted" viewBox="0 0 16 16">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                </svg>
+            </div>
+        </div>
+    </div>
 
-    <!-- Seznam knih -->
+    <!-- 📖 Seznam knih -->
     <div class="px-3">
         <div class="row bg-light p-3 border-bottom fw-bold mb-2 mx-0">
             <div class="col-1">#</div>
             <div class="col-md-4 col-5">Název</div>
             <div class="col-md-3 d-none d-md-block">Autor</div>
-            <div class="col-md-2 d-none d-lg-block">Žánr</div>
-            <div class="col-md-2 d-none d-xl-block">Typ</div>
+            <div class="col-md-2 d-none d-lg-block">Rok vydání</div>
+            <div class="col-md-2 d-none d-xl-block">Žánr</div>
         </div>
 
-        @if (MaturitaService.GetBooks().Count == 0)
+        @for (int i = 1; i <= 20; i++)
         {
-            <p class="text-muted px-3">Žádné knihy k maturitě.</p>
-        }
-        else
-        {
-            int index = 1;
-            foreach (var b in MaturitaService.GetBooks())
-            {
-                <details class="border-bottom">
-                    <summary class="row p-3 bg-white user-select-none mx-0">
-                        <div class="col-1">@index</div>
-                        <div class="col-md-4 col-5">@b.Title</div>
-                        <div class="col-md-3 d-none d-md-block">@b.AuthorFullName</div>
-                        <div class="col-md-2 d-none d-lg-block">@b.Genre</div>
-                        <div class="col-md-2 d-none d-xl-block">@b.Kind</div>
-                    </summary>
-                </details>
-                index++;
-            }
+           <details class="border-bottom">
+               <summary class="row p-3 bg-white user-select-none mx-0">
+                          <div class="col-1">@i</div>
+                          <div class="col-md-4 col-5">Kniha @i</div>
+                          <div class="col-md-3 d-none d-md-block">Autor @i</div>
+                          <div class="col-md-2 d-none d-lg-block">@(2020 + (i % 5))</div>
+                          <div class="col-md-2 d-none d-xl-block">@(i % 3 == 0 ? "Fantasy" : i % 3 == 1 ? "Sci-fi" : "Román")</div>
+               </summary>
+               <div class="p-4 bg-light">
+                   <div class="row mx-0">
+                       <div class="col-md-6">
+                           <p class="mb-2"><strong>Autor:</strong> Autor @i</p>
+                            <p class="mb-2"><strong>Rok vydání:</strong> @(2020 + (i % 5))</p>
+                            <p class="mb-2"><strong>Žánr:</strong> @(i % 3 == 0 ? "Fantasy" : i % 3 == 1 ? "Sci-fi" : "Román")</p>
+                           <p class="mb-2"><strong>Počet stran:</strong> @(250 + i * 10)</p>
+                       </div>
+                       <div class="col-md-6">
+                           <p class="mb-0"><strong>Popis:</strong>Ukázkový popis knihy číslo @i, maturitní literatura.</p>
+                       </div>
+                   </div>
+               </div>
+           </details>
         }
     </div>
 </div>

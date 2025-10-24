@@ -4,7 +4,6 @@ using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
 using Bookong.Infrastructure.Services;
 using Bookong.Web.Components;
-using Bookong.Web.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,9 +15,6 @@ builder.Services.AddDbContext<BookongDbContext>(options =>
 // Unit of Work a Queries
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IGetAvailableBooksQuery, GetAvailableBooksQuery>();
-
-// Singleton pro uchování knih pro maturitu
-builder.Services.AddSingleton<MaturitaService>();
 
 // Blazor komponenty
 builder.Services.AddRazorComponents()
