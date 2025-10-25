@@ -10,6 +10,41 @@
 <div class="container my-4">
     <h1 class="display-6 fw-semibold mb-4">Seznam knih</h1>
 
+    <!-- Filtr -->
+    <div class="row mb-3">
+        <div class="col-12 col-md-11 col-lg-9">
+            <div class="d-flex align-items-center gap-2">
+                <input class="form-control rounded-pill ps-4 flex-grow-1"
+                       style="height: 3rem; border-color: #0a4db8; max-width: 600px;"
+                       placeholder="Hledejte knihy podle názvu..."
+                       @bind="searchText" @bind:event="oninput" />
+
+                <select class="form-select rounded-pill ms-2"
+                        style="height: 3rem; min-width: 180px; border-color: #0a4db8;"
+                        @bind="selectedAuthor" @bind:event="onchange">
+                    <option value="">Autor</option>
+                    @foreach (var a in authors)
+                    {
+                        <option value="@a">@a</option>
+                    }
+                </select>
+
+
+                <select class="form-select rounded-pill ms-2"
+                        style="height: 3rem; min-width: 160px; border-color: #0a4db8;"
+                        @bind="selectedType" @bind:event="onchange">
+                    <option value="">Typ</option>
+                    @foreach (var t in types)
+                    {
+                        <option value="@t">@t</option>
+                    }
+                </select>
+
+                <button class="btn btn-outline-secondary rounded-pill ms-2" style="height: 3rem;" @onclick="ResetFilters">Reset</button>
+            </div>
+        </div>
+    </div>
+
     @if (items is null)
     {
         <div class="d-flex align-items-center gap-2 text-muted">
@@ -17,7 +52,7 @@
             <span>Načítání…</span>
         </div>
     }
-    else if (items.Count == 0)
+    else if (filteredItems == null || filteredItems.Count == 0)
     {
         <p class="text-muted">Žádné knihy k zobrazení.</p>
     }
@@ -36,7 +71,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var book in items)
+                        @foreach (var book in filteredItems)
                         {
                             var bookId = book.PublicId;
                             <tr>
@@ -54,7 +89,7 @@
                                             @if (isProcessing && processingBookId == bookId)
                                             {
                                                 <span class="spinner-border spinner-border-sm" role="status"></span>
-                                                <span>Přidávám...</span>
+                                                <span class="ms-1">Přidávám...</span>
                                             }
                                             else
                                             {
@@ -74,8 +109,49 @@
 
 @code {
     private List<BookListItemDto>? items;
+    private List<BookListItemDto> filteredItems = new();
     private bool isProcessing;
     private Guid processingBookId;
+
+    // filters
+    private string _searchText = "";
+    private string searchText
+    {
+        get => _searchText;
+        set
+        {
+            if (_searchText == value) return;
+            _searchText = value;
+            ApplyFilters();
+        }
+    }
+
+    private List<string> authors = new();
+    private List<string> types = new();
+
+    private string? _selectedAuthor;
+    private string? selectedAuthor
+    {
+        get => _selectedAuthor;
+        set
+        {
+            if (_selectedAuthor == value) return;
+            _selectedAuthor = value;
+            ApplyFilters();
+        }
+    }
+
+    private string? _selectedType;
+    private string? selectedType
+    {
+        get => _selectedType;
+        set
+        {
+            if (_selectedType == value) return;
+            _selectedType = value;
+            ApplyFilters();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -83,7 +159,24 @@
         {
             Logger.LogInformation("Loading books...");
             items = (await GetAvailableBooks.ExecuteAsync()).ToList();
+
+            // derive authors and types from available books (only actual values)
+            authors = items
+                .Where(b => !string.IsNullOrWhiteSpace(b.AuthorFullName))
+                .Select(b => b.AuthorFullName!.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(a => a)
+                .ToList();
+
+            types = items
+                .Where(b => !string.IsNullOrWhiteSpace(b.Kind))
+                .Select(b => b.Kind!.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(t => t)
+                .ToList();
+
             Logger.LogInformation($"Loaded {items.Count} books");
+            ApplyFilters();
         }
         catch (Exception ex)
         {
@@ -104,7 +197,7 @@
 
             await AddToMaturitaSelection.ExecuteAsync(bookId);
             Logger.LogInformation($"Book {bookId} added to selection successfully");
-            
+
             NavigationManager.NavigateTo("/maturita", true);
         }
         catch (Exception ex)
@@ -116,5 +209,40 @@
             isProcessing = false;
             StateHasChanged();
         }
+    }
+
+    private void ResetFilters()
+    {
+        searchText = "";
+        selectedAuthor = null;
+        selectedType = null;
+        ApplyFilters();
+        StateHasChanged();
+    }
+
+    private void ApplyFilters()
+    {
+        if (items == null)
+        {
+            filteredItems = new();
+            return;
+        }
+
+        var q = items.AsEnumerable();
+
+        // search by title starting from the beginning
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            var s = searchText.Trim();
+            q = q.Where(b => !string.IsNullOrWhiteSpace(b.Title) && b.Title.StartsWith(s, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedAuthor))
+            q = q.Where(b => string.Equals(b.AuthorFullName, selectedAuthor, StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(selectedType))
+            q = q.Where(b => string.Equals(b.Kind, selectedType, StringComparison.OrdinalIgnoreCase));
+
+        filteredItems = q.ToList();
     }
 }
