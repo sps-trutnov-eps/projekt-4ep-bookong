@@ -1,220 +1,243 @@
 ﻿@page "/maturita"
 @using Bookong.Application.UseCases.Queries.Interfaces
+@using Bookong.Application.UseCases.Commands.Interfaces
 @using Bookong.Application.DTOs
 @inject IGetMaturitaBookSelectionQuery GetMaturitaBookSelection
+@inject IRemoveBookFromMaturitaSelectionCommand RemoveBookCommand
 @inject ILogger<Maturita> Logger
 
 <div class="container my-4">
-    <h1 class="display-6 fw-semibold mb-4">Maturitní seznam</h1>
+ <h1 class="display-6 fw-semibold mb-4">Maturitní seznam</h1>
 
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @errorMessage
-            <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
-        </div>
-    }
+ @if (!string.IsNullOrEmpty(errorMessage))
+ {
+ <div class="alert alert-danger alert-dismissible fade show" role="alert">
+ @errorMessage
+ <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+ </div>
+ }
 
-    <!-- Filtr - prodloužený search bar -->
-    <div class="row mb-3">
-        <div class="col-12 col-md-11 col-lg-9">
-            <div class="d-flex align-items-center gap-2">
-                <input class="form-control rounded-pill ps-4 flex-grow-1"
-                       style="height: 3rem; border-color: #0a4db8; max-width: 600px;"
-                       placeholder="Hledejte knihy podle názvu..."
-                       @bind="searchText" @bind:event="oninput" />
+ <!-- Filtr -->
+ <div class="row mb-3">
+ <div class="col-12 col-md-11 col-lg-9">
+ <div class="d-flex align-items-center gap-2">
+ <input class="form-control rounded-pill ps-4 flex-grow-1"
+ style="height:3rem; border-color: #0a4db8; max-width:600px;"
+ placeholder="Hledejte knihy podle názvu..."
+ @bind="searchText" @bind:event="oninput" />
 
-                <select class="form-select rounded-pill ms-2"
-                        style="height: 3rem; min-width: 180px; border-color: #0a4db8;"
-                        @bind="selectedAuthor" @bind:event="onchange">
-                    <option value="">Autor</option>
-                    @foreach (var a in authors)
-                    {
-                        <option value="@a">@a</option>
-                    }
-                </select>
+ <select class="form-select rounded-pill ms-2"
+ style="height:3rem; min-width:180px; border-color: #0a4db8;"
+ @bind="selectedAuthor" @bind:event="onchange">
+ <option value="">Autor</option>
+ @foreach (var a in authors)
+ {
+ <option value="@a">@a</option>
+ }
+ </select>
 
+ <select class="form-select rounded-pill ms-2"
+ style="height:3rem; min-width:180px; border-color: #0a4db8;"
+ @bind="selectedType" @bind:event="onchange">
+ <option value="">Typ</option>
+ @foreach (var t in types)
+ {
+ <option value="@t">@t</option>
+ }
+ </select>
 
-                <select class="form-select rounded-pill ms-2"
-                        style="height: 3.2rem; min-width: 180px; border-color: #0a4db8;"
-                        @bind="selectedType" @bind:event="onchange">
-                    <option value="">Typ</option>
-                    @foreach (var t in types)
-                    {
-                        <option value="@t">@t</option>
-                    }
-                </select>
+ <button class="btn btn-outline-secondary rounded-pill ms-2"
+ style="height:3rem;"
+ @onclick="ResetFilters">
+ Reset
+ </button>
+ </div>
+ </div>
+ </div>
 
-                <button class="btn btn-outline-secondary rounded-pill ms-2" style="height: 3.2rem;" @onclick="ResetFilters">Reset</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Seznam jako tabulka ohraničená stejně jako v Books.razor -->
-    @if (isLoading)
-    {
-        <div class="d-flex justify-content-center">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Načítání...</span>
-            </div>
-        </div>
-    }
-    else if (filteredBooks == null || !filteredBooks.Any())
-    {
-        <div class="text-center">
-            <p class="text-muted mb-3">Zatím nemáte vybrané žádné knihy k maturitě.</p>
-            <a href="/books" class="btn btn-primary">Přejít na výběr knih</a>
-        </div>
-    }
-    else
-    {
-        <div class="border rounded-3 shadow-sm bg-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width:4%">#</th>
-                            <th>Název</th>
-                            <th class="d-none d-md-table-cell">Autor</th>
-                            <th class="d-none d-lg-table-cell">Žánr</th>
-                            <th class="d-none d-xl-table-cell">Typ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @for (int i = 0; i < filteredBooks.Count; i++)
-                        {
-                            var book = filteredBooks[i];
-                            <tr>
-                                <td>@(i + 1)</td>
-                                <td class="fw-medium">@book.Title</td>
-                                <td class="d-none d-md-table-cell">@book.AuthorFullName</td>
-                                <td class="d-none d-lg-table-cell">@book.Genre</td>
-                                <td class="d-none d-xl-table-cell">@book.Kind</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    }
+ <!-- Tabulka knih -->
+ @if (isLoading)
+ {
+ <div class="d-flex justify-content-center">
+ <div class="spinner-border text-primary" role="status">
+ <span class="visually-hidden">Načítání...</span>
+ </div>
+ </div>
+ }
+ else if (filteredBooks == null || !filteredBooks.Any())
+ {
+ <div class="text-center">
+ <p class="text-muted mb-3">Zatím nemáte vybrané žádné knihy k maturitě.</p>
+ <a href="/books" class="btn btn-primary">Přejít na výběr knih</a>
+ </div>
+ }
+ else
+ {
+ <div class="border rounded-3 shadow-sm bg-body">
+ <div class="table-responsive">
+ <table class="table table-striped table-hover align-middle mb-0">
+ <thead class="table-light">
+ <tr>
+ <th style="width:4%">#</th>
+ <th>Název</th>
+ <th class="d-none d-md-table-cell">Autor</th>
+ <th class="d-none d-lg-table-cell">Žánr</th>
+ <th class="d-none d-xl-table-cell">Typ</th>
+ <th class="text-end">Akce</th>
+ </tr>
+ </thead>
+ <tbody>
+ @for (int i =0; i < filteredBooks.Count; i++)
+ {
+ var book = filteredBooks[i];
+ <tr>
+ <td>@(i +1)</td>
+ <td class="fw-medium">@book.Title</td>
+ <td class="d-none d-md-table-cell">@book.AuthorFullName</td>
+ <td class="d-none d-lg-table-cell">@book.Genre</td>
+ <td class="d-none d-xl-table-cell">@book.Kind</td>
+ <td class="text-end">
+ <button class="btn btn-sm btn-outline-danger"
+ @onclick="() => OnRemoveBook(book.PublicId)">
+ Odstranit
+ </button>
+ </td>
+ </tr>
+ }
+ </tbody>
+ </table>
+ </div>
+ </div>
+ }
 </div>
 
 @code {
-    private List<BookListItemDto>? allBooks;
-    private List<BookListItemDto> filteredBooks = new();
-    private bool isLoading = true;
-    private string? errorMessage;
+ private List<BookListItemDto>? allBooks;
+ private List<BookListItemDto> filteredBooks = new();
+ private bool isLoading = true;
+ private string? errorMessage;
 
-    // filters
-    private string _searchText = "";
-    private string searchText
-    {
-        get => _searchText;
-        set
-        {
-            if (_searchText == value) return;
-            _searchText = value;
-            ApplyFilters();
-        }
-    }
+ private string _searchText = "";
+ private string searchText
+ {
+ get => _searchText;
+ set
+ {
+ if (_searchText == value) return;
+ _searchText = value;
+ ApplyFilters();
+ }
+ }
 
-    private List<string> authors = new();
-    private List<string> types = new();
-    private string? _selectedAuthor;
-    private string? selectedAuthor
-    {
-        get => _selectedAuthor;
-        set
-        {
-            if (_selectedAuthor == value) return;
-            _selectedAuthor = value;
-            ApplyFilters();
-        }
-    }
+ private List<string> authors = new();
+ private List<string> types = new();
+ private string? _selectedAuthor;
+ private string? selectedAuthor
+ {
+ get => _selectedAuthor;
+ set
+ {
+ if (_selectedAuthor == value) return;
+ _selectedAuthor = value;
+ ApplyFilters();
+ }
+ }
 
-    private string? _selectedType;
-    private string? selectedType
-    {
-        get => _selectedType;
-        set
-        {
-            if (_selectedType == value) return;
-            _selectedType = value;
-            ApplyFilters();
-        }
-    }
+ private string? _selectedType;
+ private string? selectedType
+ {
+ get => _selectedType;
+ set
+ {
+ if (_selectedType == value) return;
+ _selectedType = value;
+ ApplyFilters();
+ }
+ }
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            isLoading = true;
+ protected override async Task OnInitializedAsync()
+ {
+ try
+ {
+ isLoading = true;
 
-            // načti maturitní výběr
-            allBooks = (await GetMaturitaBookSelection.ExecuteAsync()).ToList();
+ allBooks = (await GetMaturitaBookSelection.ExecuteAsync()).ToList();
 
-            // derive authors/types from maturita selection
-            authors = allBooks
-                .Select(b => (b.AuthorFullName ?? string.Empty).Trim())
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(a => a)
-                .ToList();
+ authors = allBooks
+ .Select(b => (b.AuthorFullName ?? string.Empty).Trim())
+ .Where(s => !string.IsNullOrWhiteSpace(s))
+ .Distinct(StringComparer.OrdinalIgnoreCase)
+ .OrderBy(a => a)
+ .ToList();
 
-            types = allBooks
-                .Select(b => (b.Kind ?? string.Empty).Trim())
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(t => t)
-                .ToList();
+ types = allBooks
+ .Select(b => (b.Kind ?? string.Empty).Trim())
+ .Where(s => !string.IsNullOrWhiteSpace(s))
+ .Distinct(StringComparer.OrdinalIgnoreCase)
+ .OrderBy(t => t)
+ .ToList();
 
-            ApplyFilters();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error loading maturita book selection");
-            errorMessage = "Nepodařilo se načíst seznam vybraných knih. Zkuste to prosím později.";
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
+ ApplyFilters();
+ }
+ catch (Exception ex)
+ {
+ Logger.LogError(ex, "Error loading maturita book selection");
+ errorMessage = "Nepodařilo se načíst seznam vybraných knih.";
+ }
+ finally
+ {
+ isLoading = false;
+ }
+ }
 
-    private void ResetFilters()
-    {
-        searchText = "";
-        selectedAuthor = null;
-        selectedType = null;
-        ApplyFilters();
-        StateHasChanged();
-    }
+ private void ResetFilters()
+ {
+ searchText = "";
+ selectedAuthor = null;
+ selectedType = null;
+ ApplyFilters();
+ StateHasChanged();
+ }
 
-    private void ApplyFilters()
-    {
-        if (allBooks == null)
-        {
-            filteredBooks = new();
-            StateHasChanged();
-            return;
-        }
+ private void ApplyFilters()
+ {
+ if (allBooks == null)
+ {
+ filteredBooks = new();
+ return;
+ }
 
-        var q = allBooks.AsEnumerable();
+ var q = allBooks.AsEnumerable();
 
-        // search only by title starting from the beginning
-        if (!string.IsNullOrWhiteSpace(searchText))
-        {
-            var s = searchText.Trim();
-            q = q.Where(b => !string.IsNullOrWhiteSpace(b.Title) && b.Title.StartsWith(s, StringComparison.OrdinalIgnoreCase));
-        }
+ if (!string.IsNullOrWhiteSpace(searchText))
+ {
+ var s = searchText.Trim();
+ q = q.Where(b => !string.IsNullOrWhiteSpace(b.Title) &&
+ b.Title.StartsWith(s, StringComparison.OrdinalIgnoreCase));
+ }
 
-        if (!string.IsNullOrWhiteSpace(selectedAuthor))
-            q = q.Where(b => string.Equals(b.AuthorFullName, selectedAuthor, StringComparison.OrdinalIgnoreCase));
+ if (!string.IsNullOrWhiteSpace(selectedAuthor))
+ q = q.Where(b => string.Equals(b.AuthorFullName, selectedAuthor, StringComparison.OrdinalIgnoreCase));
 
-        if (!string.IsNullOrWhiteSpace(selectedType))
-            q = q.Where(b => string.Equals(b.Kind, selectedType, StringComparison.OrdinalIgnoreCase));
+ if (!string.IsNullOrWhiteSpace(selectedType))
+ q = q.Where(b => string.Equals(b.Kind, selectedType, StringComparison.OrdinalIgnoreCase));
 
-        filteredBooks = q.ToList();
-        StateHasChanged();
-    }
+ filteredBooks = q.ToList();
+ StateHasChanged();
+ }
+
+ private async Task OnRemoveBook(Guid bookId)
+ {
+ try
+ {
+ await RemoveBookCommand.ExecuteAsync(bookId);
+ allBooks = allBooks?.Where(b => b.PublicId != bookId).ToList();
+ ApplyFilters();
+ }
+ catch (Exception ex)
+ {
+ Logger.LogError(ex, "Chyba při odstraňování knihy");
+ errorMessage = "Knihu se nepodařilo odstranit.";
+ }
+ }
 }

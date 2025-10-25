@@ -23,6 +23,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IGetAvailableBooksQuery, GetAvailableBooksQuery>();
 builder.Services.AddScoped<IAddBookToMaturitaSelectionCommand, AddBookToMaturitaSelectionCommand>();
 builder.Services.AddScoped<IGetMaturitaBookSelectionQuery, GetMaturitaBookSelectionQuery>();
+builder.Services.AddScoped<IRemoveBookFromMaturitaSelectionCommand, RemoveBookFromMaturitaSelectionCommand>();
 
 // Blazor komponenty
 builder.Services.AddRazorComponents()
