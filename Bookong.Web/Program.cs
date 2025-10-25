@@ -1,15 +1,20 @@
 using Bookong.Infrastructure.Data;
 using Bookong.Web.Components;
 using Microsoft.EntityFrameworkCore;
+using Bookong.Application.UseCases;
+using Bookong.Application.UseCases.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<BookongDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add services to the container.
+
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+
+builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
 
 var app = builder.Build();
 

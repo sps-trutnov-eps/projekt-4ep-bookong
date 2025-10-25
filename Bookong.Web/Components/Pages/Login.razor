@@ -1,31 +1,36 @@
 ﻿@page "/login"
+@rendermode InteractiveServer
 
 @using System.ComponentModel.DataAnnotations
+@using Bookong.Application.DTOs
+@inject Bookong.Application.UseCases.Interfaces.ILoginUserUseCase LoginUserUseCase
 
 <div class="login-wrapper d-flex flex-column align-items-center justify-content-center text-center">
 
    <div class="card shadow-sm p-4 login-card">
-        <h3 class="mb-4">Přihlášení do systému</h3>
+   <h3 class="mb-4">Přihlášení do systému</h3>
 
-        <EditForm Model="loginModel" OnValidSubmit="LoginUserAsync">
-            @if (showError)
-            {
-                <div class="alert alert-danger" role="alert">
-                    Neplatné přihlašovací údaje. Zkuste to prosím znovu.
-                </div>
-            }
+      <EditForm Model="loginModel" OnValidSubmit="LoginUserAsync">
+       <DataAnnotationsValidator />
+  
+  @if (!string.IsNullOrEmpty(debugMessage))
+     {
+      <div class="alert alert-info" role="alert">
+            @debugMessage
+        </div>
+     }
 
-            <div class="mb-3 text-start">
-                <label class="form-label">Uživatelské jméno</label>
-                <InputText @bind-Value="loginModel.Username" class="form-control" />
-                <ValidationMessage For="@(() => loginModel.Username)" />
+    <div class="mb-3 text-start">
+      <label class="form-label">Uživatelské jméno</label>
+    <InputText @bind-Value="loginModel.Username" class="form-control" />
+     <ValidationMessage For="@(() => loginModel.Username)" />
             </div>
 
-            <div class="mb-3 text-start">
-                <label class="form-label">Heslo</label>
-                <InputText @bind-Value="loginModel.Password" class="form-control" type="password" />
-                <ValidationMessage For="@(() => loginModel.Password)" />
-            </div>
+  <div class="mb-3 text-start">
+          <label class="form-label">Heslo</label>
+    <InputText @bind-Value="loginModel.Password" class="form-control" type="password" />
+            <ValidationMessage For="@(() => loginModel.Password)" />
+      </div>
 
             <button type="submit" class="btn btn-primary w-100">Přihlásit se</button>
         </EditForm>
@@ -34,15 +39,24 @@
 
 @code {
     private LoginModel loginModel { get; set; } = new();
-    private bool showError = false;
+    private string? debugMessage;
 
     private async Task LoginUserAsync()
     {
-        // TODO: AD authentication
-        // bool isValid = await authService.LoginAsync(loginModel.Username, loginModel.Password);
-        // if (!isValid) { showError = true; return; }
+        // Create request with user credentials
+        var request = new LoginUserRequest
+   {
+         Email = loginModel.Username,
+   Password = loginModel.Password
+        };
 
-        showError = false;
+        // Execute use case - credentials will be stored in LoginUserUseCase.StoredEmail and LoginUserUseCase.StoredPassword
+        var response = await LoginUserUseCase.ExecuteAsync(request);
+    
+        // Show debug message
+        debugMessage = response.Message;
+        
+        // You can now inspect LoginUserUseCase.StoredEmail and LoginUserUseCase.StoredPassword in debugger
     }
 
     public class LoginModel
