@@ -1,7 +1,10 @@
 ﻿@using Bookong.Web.Components.Layout
+@using Bookong.Application.UseCases.Queries.Interfaces
+@using Bookong.Application.DTOs
 @page "/statistics"
 @layout MainLayout
 @inject IJSRuntime JS
+@inject IGetLibraryStatisticsQuery LibraryStatsQuery
 
 <!-- Hero Section with white background -->
 <div class="bg-white pb-5" style="min-height: 80vh;">
@@ -14,86 +17,146 @@
             Přehled čtenářů, výpůjček a oblíbených knih
         </p>
 
-        <!-- Statistické karty -->
-        <div class="row g-4 justify-content-center mb-5">
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
-                    <div class="card-body d-flex flex-column align-items-center p-4">
-                        <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
-                             style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                <path d="M10 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
-                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-7 7 7 7 0 0 0 14 0A7 7 0 0 0 8 1z" />
-                            </svg>
+        @if (isLoading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Načítání...</span>
+                </div>
+            </div>
+        }
+        else if (stats != null)
+        {
+            <!-- Statistické karty -->
+            <div class="row g-4 justify-content-center mb-5">
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
+                        <div class="card-body d-flex flex-column align-items-center p-4">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
+                                 style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M10 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
+                                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-7 7 7 7 0 0 0 14 0A7 7 0 0 0 8 1z" />
+                                </svg>
+                            </div>
+                            <h3 class="card-title h6 fw-bold mb-2 text-primary">Počet čtenářů</h3>
+                            <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">@stats.TotalUsers</p>
                         </div>
-                        <h3 class="card-title h6 fw-bold mb-2 text-primary">Počet čtenářů</h3>
-                        <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">312</p>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
+                        <div class="card-body d-flex flex-column align-items-center p-4">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
+                                 style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828z" />
+                                    <path d="M8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
+                                </svg>
+                            </div>
+                            <h3 class="card-title h6 fw-bold mb-2 text-primary">Aktivní výpůjčky</h3>
+                            <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">@stats.ActiveLoans</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
+                        <div class="card-body d-flex flex-column align-items-center p-4">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
+                                 style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828z" />
+                                    <path d="M8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
+                                </svg>
+                            </div>
+                            <h3 class="card-title h6 fw-bold mb-2 text-primary">Knih v knihovně</h3>
+                            <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">@stats.TotalBooksInLibrary</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
-                    <div class="card-body d-flex flex-column align-items-center p-4">
-                        <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
-                             style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828z" />
-                                <path d="M8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
-                            </svg>
+            <!-- Sekce Top 5 knih za poslední měsíc -->
+            <div class="row justify-content-center g-4 mb-4">
+                <div class="col-lg-6 col-md-10">
+                    <div class="card shadow-lg border-0 p-4">
+                        <h5 class="fw-bold text-primary mb-4 text-center">
+                            Top 5 knih za poslední měsíc
+                        </h5>
+
+                        @if (stats.TopBooksLastMonth.Any())
+                        {
+                            <!-- Tabulka -->
+                            <table class="table table-striped mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 10%;">#</th>
+                                        <th style="width: 50%;">Kniha</th>
+                                        <th style="width: 25%;">Autor</th>
+                                        <th style="width: 15%;" class="text-center">Výpůjčky</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < stats.TopBooksLastMonth.Count; i++)
+                                    {
+                                        var book = stats.TopBooksLastMonth[i];
+                                        <tr>
+                                            <td class="text-center fw-bold">@(i + 1)</td>
+                                            <td>@book.BookTitle</td>
+                                            <td class="text-muted small">@book.AuthorName</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">@book.LoanCount</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <p class="text-center text-muted">Žádné výpůjčky za poslední měsíc</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-md-10">
+                    <div class="card shadow-lg border-0 p-4">
+                        <h5 class="fw-bold text-primary mb-4 text-center">
+                            Další statistiky
+                        </h5>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                    <span class="fw-semibold">Nejoblíbenější kniha</span>
+                                    <span class="text-muted">@(string.IsNullOrEmpty(stats.MostPopularBook) ? "—" : stats.MostPopularBook)</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                    <span class="fw-semibold">Nejoblíbenější autor</span>
+                                    <span class="text-muted">@(string.IsNullOrEmpty(stats.MostPopularAuthor) ? "—" : stats.MostPopularAuthor)</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                    <span class="fw-semibold">Nejoblíbenější žánr</span>
+                                    <span class="text-muted">@(string.IsNullOrEmpty(stats.MostPopularGenre) ? "—" : stats.MostPopularGenre)</span>
+                                </div>
+                            </div>
                         </div>
-                        <h3 class="card-title h6 fw-bold mb-2 text-primary">Aktivní výpůjčky</h3>
-                        <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">148</p>
                     </div>
                 </div>
             </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
-                    <div class="card-body d-flex flex-column align-items-center p-4">
-                        <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
-                             style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.32-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.63.282.95l-3.523 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
-                            </svg>
-                        </div>
-                        <h3 class="card-title h6 fw-bold mb-2 text-primary">Nejoblíbenější kniha</h3>
-                        <p class="card-text flex-grow-1 mb-0 text-muted small fw-semibold">Harry Potter a Ohnivý pohár</p>
-                    </div>
-                </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                Nepodařilo se načíst statistiky.
             </div>
-        </div>
-
-        <!-- Sekce Top 5 žánrů za poslední měsíc -->
-        <div class="row justify-content-center g-4">
-            <div class="col-lg-8 col-md-10">
-                <div class="card shadow-lg border-0 p-4">
-                    <h5 class="fw-bold text-primary mb-4 text-center">
-                        Top 5 žánrů za poslední měsíc
-                    </h5>
-
-                    <!-- Tabulka -->
-                    <table class="table table-striped mb-0 text-center align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Žánr</th>
-                                <th>Počet výpůjček</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td>1</td><td>Fantasy</td><td>62</td></tr>
-                            <tr><td>2</td><td>Detektivka</td><td>48</td></tr>
-                            <tr><td>3</td><td>Román</td><td>37</td></tr>
-                            <tr><td>4</td><td>Dobrodružství</td><td>31</td></tr>
-                            <tr><td>5</td><td>Science fiction</td><td>27</td></tr>
-                        </tbody>
-                    </table>
-
-                    <!-- Rezervované místo pro graf -->
-                </div>
-            </div>
-        </div>
+        }
     </div>
 </div>
 
@@ -108,3 +171,24 @@
         <path d="M0,0 C400,60 800,0 1200,60 L1200,120 L0,120 Z" fill="#083d96"></path>
     </svg>
 </div>
+
+@code {
+    private LibraryStatisticsDto? stats;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            stats = await LibraryStatsQuery.ExecuteAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading statistics: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

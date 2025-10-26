@@ -16,6 +16,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Application UseCases, Queries
 builder.Services.AddScoped<IGetAvailableBooksQuery, GetAvailableBooksQuery>();
+builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
