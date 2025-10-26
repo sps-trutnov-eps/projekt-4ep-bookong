@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Flexinets.Radius.RadiusClient" Version="3.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Bookong.Domain\Bookong.Domain.csproj" />
   </ItemGroup>
 
