@@ -1,6 +1,17 @@
 ﻿@page "/"
+@inject Bookong.Application.Services.Interfaces.ISessionService SessionService
 
 <PageTitle>Home</PageTitle>
 <h1>Hello, world!</h1>
 <NavLink href="/portalpage">přesměrování na hp</NavLink>
 <p>Welcome to your new app.</p>
+<p>Active user id: @userId</p>
+
+@code {
+    private string? userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        userId = await SessionService.GetAsync("CurrentUserPublicId");
+    }
+}
