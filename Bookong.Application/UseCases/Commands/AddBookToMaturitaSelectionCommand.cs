@@ -3,20 +3,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using Bookong.Application.UseCases.Commands.Interfaces;
 using Bookong.Domain.Entities;
-using Bookong.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using Bookong.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace Bookong.Application.UseCases.Commands
 {
     public class AddBookToMaturitaSelectionCommand : IAddBookToMaturitaSelectionCommand
     {
-        private readonly BookongDbContext _dbContext;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AddBookToMaturitaSelectionCommand> _logger;
 
-        public AddBookToMaturitaSelectionCommand(BookongDbContext dbContext, ILogger<AddBookToMaturitaSelectionCommand> logger)
+        public AddBookToMaturitaSelectionCommand(IUnitOfWork unitOfWork, ILogger<AddBookToMaturitaSelectionCommand> logger)
         {
-            _dbContext = dbContext;
+            _unitOfWork = unitOfWork;
             _logger = logger;
         }
 
@@ -25,30 +24,31 @@ namespace Bookong.Application.UseCases.Commands
             try
             {
                 // Get the first user from seeded data
-                var user = await _dbContext.Users.FirstOrDefaultAsync()
+                var users = await _unitOfWork.Users.GetAllAsync();
+                var user = users.FirstOrDefault()
                     ?? throw new InvalidOperationException("No users found in database. Please run seed data first.");
 
                 // Get the book by its public ID
-                var book = await _dbContext.Books.FirstOrDefaultAsync(b => b.PublicId == bookPublicId)
+                var book = await _unitOfWork.Books.GetByPublicIdAsync(bookPublicId)
                     ?? throw new ArgumentException($"Book with PublicId {bookPublicId} not found", nameof(bookPublicId));
 
                 // Check if the book is already in the selection
-                var exists = await _dbContext.MaturitaBookSelections
-                    .AnyAsync(m => m.BookId == book.Id && m.UserId == user.Id);
+                var allSelections = await _unitOfWork.MaturitaBookSelections.GetAllAsync();
+                var exists = allSelections.Any(m => m.BookId == book.Id && m.UserId == user.Id);
 
                 if (!exists)
                 {
                     _logger.LogInformation("Adding book {BookId} to maturita selection for user {UserId}", book.Id, user.Id);
-                    
+
                     var selection = new MaturitaBookSelection
                     {
                         BookId = book.Id,
                         UserId = user.Id
                     };
 
-                    _dbContext.MaturitaBookSelections.Add(selection);
-                    await _dbContext.SaveChangesAsync();
-                    
+                    _unitOfWork.MaturitaBookSelections.Add(selection);
+                    await _unitOfWork.CommitAsync();
+
                     _logger.LogInformation("Book {BookId} successfully added to maturita selection for user {UserId}", book.Id, user.Id);
                 }
                 else

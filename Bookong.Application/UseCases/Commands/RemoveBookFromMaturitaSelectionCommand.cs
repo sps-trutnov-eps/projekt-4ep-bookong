@@ -1,22 +1,22 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Bookong.Application.UseCases.Commands.Interfaces;
-using Bookong.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using Bookong.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace Bookong.Application.UseCases.Commands
 {
     public class RemoveBookFromMaturitaSelectionCommand : IRemoveBookFromMaturitaSelectionCommand
     {
-        private readonly BookongDbContext _dbContext;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<RemoveBookFromMaturitaSelectionCommand> _logger;
 
         public RemoveBookFromMaturitaSelectionCommand(
-            BookongDbContext dbContext,
+            IUnitOfWork unitOfWork,
             ILogger<RemoveBookFromMaturitaSelectionCommand> logger)
         {
-            _dbContext = dbContext;
+            _unitOfWork = unitOfWork;
             _logger = logger;
         }
 
@@ -24,19 +24,24 @@ namespace Bookong.Application.UseCases.Commands
         {
             try
             {
-                var user = await _dbContext.Users.FirstOrDefaultAsync()
+                // Získáme prvního uživatele ze seedovaných dat přes repository
+                var users = await _unitOfWork.Users.GetAllAsync();
+                var user = users.FirstOrDefault()
                     ?? throw new InvalidOperationException("No users found in database.");
 
-                var book = await _dbContext.Books.FirstOrDefaultAsync(b => b.PublicId == bookPublicId)
-                    ?? throw new ArgumentException($"Book with PublicId {bookPublicId} not found.");
+                // Získáme knihu podle publicId přes repository
+                var book = await _unitOfWork.Books.GetByPublicIdAsync(bookPublicId)
+                    ?? throw new ArgumentException($"Book with PublicId {bookPublicId} not found.", nameof(bookPublicId));
 
-                var selection = await _dbContext.MaturitaBookSelections
-                    .FirstOrDefaultAsync(m => m.BookId == book.Id && m.UserId == user.Id);
+                // Najdeme odpovídající výběr
+                var selections = await _unitOfWork.MaturitaBookSelections.GetAllAsync();
+                var selection = selections.FirstOrDefault(m => m.BookId == book.Id && m.UserId == user.Id);
 
                 if (selection != null)
                 {
-                    _dbContext.MaturitaBookSelections.Remove(selection);
-                    await _dbContext.SaveChangesAsync();
+                    _unitOfWork.MaturitaBookSelections.Delete(selection);
+                    await _unitOfWork.CommitAsync();
+
                     _logger.LogInformation("Removed book {BookId} from maturita selection for user {UserId}", book.Id, user.Id);
                 }
                 else
