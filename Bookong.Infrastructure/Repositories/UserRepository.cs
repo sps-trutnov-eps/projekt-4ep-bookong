@@ -2,6 +2,7 @@
 using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bookong.Infrastructure.Repositories
 {
@@ -52,6 +53,12 @@ namespace Bookong.Infrastructure.Repositories
         public void Update(User user)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<int?> CountAsync()
+        {
+            var count = await _context.Users.CountAsync();
+            return count;
         }
     }
 }

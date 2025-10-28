@@ -1,5 +1,6 @@
 using Bookong.Application.DTOs;
 using Bookong.Application.UseCases.Queries.Interfaces;
+using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,46 +8,43 @@ namespace Bookong.Application.UseCases.Queries
 {
     public class GetLibraryStatisticsQuery : IGetLibraryStatisticsQuery
     {
-        private readonly BookongDbContext _dbContext;
+        private readonly IUnitOfWork _uow;
 
-        public GetLibraryStatisticsQuery(BookongDbContext dbContext)
+        public GetLibraryStatisticsQuery(IUnitOfWork uow)
         {
-            _dbContext = dbContext;
+            _uow = uow;
         }
 
         public async Task<LibraryStatisticsDto> ExecuteAsync()
         {
-            var totalUsers = await _dbContext.Users.CountAsync();
-            var totalBooksInLibrary = await _dbContext.Books.CountAsync();
+            var totalUsersNullable = await _uow.Users.CountAsync();
+            var totalUsers = totalUsersNullable ?? 0;
+
+            var totalBooksInLibrary = await _uow.Books.CountAsync();
 
             // Load all book loans with related data eagerly
-            var bookLoans = await _dbContext.BookLoans
-                .Include(bl => bl.Book)
-                    .ThenInclude(b => b.Genre)
-                .Include(bl => bl.Book)
-                    .ThenInclude(b => b.Author)
-                .ToListAsync();
+            var bookLoans = (await _uow.BookLoans.GetAllAsync()).ToList();
 
             var activeLoans = bookLoans.Count(bl => bl.ReturnDate == null);
             var totalLoansAllTime = bookLoans.Count;
 
             // Most popular book (most borrowed)
             var mostPopularBookGroup = bookLoans
-                .GroupBy(bl => bl.Book.Name)
+                .GroupBy(bl => bl.Book?.Name)
                 .OrderByDescending(g => g.Count())
                 .FirstOrDefault();
             var mostPopularBook = mostPopularBookGroup?.Key;
 
             // Most popular author
             var mostPopularAuthorGroup = bookLoans
-                .GroupBy(bl => $"{bl.Book.Author.FirstName} {bl.Book.Author.LastName}")
+                .GroupBy(bl => $"{bl.Book?.Author?.FirstName} {bl.Book?.Author?.LastName}")
                 .OrderByDescending(g => g.Count())
                 .FirstOrDefault();
             var mostPopularAuthor = mostPopularAuthorGroup?.Key;
 
             // Most popular genre
             var mostPopularGenreGroup = bookLoans
-                .GroupBy(bl => bl.Book.Genre.Name)
+                .GroupBy(bl => bl.Book?.Genre?.Name)
                 .OrderByDescending(g => g.Count())
                 .FirstOrDefault();
             var mostPopularGenre = mostPopularGenreGroup?.Key;
@@ -55,7 +53,7 @@ namespace Bookong.Application.UseCases.Queries
             var oneMonthAgo = DateTime.UtcNow.AddMonths(-1);
             var topBooksLastMonth = bookLoans
                 .Where(bl => bl.LoanDate >= oneMonthAgo)
-                .GroupBy(bl => new { bl.Book.Name, AuthorName = $"{bl.Book.Author.FirstName} {bl.Book.Author.LastName}" })
+                .GroupBy(bl => new { bl.Book?.Name, AuthorName = $"{bl.Book?.Author?.FirstName} {bl.Book?.Author?.LastName}" })
                 .Select(g => new BookStatDto
                 {
                     BookTitle = g.Key.Name,
