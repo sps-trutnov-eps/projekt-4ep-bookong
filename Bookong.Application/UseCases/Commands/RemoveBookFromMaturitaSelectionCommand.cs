@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Bookong.Application.Services.Interfaces;
 using Bookong.Application.UseCases.Commands.Interfaces;
 using Bookong.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -10,13 +11,16 @@ namespace Bookong.Application.UseCases.Commands
     public class RemoveBookFromMaturitaSelectionCommand : IRemoveBookFromMaturitaSelectionCommand
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ISessionService _sessionService;
         private readonly ILogger<RemoveBookFromMaturitaSelectionCommand> _logger;
 
         public RemoveBookFromMaturitaSelectionCommand(
             IUnitOfWork unitOfWork,
+            ISessionService sessionService,
             ILogger<RemoveBookFromMaturitaSelectionCommand> logger)
         {
             _unitOfWork = unitOfWork;
+            _sessionService = sessionService;
             _logger = logger;
         }
 
@@ -24,10 +28,8 @@ namespace Bookong.Application.UseCases.Commands
         {
             try
             {
-                // Získáme prvního uživatele ze seedovaných dat přes repository
-                var users = await _unitOfWork.Users.GetAllAsync();
-                var user = users.FirstOrDefault()
-                    ?? throw new InvalidOperationException("No users found in database.");
+                // Pokusíme se získat CurrentUserPublicId z relace
+                var user = (await TryGetUserFromSessionAsync()) ?? throw new InvalidOperationException("No users found in database.");
 
                 // Získáme knihu podle publicId přes repository
                 var book = await _unitOfWork.Books.GetByPublicIdAsync(bookPublicId)
@@ -54,6 +56,32 @@ namespace Bookong.Application.UseCases.Commands
                 _logger.LogError(ex, "Error removing book {BookPublicId} from maturita selection", bookPublicId);
                 throw;
             }
+        }
+
+        private async Task<Domain.Entities.User?> TryGetUserFromSessionAsync()
+        {
+            try
+            {
+                var currentUserPublicId = await _sessionService.GetAsync("CurrentUserPublicId");
+                _logger.LogDebug("Session CurrentUserPublicId = {CurrentUserPublicId}", currentUserPublicId);
+
+                if (!string.IsNullOrWhiteSpace(currentUserPublicId) && Guid.TryParse(currentUserPublicId, out var publicId))
+                {
+                    var userFromSession = await _unitOfWork.Users.GetByPublicIdAsync(publicId);
+                    if (userFromSession != null)
+                        return userFromSession;
+
+                    _logger.LogDebug("User with PublicId {PublicId} not found, will fallback to seeded user.", publicId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error reading CurrentUserPublicId from session, will fallback to seeded user.");
+            }
+
+            // fallback na seedovaného uživatele
+            var users = await _unitOfWork.Users.GetAllAsync();
+            return users.FirstOrDefault();
         }
     }
 }

@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bookong.Application.DTOs;
+using Bookong.Application.Services.Interfaces;
 using Bookong.Application.UseCases.Queries.Interfaces;
+using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -11,11 +14,16 @@ namespace Bookong.Application.UseCases.Queries
     public class GetMaturitaBookSelectionQuery : IGetMaturitaBookSelectionQuery
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ISessionService _sessionService;
         private readonly ILogger<GetMaturitaBookSelectionQuery> _logger;
 
-        public GetMaturitaBookSelectionQuery(IUnitOfWork unitOfWork, ILogger<GetMaturitaBookSelectionQuery> logger)
+        public GetMaturitaBookSelectionQuery(
+            IUnitOfWork unitOfWork,
+            ISessionService sessionService,
+            ILogger<GetMaturitaBookSelectionQuery> logger)
         {
             _unitOfWork = unitOfWork;
+            _sessionService = sessionService;
             _logger = logger;
         }
 
@@ -23,16 +31,41 @@ namespace Bookong.Application.UseCases.Queries
         {
             try
             {
-                // Get the first user from seeded data
-                var users = await _unitOfWork.Users.GetAllAsync();
-                var user = users.FirstOrDefault()
-                    ?? throw new InvalidOperationException("No users found in database. Please run seed data first.");
+                // Získejte publicId aktuálního uživatele z relace
+                User? user = null;
+                try
+                {
+                    var currentUserPublicId = await _sessionService.GetAsync("CurrentUserPublicId");
+                    _logger.LogDebug("Session CurrentUserPublicId = {CurrentUserPublicId}", currentUserPublicId);
+
+                    if (!string.IsNullOrWhiteSpace(currentUserPublicId) && Guid.TryParse(currentUserPublicId, out var publicId))
+                    {
+                        user = await _unitOfWork.Users.GetByPublicIdAsync(publicId);
+                        if (user == null)
+                        {
+                            _logger.LogDebug("User with PublicId {PublicId} not found, will fallback to seeded user.", publicId);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error reading CurrentUserPublicId from session, will fallback to seeded user.");
+                }
+
+                // fallback na seedovaného uživatele, pokud není uživatel z relace
+                if (user is null)
+                {
+                    var users = await _unitOfWork.Users.GetAllAsync();
+                    user = users.FirstOrDefault()
+                        ?? throw new InvalidOperationException("No users found in database. Please run seed data first.");
+                    _logger.LogDebug("Using fallback seeded user Id={UserId}", user.Id);
+                }
 
                 _logger.LogInformation("Fetching maturita book selection for user {UserId}", user.Id);
 
-                var selections = await _unitOfWork.MaturitaBookSelections.GetByUserWithDetailsAsync(user.Id);
+                var selections = (await _unitOfWork.MaturitaBookSelections.GetByUserWithDetailsAsync(user.Id)).ToList();
 
-                if (selections == null)
+                if (selections.Count == 0)
                     return Enumerable.Empty<BookListItemDto>();
 
                 var result = selections
