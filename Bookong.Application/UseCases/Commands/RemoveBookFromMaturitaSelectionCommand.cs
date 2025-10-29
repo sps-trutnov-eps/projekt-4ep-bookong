@@ -28,14 +28,14 @@ namespace Bookong.Application.UseCases.Commands
         {
             try
             {
-                // Pokusíme se získat CurrentUserPublicId z relace
+                // Attempt to retrieve CurrentUserPublicId from session
                 var user = (await TryGetUserFromSessionAsync()) ?? throw new InvalidOperationException("No users found in database.");
 
-                // Získáme knihu podle publicId přes repository
+                // Get the book by publicId via repository
                 var book = await _unitOfWork.Books.GetByPublicIdAsync(bookPublicId)
                     ?? throw new ArgumentException($"Book with PublicId {bookPublicId} not found.", nameof(bookPublicId));
 
-                // Najdeme odpovídající výběr
+                // Find the matching selection
                 var selections = await _unitOfWork.MaturitaBookSelections.GetAllAsync();
                 var selection = selections.FirstOrDefault(m => m.BookId == book.Id && m.UserId == user.Id);
 
@@ -79,7 +79,7 @@ namespace Bookong.Application.UseCases.Commands
                 _logger.LogWarning(ex, "Error reading CurrentUserPublicId from session, will fallback to seeded user.");
             }
 
-            // fallback na seedovaného uživatele
+            // fallback to seeded user
             var users = await _unitOfWork.Users.GetAllAsync();
             return users.FirstOrDefault();
         }

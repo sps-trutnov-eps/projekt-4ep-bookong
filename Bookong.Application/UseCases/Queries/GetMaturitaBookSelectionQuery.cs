@@ -31,7 +31,7 @@ namespace Bookong.Application.UseCases.Queries
         {
             try
             {
-                // Získejte publicId aktuálního uživatele z relace
+                // Get publicId of the current user from the session
                 User? user = null;
                 try
                 {
@@ -52,7 +52,7 @@ namespace Bookong.Application.UseCases.Queries
                     _logger.LogWarning(ex, "Error reading CurrentUserPublicId from session, will fallback to seeded user.");
                 }
 
-                // fallback na seedovaného uživatele, pokud není uživatel z relace
+                // Fallback to seeded user if no user in session
                 if (user is null)
                 {
                     var users = await _unitOfWork.Users.GetAllAsync();

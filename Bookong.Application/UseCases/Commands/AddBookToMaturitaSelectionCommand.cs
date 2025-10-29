@@ -29,7 +29,7 @@ namespace Bookong.Application.UseCases.Commands
         {
             try
             {
-                // Získejte uživatele z relace (pokud je)
+                // Get user from session (if present)
                 User? user = null;
                 try
                 {
@@ -50,7 +50,7 @@ namespace Bookong.Application.UseCases.Commands
                     _logger.LogWarning(ex, "Error reading CurrentUserPublicId from session, will fallback to seeded user.");
                 }
 
-                // fallback na seedovaného uživatele, pokud není uživatel z relace
+                // Fallback to seeded user if no user in session
                 if (user is null)
                 {
                     var users = await _unitOfWork.Users.GetAllAsync();
