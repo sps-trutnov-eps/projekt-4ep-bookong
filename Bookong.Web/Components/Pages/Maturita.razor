@@ -211,9 +211,13 @@
 
  if (!string.IsNullOrWhiteSpace(searchText))
  {
- var s = searchText.Trim();
- q = q.Where(b => !string.IsNullOrWhiteSpace(b.Title) &&
- b.Title.StartsWith(s, StringComparison.OrdinalIgnoreCase));
+            var s = searchText.Trim().ToLower();
+            q = q.Where(b =>
+                (!string.IsNullOrWhiteSpace(b.Title) && b.Title.ToLower().Contains(s)) ||
+                (!string.IsNullOrWhiteSpace(b.AuthorFullName) && b.AuthorFullName.ToLower().Contains(s)) ||
+                (!string.IsNullOrWhiteSpace(b.Genre) && b.Genre.ToLower().Contains(s)) ||
+                (!string.IsNullOrWhiteSpace(b.Kind) && b.Kind.ToLower().Contains(s))
+            );
  }
 
  if (!string.IsNullOrWhiteSpace(selectedAuthor))
