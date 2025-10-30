@@ -1,0 +1,16 @@
+# Docker build context exclusions
+.git
+.vscode
+**/[Bb]in/
+**/[Oo]bj/
+**/.vs/
+**/.DS_Store
+node_modules/
+
+# Test outputs
+**/TestResult*/
+*.trx
+
+# Local env files
+*.env
+deploy/.env.*

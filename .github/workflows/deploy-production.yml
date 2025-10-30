@@ -1,0 +1,32 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          envs: APP_DIR,REPO_URL
+          script: |
+            set -e
+            : "${APP_DIR:=${HOME}/apps/bookong}"
+            : "${REPO_URL:=${{ github.server_url }}/${{ github.repository }}}"
+            if [ ! -d "$APP_DIR" ]; then
+              mkdir -p "$APP_DIR"
+              git clone --depth=1 --branch main "$REPO_URL" "$APP_DIR"
+            fi
+            cd "$APP_DIR"
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            bash deploy/deploy.sh production

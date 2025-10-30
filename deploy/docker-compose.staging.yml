@@ -1,0 +1,31 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: bookong-staging-db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Express
+      - SA_PASSWORD=${SA_PASSWORD}
+    volumes:
+      - bookong-staging-sqldata:/var/opt/mssql
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ../
+      dockerfile: deploy/Dockerfile
+    image: bookong-staging-app
+    container_name: bookong-staging-app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Staging
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - ConnectionStrings__DefaultConnection=Server=db,1433;Database=BookongDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;Encrypt=False
+    depends_on:
+      - db
+    ports:
+      - "5080:8080"
+    restart: unless-stopped
+
+volumes:
+  bookong-staging-sqldata:
+    name: bookong-staging-sqldata

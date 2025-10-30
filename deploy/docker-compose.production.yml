@@ -1,0 +1,31 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: bookong-production-db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Express
+      - SA_PASSWORD=${SA_PASSWORD}
+    volumes:
+      - bookong-production-sqldata:/var/opt/mssql
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ../
+      dockerfile: deploy/Dockerfile
+    image: bookong-production-app
+    container_name: bookong-production-app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - ConnectionStrings__DefaultConnection=Server=db,1433;Database=BookongDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;Encrypt=False
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  bookong-production-sqldata:
+    name: bookong-production-sqldata
