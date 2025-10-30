@@ -3,25 +3,83 @@
 <PageTitle>Testing Excel</PageTitle>
 
 <h1>Testing Excel</h1>
-<p>This is a blank page for testing Excel import.</p>
+<p>This page allows you to import and view data from an Excel (.xlsm) file.</p>
 
-<InputFile OnChange="HandleFileSelected" accept=".xlsm" multiple="false" />
+<InputFile OnChange="HandleFileSelected" accept=".xlsm" />
 
 @if (selectedFileName != null)
 {
-    <p>Selected file: @selectedFileName</p>
+    <p>Selected file: <b>@selectedFileName</b></p>
+}
+
+@if (excelData != null && excelData.Count > 0)
+{
+    <h3>Preview of Excel Data</h3>
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                @foreach (var header in excelData[0])
+                {
+                    <th>@header</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 1; i < excelData.Count; i++)
+            {
+                <tr>
+                    @foreach (var cell in excelData[i])
+                    {
+                        <td>@cell</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
 }
 
 @code {
     private string? selectedFileName;
+    private List<List<string>>? excelData;
 
-    private void HandleFileSelected(InputFileChangeEventArgs e)
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
         var file = e.File;
-        if (file != null)
+        if (file is null) return;
+
+        selectedFileName = file.Name;
+
+        using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10MB limit
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+        memoryStream.Position = 0;
+
+        excelData = ReadExcelData(memoryStream);
+    }
+
+    private List<List<string>> ReadExcelData(Stream fileStream)
+    {
+        var result = new List<List<string>>();
+
+        using var package = new OfficeOpenXml.ExcelPackage(fileStream);
+        var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+        if (worksheet == null)
+            return result;
+
+        int rowCount = worksheet.Dimension.Rows;
+        int colCount = worksheet.Dimension.Columns;
+
+        for (int row = 1; row <= rowCount; row++)
         {
-            selectedFileName = file.Name;
-            // Here you can add logic to process the file, e.g. upload or read its contents
+            var rowData = new List<string>();
+            for (int col = 1; col <= colCount; col++)
+            {
+                var cellValue = worksheet.Cells[row, col].Text ?? "";
+                rowData.Add(cellValue);
+            }
+            result.Add(rowData);
         }
+
+        return result;
     }
 }
