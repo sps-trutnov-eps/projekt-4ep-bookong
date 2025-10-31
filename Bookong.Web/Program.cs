@@ -1,4 +1,6 @@
+using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
+using Bookong.Infrastructure.Services;
 using Bookong.Web.Components;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<BookongDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Register UnitOfWork and repositories
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

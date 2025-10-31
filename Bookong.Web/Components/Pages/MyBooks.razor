@@ -1,7 +1,12 @@
 @using Bookong.Web.Components.Layout
+@using Bookong.Domain.Entities
+@using Bookong.Domain.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
 
-@page "/my-books"
+@page "/mybooks"
 @layout MainLayout
+@inject IUnitOfWork UnitOfWork
+@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>Moje knihy - BooKong</PageTitle>
 
@@ -10,23 +15,98 @@
   <div class="w-100" style="max-width: 900px;">
     <h2 class="mb-4 text-primary text-center">Moje knihy</h2>
 
-    <div class="table-responsive mt-4">
-      <table class="table table-striped table-bordered align-middle">
-        <caption class="text-muted">Historie vypůjčených knih</caption>
-        <thead class="table-primary">
-          <tr>
-            <th scope="col">Název</th>
-            <th scope="col">Autor</th>
-            <th scope="col">Století</th>
-            <th scope="col">Literatura</th>
-            <th scope="col">ISBN</th>
-          </tr>
-        </thead>
-        <tbody id="borrow-history">
-          <!-- Zde se budou dynamicky vkládat řádky historie -->
-        </tbody>
-      </table>
-    </div>
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Načítání...</span>
+            </div>
+        </div>
+    }
+    else if (borrowedBooks.Count == 0)
+    {
+        <p class="text-center text-muted">Nemáte žádné vypůjčené knihy.</p>
+    }
+    else
+    {
+        <div class="table-responsive mt-4">
+            <table class="table table-striped table-bordered align-middle">
+                <caption class="text-muted">Aktuálně vypůjčené knihy</caption>
+                <thead class="table-primary">
+                    <tr>
+                        <th scope="col">Název</th>
+                        <th scope="col">Autor</th>
+                        <th scope="col">Století</th>
+                        <th scope="col">Literatura</th>
+                        <th scope="col">ISBN</th>
+                        <th scope="col">Akce</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var loan in borrowedBooks)
+                    {
+                        <tr>
+                            <td>@loan.Book.Name</td>
+                            <td>@loan.Book.Author.FirstName @loan.Book.Author.LastName</td>
+                            <td>@loan.Book.Period.Name</td>
+                            <td>@loan.Book.Kind.Name</td>
+                            <td>@loan.Book.ISBN</td>
+                            <td>
+                                <button class="btn btn-success btn-sm me-2" @onclick="() => ReturnBook(loan)">Vrátit</button>
+                                <button class="btn btn-primary btn-sm" @onclick="() => BorrowAgain(loan)">Půjčit znovu</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="alert alert-info mt-3">@message</div>
+    }
 
   </div>
 </main>
+
+@code {
+    private List<BookLoan> borrowedBooks = new();
+    private User currentUser;
+    private bool isLoading = true;
+    private string message = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            // Assume SamAccountName is the username
+            currentUser = await UnitOfWork.Users.GetBySamAccountNameAsync(user.Identity.Name);
+            if (currentUser != null)
+            {
+                var pagedResult = await UnitOfWork.BookLoans.GetByUserAsync(currentUser, 1, 1000);
+                borrowedBooks = pagedResult.Items.Where(b => b.ReturnDate == null).ToList();
+            }
+        }
+
+        isLoading = false;
+    }
+
+    private async Task ReturnBook(BookLoan loan)
+    {
+        // Simulate return book action
+        borrowedBooks.Remove(loan);
+        message = "Kniha byla úspěšně vrácena.";
+        StateHasChanged();
+    }
+
+    private async Task BorrowAgain(BookLoan loan)
+    {
+        // Simulate borrow again action
+        message = "Žádost o opětovné vypůjčení byla odeslána.";
+        StateHasChanged();
+    }
+}

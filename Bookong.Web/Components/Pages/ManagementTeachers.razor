@@ -1,40 +1,43 @@
 @using Bookong.Web.Components.Layout
 
-@page "/management-teachers"
+@page "/managementteachers"
 @layout MainLayout
 
-<PageTitle>Vypůjčení knihy - BooKong</PageTitle>
+<PageTitle>Zobrazení seznamů knih studentů - BooKong</PageTitle>
 
-<!-- Main: Buttons -->
+<!-- Main: Management -->
 <main class="container my-5 flex-grow-1 d-flex justify-content-center align-items-start">
   <div class="w-100" style="max-width: 900px;">
-    <h2 class="mb-4 text-primary text-center">Vypůjčení knihy</h2>
+    <h2 class="mb-4 text-primary text-center">Zobrazení seznamů knih studentů</h2>
 
-    <!-- Search form -->
-    <form id="search-form" class="mb-4" role="search" aria-label="Vyhledávání knih">
+    <!-- Search form for students -->
+    <form id="search-student-form" class="mb-4" role="search" aria-label="Vyhledávání studentů">
       <div class="row g-2">
-        <div class="col-md-4">
-          <select class="form-select" name="field" aria-label="Vyberte pole pro vyhledávání">
-            <option value="title" selected>Podle názvu</option>
-            <option value="author">Podle autora</option>
-            <option value="isbn">Podle ISBN</option>
-            <option value="literature">Podle literatury</option>
-            <option value="century">Podle století</option>
-          </select>
+        <div class="col-md-8">
+          <input type="search" name="studentName" class="form-control" placeholder="Zadejte jméno studenta" aria-label="Jméno studenta" required />
         </div>
 
-        <div class="col-md-6">
-          <input type="search" name="query" class="form-control" placeholder="Zadejte hledaný výraz" aria-label="Hledaný výraz" required />
-        </div>
-
-        <div class="col-md-2 d-grid">
-          <button type="submit" class="btn btn-primary">Hledat</button>
+        <div class="col-md-4 d-grid">
+          <button type="submit" class="btn btn-primary">Hledat studenta</button>
         </div>
       </div>
     </form>
-      <!-- Results -->
-    <section id="search-results" aria-live="polite">
-      <p class="text-muted">Sem se zobrazí výsledky po provedení vyhledávání.</p>
+
+    <!-- Student book lists -->
+    <section id="student-lists" aria-live="polite">
+      <h3>Výsledky vyhledávání</h3>
+      <p class="text-muted">Zde se zobrazí seznamy knih studentů po vyhledávání.</p>
+      <!-- Sample student list for demonstration -->
+      <div class="list-group">
+        <div class="list-group-item">
+          <h5>Jan Novák</h5>
+          <ul class="list-unstyled">
+            <li>Kniha 1</li>
+            <li>Kniha 2</li>
+            <li>Kniha 3</li>
+          </ul>
+        </div>
+      </div>
     </section>
   </div>
 </main>
