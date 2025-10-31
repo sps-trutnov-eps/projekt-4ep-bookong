@@ -1,11 +1,16 @@
 using Bookong.Infrastructure.Data;
 using Bookong.Web.Components;
 using Microsoft.EntityFrameworkCore;
+using Bookong.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<BookongDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
+builder.Services.AddScoped<Bookong.Web.Services.ITeachingMaterialsApi, Bookong.Web.Services.TeachingMaterialsApi>();
+
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -22,7 +27,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 
 app.UseAntiforgery();
 

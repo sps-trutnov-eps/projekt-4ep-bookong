@@ -1,18 +1,21 @@
 ﻿@page "/teaching-materials"
+@using Bookong.Web.Services
+@using Bookong.Web.Models
 @inject ITeachingMaterialsApi TeachingMaterialsApi
 
 <h1>Výukové materiály</h1>
 <div class="container">
     <div class="row">
+        <!-- Navigation -->
         <div class="col-4">
             <ul class="list-group">
                 @if (folders != null)
                 {
-                    foreach (var f in folders)
+                    foreach (var folder in folders)
                     {
-                        <li class="list-group-item @(selectedFolder == f ? "active" : "")"
-                            @onclick="@(() => SelectFolder(f))">
-                            @f.Name
+                        <li class="list-group-item @(selectedFolder == folder ? "active" : "")"
+                            @onclick="@(() => SelectFolder(folder))">
+                            @folder.Name
                         </li>
                     }
                 }
@@ -22,40 +25,58 @@
                 }
             </ul>
         </div>
-
+        <!-- Detail selected folder -->
         <div class="col-8">
             @if (selectedFolder != null)
             {
                 <h2>@selectedFolder.Name</h2>
                 <p>@selectedFolder.Description</p>
-                <p><b>Založil:</b> @selectedFolder.CreatedBy</p>
+                <p><strong>Založil:</strong> @selectedFolder.CreatedBy</p>
 
                 <h4>Soubory</h4>
-                
-                <ul>
-                    @foreach (var file in selectedFolder.Files)
-                    {
-                        <li>@file.FileName (@file.FileType)</li>
-                    }
-                </ul>
-                
+                @if (selectedFolder.Files != null && selectedFolder.Files.Count > 0)
+                {
+                    <ul>
+                        @foreach (var file in selectedFolder.Files)
+                        {
+                            <li>@file.FileName (@file.FileType)</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>Žádné soubory.</p>
+                }
 
                 <h4>Odkazy</h4>
-                <ul>
-                    @foreach (var link in selectedFolder.Links)
-                    {
-                        <li><a href="@link.Url" target="_blank">@link.Name</a></li>
-                    }
-                </ul>
+                @if (selectedFolder.Links != null && selectedFolder.Links.Count > 0)
+                {
+                    <ul>
+                        @foreach (var link in selectedFolder.Links)
+                        {
+                            <li><a href="@link.Url" target="_blank">@link.Name</a></li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>Žádné odkazy.</p>
+                }
 
                 <h4>Materiály pro žáky</h4>
-                <ul>
-                    @foreach (var material in selectedFolder.StudentMaterials)
-                    {
-                        <li>@material.Title – @material.Description</li>
-                    }
-                </ul>
-                
+                @if (selectedFolder.StudentMaterials != null && selectedFolder.StudentMaterials.Count > 0)
+                {
+                    <ul>
+                        @foreach (var material in selectedFolder.StudentMaterials)
+                        {
+                            <li>@material.Title – @material.Description</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>Žádné materiály pro žáky.</p>
+                }
             }
             else
             {
@@ -74,35 +95,8 @@
         folders = await TeachingMaterialsApi.GetFoldersAsync();
     }
 
-    private void SelectFolder(FolderDto f)
+    private void SelectFolder(FolderDto folder)
     {
-        selectedFolder = f;
-    }
-
-    // Modely 
-    public class FolderDto
-    {
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string CreatedBy { get; set; }
-        public List<FileDto> Files { get; set; }
-        public List<LinkDto> Links { get; set; }
-        public List<StudentMaterialDto> StudentMaterials { get; set; }
-    }
-    public class FileDto
-    {
-        public string FileName { get; set; }
-        public string FileType { get; set; }
-        
-    }
-    public class LinkDto
-    {
-        public string Name { get; set; }
-        public string Url { get; set; }
-    }
-    public class StudentMaterialDto
-    {
-        public string Title { get; set; }
-        public string Description { get; set; }
+        selectedFolder = folder;
     }
 }
