@@ -18,6 +18,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Application UseCases, Queries
 builder.Services.AddScoped<IGetAvailableBooksQuery, GetAvailableBooksQuery>();
+builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
 
 // Session services
 builder.Services.AddDistributedMemoryCache();
