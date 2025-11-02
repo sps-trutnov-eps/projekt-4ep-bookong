@@ -5,12 +5,12 @@ using Bookong.Domain.Interfaces;
 
 namespace Bookong.Application.UseCases
 {
-    internal class CreateTeachingMaterialUseCase : ICreateTeachingMaterialUseCase
+    internal class ICreateTeachingMaterialUseCase : Interfaces.ICreateTeachingMaterialUseCase
     {
         private readonly ITeachingMaterialRepository _teachingMaterialRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public CreateTeachingMaterialUseCase(
+        public ICreateTeachingMaterialUseCase(
             ITeachingMaterialRepository teachingMaterialRepository,
             IUnitOfWork unitOfWork)
         {
