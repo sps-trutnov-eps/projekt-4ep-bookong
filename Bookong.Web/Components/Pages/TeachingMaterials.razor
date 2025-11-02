@@ -1,15 +1,14 @@
 ﻿@page "/materials"
 @using Bookong.Web.Services
 @using Bookong.Web.Models
-@using System.Linq
 @using System.ComponentModel.DataAnnotations
 @inject ITeachingMaterialsApi TeachingMaterialsApi
 
 <h1>Výukové materiály</h1>
+
 <div class="container">
     <div class="row">
-        <!-- Navigation and create form -->
-        <div class="col-4">
+        <div class="col-6">
             <EditForm Model="newFolder" OnValidSubmit="CreateFolder">
                 <DataAnnotationsValidator />
                 <div class="mb-2">
@@ -24,85 +23,33 @@
                 <button type="submit" class="btn btn-primary mb-3">Vytvořit předmět</button>
                 <ValidationSummary />
             </EditForm>
-
-            <ul class="list-group">
-                @if (folders != null && folders.Count > 0)
-                {
-                    foreach (var folder in folders)
-                    {
-                        <li class="list-group-item @(selectedFolder == folder ? "active" : "")"
-                            @onclick="@(() => SelectFolder(folder))">
-                            @folder.Name
-                        </li>
-                    }
-                }
-                else if (folders == null)
-                {
-                    <li class="list-group-item">Načítám složky...</li>
-                }
-                else
-                {
-                    <li class="list-group-item">Žádné složky.</li>
-                }
-            </ul>
         </div>
 
-        <!-- Detail selected folder -->
-        <div class="col-8">
-            @if (selectedFolder != null)
+        <div class="col-6">
+            <h4>Vytvořené předměty</h4>
+
+            @if (folders == null)
             {
-                <h2>@selectedFolder.Name</h2>
-                <p>@selectedFolder.Description</p>
-                <p><strong>Založil:</strong> @selectedFolder.CreatedBy</p>
-
-                <h4>Soubory</h4>
-                @if (selectedFolder.Files != null && selectedFolder.Files.Count > 0)
-                {
-                    <ul>
-                        @foreach (var file in selectedFolder.Files)
-                        {
-                            <li>@file.FileName (@file.FileType)</li>
-                        }
-                    </ul>
-                }
-                else
-                {
-                    <p>Žádné soubory.</p>
-                }
-
-                <h4>Odkazy</h4>
-                @if (selectedFolder.Links != null && selectedFolder.Links.Count > 0)
-                {
-                    <ul>
-                        @foreach (var link in selectedFolder.Links)
-                        {
-                            <li><a href="@link.Url" target="_blank">@link.Name</a></li>
-                        }
-                    </ul>
-                }
-                else
-                {
-                    <p>Žádné odkazy.</p>
-                }
-
-                <h4>Materiály pro žáky</h4>
-                @if (selectedFolder.StudentMaterials != null && selectedFolder.StudentMaterials.Count > 0)
-                {
-                    <ul>
-                        @foreach (var material in selectedFolder.StudentMaterials)
-                        {
-                            <li>@material.Title – @material.Description</li>
-                        }
-                    </ul>
-                }
-                else
-                {
-                    <p>Žádné materiály pro žáky.</p>
-                }
+                <p>Načítám...</p>
+            }
+            else if (folders.Count == 0)
+            {
+                <p>Ještě nejsou vytvořené žádné předměty.</p>
             }
             else
             {
-                <p>Vyberte složku pro zobrazení detailů.</p>
+                <div class="list-group">
+                    @foreach (var f in folders)
+                    {
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">@f.Name</h5>
+                                <small>@f.CreatedBy</small>
+                            </div>
+                            <p class="mb-1">@f.Description</p>
+                        </div>
+                    }
+                </div>
             }
         </div>
     </div>
@@ -110,19 +57,11 @@
 
 @code {
     private List<FolderDto>? folders;
-    private FolderDto? selectedFolder;
-
     private CreateFolderModel newFolder = new CreateFolderModel();
 
     protected override async Task OnInitializedAsync()
     {
         folders = await TeachingMaterialsApi.GetFoldersAsync();
-        selectedFolder = folders?.FirstOrDefault();
-    }
-
-    private void SelectFolder(FolderDto folder)
-    {
-        selectedFolder = folder;
     }
 
     private async Task CreateFolder()
@@ -142,7 +81,6 @@
 
         await TeachingMaterialsApi.CreateFolderAsync(folder);
         folders = await TeachingMaterialsApi.GetFoldersAsync();
-        selectedFolder = folders?.FirstOrDefault(f => f == folder);
         newFolder = new CreateFolderModel();
     }
 
