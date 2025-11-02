@@ -20,7 +20,7 @@ namespace Bookong.Application.UseCases
 
         public async Task<GenericResponse> ExecuteAsync(CreateTeachingMaterialDto dto)
         {
-            // ✅ 1. Validace vstupu
+            //  1. Validace vstupu
             if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Url))
             {
                 return new GenericResponse
@@ -30,18 +30,18 @@ namespace Bookong.Application.UseCases
                 };
             }
 
-            // ✅ 2. Vytvoření entity
+            //  2. Vytvoření entity
             var newMaterial = new TeachingMaterial
             {
                 Title = dto.Title.Trim(),
                 Url = dto.Url.Trim()
             };
 
-            // ✅ 3. Uložení do databáze
+            //  3. Uložení do databáze
             _teachingMaterialRepository.Add(newMaterial);
             await _unitOfWork.CommitAsync();
 
-            // ✅ 4. Vrácení odpovědi
+            //  4. Vrácení odpovědi
             return new GenericResponse
             {
                 Success = true,
