@@ -1,0 +1,26 @@
+﻿@inject Bookong.Application.Services.Interfaces.ISessionService SessionService
+@inject NavigationManager Navigation
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        var user = await SessionService.GetAsync("CurrentUserPublicId");
+        var uri = Navigation.Uri.ToLowerInvariant();
+        var onLoginPage = uri.Contains("/login");
+
+        // Nepřihlášený → redirect na login
+        if (string.IsNullOrEmpty(user) && !onLoginPage)
+        {
+            Navigation.NavigateTo("/login", true);
+        }
+
+        // Přihlášený → nech ho být (nebo redirect z loginu zpět na /)
+        if (!string.IsNullOrEmpty(user) && onLoginPage)
+        {
+            Navigation.NavigateTo("/", true);
+        }
+    }
+}
