@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Bookong.Web.Models;
 namespace Bookong.Web.Models;
 
@@ -6,9 +7,9 @@ public class FolderDto
     public required string Name { get; set; }
     public required string Description { get; set; }
     public required string CreatedBy { get; set; }
-    public List<FileDto> Files { get; set; } = [];
-    public List<LinkDto> Links { get; set; } = [];
-    public List<StudentMaterialDto> StudentMaterials { get; set; } = [];
+    public List<FileDto> Files { get; set; } = new List<FileDto>();
+    public List<LinkDto> Links { get; set; } = new List<LinkDto>();
+    public List<StudentMaterialDto> StudentMaterials { get; set; } = new List<StudentMaterialDto>();
 }
 
 public class FileDto

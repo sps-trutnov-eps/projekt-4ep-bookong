@@ -31,7 +31,7 @@ namespace Bookong.Application.UseCases
             //  2. Vytvoření entity
             var newMaterial = new TeachingMaterial
             {
-                Title = dto.Title.Trim(),
+                Title = dto.Title.Trim(),       
                 Url = dto.Url.Trim()
             };
 

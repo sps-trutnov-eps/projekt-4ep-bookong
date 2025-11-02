@@ -1,7 +1,8 @@
 ﻿@page "/materials"
 @using Bookong.Web.Services
 @using Bookong.Web.Models
-@inject TeachingMaterialsApi TeachingMaterialsApi
+@using System.Linq
+@inject ITeachingMaterialsApi TeachingMaterialsApi
 
 <h1>Výukové materiály</h1>
 <div class="container">
@@ -93,6 +94,8 @@
     protected override async Task OnInitializedAsync()
     {
         folders = await TeachingMaterialsApi.GetFoldersAsync();
+        // Vyber první složku automaticky, pokud existuje
+        selectedFolder = folders?.FirstOrDefault();
     }
 
     private void SelectFolder(FolderDto folder)
