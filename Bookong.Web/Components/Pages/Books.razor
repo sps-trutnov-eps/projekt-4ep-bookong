@@ -10,25 +10,25 @@
     <div class="border rounded-3 shadow-sm bg-body mb-4 p-3">
         <div class="row g-3 align-items-end">
             <div class="col-12 col-md-6 col-lg-4">
-                <label class="form-label">Vyhledávání</label>
-                <input class="form-control" placeholder="Zadejte název nebo autora" disabled />
+                <label class="form-label">Vyhledï¿½vï¿½nï¿½</label>
+                <input class="form-control" placeholder="Zadejte nï¿½zev nebo autora" disabled />
             </div>
             <div class="col-6 col-md-3 col-lg-2">
                 <label class="form-label">Autor</label>
                 <select class="form-select" disabled>
-                    <option>Všichni</option>
+                    <option>Vï¿½ichni</option>
                 </select>
             </div>
             <div class="col-6 col-md-3 col-lg-2">
-                <label class="form-label">Žánr</label>
+                <label class="form-label">ï¿½ï¿½nr</label>
                 <select class="form-select" disabled>
-                    <option>Vše</option>
+                    <option>Vï¿½e</option>
                 </select>
             </div>
             <div class="col-6 col-md-3 col-lg-2">
                 <label class="form-label">Typ</label>
                 <select class="form-select" disabled>
-                    <option>Vše</option>
+                    <option>Vï¿½e</option>
                 </select>
             </div>
             <div class="col-6 col-md-3 col-lg-2 d-grid d-md-flex gap-2">
@@ -37,7 +37,7 @@
             </div>
         </div>
         <div class="mt-2">
-            <small class="text-muted">Poznámka: vyhledávání a filtry jsou zatím nefunkèní a budou implementovány pozdìji.</small>
+            <small class="text-muted">Poznï¿½mka: vyhledï¿½vï¿½nï¿½ a filtry jsou zatï¿½m nefunkï¿½nï¿½ a budou implementovï¿½ny pozdï¿½ji.</small>
         </div>
     </div>
 
@@ -45,12 +45,12 @@
     {
         <div class="d-flex align-items-center gap-2 text-muted">
             <div class="spinner-border spinner-border-sm" role="status"></div>
-            <span>Naèítání…</span>
+            <span>Naï¿½ï¿½tï¿½nï¿½</span>
         </div>
     }
     else if (items.Count == 0)
     {
-        <p class="text-muted">Žádné knihy k zobrazení.</p>
+        <p class="text-muted">ï¿½ï¿½dnï¿½ knihy k zobrazenï¿½.</p>
     }
     else
     {
@@ -59,9 +59,9 @@
                 <table class="table table-striped table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Název knihy</th>
+                            <th>Nï¿½zev knihy</th>
                             <th>Autor</th>
-                            <th>Žánr</th>
+                            <th>ï¿½ï¿½nr</th>
                             <th>Typ</th>
                             <th class="text-end">Akce</th>
                         </tr>
@@ -76,6 +76,7 @@
                                 <td><span>@b.Kind</span></td>
                                 <td class="text-end">
                                     <a class="btn btn-sm btn-outline-primary" href="@($"/books/{b.PublicId}")">Detail</a>
+                                    <a class="btn btn-sm btn-outline-secondary ms-1" href="@($"/qrcodegenerator?bookId={b.PublicId}")">QR Code</a>
                                 </td>
                             </tr>
                         }

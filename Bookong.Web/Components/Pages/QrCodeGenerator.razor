@@ -1,9 +1,14 @@
 @using Bookong.Web.Components.Layout
+@using Bookong.Application.UseCases.Queries.Interfaces
+@using Bookong.Application.DTOs
+@using Microsoft.AspNetCore.WebUtilities
 
 @page "/qrcodegenerator"
 @layout MainLayout
+@inject IGetBookDetailQuery GetBookDetail
+@inject NavigationManager Navigation
 
-<PageTitle>Přidání knihy — QR generátor - BooKong</PageTitle>
+<PageTitle>@(bookDetail != null ? $"QR kód pro {bookDetail.Title} - BooKong" : "Přidání knihy — QR generátor - BooKong")</PageTitle>
 
 <style>
   @@media print {
@@ -25,47 +30,47 @@
 <!-- Main -->
 <main class="container my-5 flex-grow-1 d-flex justify-content-center align-items-start">
   <div class="w-100" style="max-width: 900px;">
-    <h2 class="mb-4 text-primary text-center">Přidání knihy — vytvoření QR kódu</h2>
+    <h2 class="mb-4 text-primary text-center">@(bookDetail != null ? $"QR kód pro knihu: {bookDetail.Title}" : "Přidání knihy — vytvoření QR kódu")</h2>
 
     <div class="card mb-4">
       <div class="card-body">
         <form id="book-form" class="row g-3" novalidate>
           <div class="col-md-8">
             <label for="title" class="form-label">Název</label>
-            <input id="title" name="title" class="form-control" required />
-            <div class="field-help">Zadejte celý název literárního díla</div>
+            <input id="title" name="title" class="form-control" required @((bookDetail != null ? "readonly" : "")) />
+            <div class="field-help">@(bookDetail != null ? "Údaje knihy jsou předvyplněné a nelze měnit" : "Zadejte celý název literárního díla")</div>
           </div>
 
           <div class="col-md-4">
             <label for="century" class="form-label">Století</label>
-            <input id="century" name="century" type="number" min="1" max="21" class="form-control"/>
-            <div class="field-help">Zadejte číslo století</div>
+            <input id="century" name="century" type="number" min="1" max="21" class="form-control" @((bookDetail != null ? "readonly" : "")) />
+            <div class="field-help">@(bookDetail != null ? "Údaje knihy jsou předvyplněné a nelze měnit" : "Zadejte číslo století")</div>
           </div>
 
           <div class="col-md-6">
             <label for="author" class="form-label">Autor</label>
-            <input id="author" nasme="author" class="form-control" />
-            <div class="field-help">Zadejte celé jméno autora</div>
+            <input id="author" name="author" class="form-control" @((bookDetail != null ? "readonly" : "")) />
+            <div class="field-help">@(bookDetail != null ? "Údaje knihy jsou předvyplněné a nelze měnit" : "Zadejte celé jméno autora")</div>
           </div>
 
           <div class="col-md-6">
             <label for="isbn" class="form-label">ISBN</label>
-            <input id="isbn" name="isbn" class="form-control" />
-            <div class="field-help">Zadejte ISBN (volitelné)</div>
+            <input id="isbn" name="isbn" class="form-control" @((bookDetail != null ? "readonly" : "")) />
+            <div class="field-help">@(bookDetail != null ? "Údaje knihy jsou předvyplněné a nelze měnit" : "Zadejte ISBN (volitelné)")</div>
           </div>
 
           <div class="col-md-4">
             <label for="literature" class="form-label">Literatura</label>
-            <select id="literature" name="literature" class="form-select">
+            <select id="literature" name="literature" class="form-select" @((bookDetail != null ? "disabled" : ""))>
               <option value="ceska" selected>Česká</option>
               <option value="svetova">Světová</option>
             </select>
-              <div class="field-help">Vyberte druh literatury</div>
+              <div class="field-help">@(bookDetail != null ? "Údaje knihy jsou předvyplněné a nelze měnit" : "Vyberte druh literatury")</div>
           </div>
 
           <div class="col-12 d-flex gap-2 justify-content-end no-print">
-            <button type="button" id="generate-btn" class="btn btn-primary">Vytvořit QR kód</button>
-            <button type="button" id="clear-btn" class="btn btn-outline-secondary">Vymazat</button>
+            <button type="button" id="generate-btn" class="btn btn-primary">@(bookDetail != null ? "Vygenerovat QR kód" : "Vytvořit QR kód")</button>
+            <button type="button" id="clear-btn" class="btn btn-outline-secondary" @(bookDetail != null ? "disabled" : "")>Vymazat</button>
             <button type="button" id="print-btn" class="btn btn-success">Tisk</button>
           </div>
         </form>
@@ -92,6 +97,31 @@
   </div>
 </main>
 
+@code {
+    private BookDetailDto? bookDetail;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("bookId", out var bookIdStr))
+        {
+            if (Guid.TryParse(bookIdStr, out var bookId))
+            {
+                bookDetail = await GetBookDetail.ExecuteAsync(bookId);
+                if (bookDetail != null)
+                {
+                    // Pre-fill form with book details
+                    await InvokeAsync(async () =>
+                    {
+                        await Task.Delay(100); // Wait for DOM to render
+                        // Note: Actual pre-filling will be done in JavaScript after component renders
+                    });
+                }
+            }
+        }
+    }
+}
+
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 <script>
   (function(){
@@ -104,6 +134,34 @@
     const summaryTitle = el('summary-title');
     const summaryMeta = el('summary-meta');
     const summaryExtra = el('summary-extra');
+
+    // Předvyplnění formuláře, pokud jsou k dispozici údaje o knize
+    const bookDetailJson = '@System.Text.Json.JsonSerializer.Serialize(bookDetail)';
+    if (bookDetailJson && bookDetailJson !== 'null') {
+        const bookDetail = JSON.parse(bookDetailJson);
+        el('title').value = bookDetail.title || '';
+        el('author').value = bookDetail.authorFullName || '';
+        el('isbn').value = bookDetail.isbn || '';
+        // Mapování století z periodName (např. "20. století" -> "20")
+        if (bookDetail.periodName) {
+            const centuryMatch = bookDetail.periodName.match(/(\d+)\. století/);
+            if (centuryMatch) {
+                el('century').value = centuryMatch[1];
+            }
+        }
+        // Mapování literatury z kindName (např. "Česká" -> "ceska", "Světová" -> "svetova")
+        if (bookDetail.kindName === 'Česká') {
+            el('literature').value = 'ceska';
+        } else if (bookDetail.kindName === 'Světová') {
+            el('literature').value = 'svetova';
+        }
+        // Rok z dateRelease
+        if (bookDetail.dateRelease) {
+            el('year').value = new Date(bookDetail.dateRelease).getFullYear().toString();
+        }
+        // Publisher
+        el('publisher').value = bookDetail.publisherName || '';
+    }
 
     function collectData() {
       return {
@@ -120,8 +178,8 @@
     }
 
     function buildPayload(data) {
-      // Payload je JSON pro pozdější backend; přidány pole literature a century
-      // U stoleti se zajistíme, že nebude větší než 21
+      // Payload je JSON pro pozdější backend; přidaná pole literatura a století
+      // Zajistit, že století není větší než 21
       let centuryVal = data.century ? parseInt(data.century, 10) : undefined;
       if (!isNaN(centuryVal)) {
         centuryVal = Math.min(21, Math.max(1, centuryVal));
@@ -182,10 +240,10 @@
         }
       }
 
-      // použijeme JSON payload — je to strukturované a snadno parsovatelné
+      // použít JSON payload — je strukturovaný a snadno parsovatelný
       const payload = buildPayload(data);
 
-      // vyčistíme starý QR
+      // vymazat starý QR
       qrcodeEl.innerHTML = '';
       try {
         await QRCode.toCanvas(qrcodeEl, payload, { width: 240, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
@@ -206,7 +264,7 @@
       summaryExtra.textContent = '';
     });
     printBtn.addEventListener('click', function(){
-      // pokud není QR, vygenerujeme jej před tiskem
+      // pokud QR není přítomen, vygenerovat ho před tiskem
       if (!qrcodeEl.querySelector('canvas') && !qrcodeEl.querySelector('svg')) {
         generateQr().then(() => window.print());
       } else {
