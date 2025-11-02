@@ -7,6 +7,8 @@ namespace Bookong.Web.Services
     {
         public async Task<List<FolderDto>> GetFoldersAsync()
         {
+            // Simulace asynchronní operace
+            await Task.Yield();
             return new List<FolderDto>
             {
                 new FolderDto
