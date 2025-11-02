@@ -1,14 +1,14 @@
-﻿using Bookong.Infrastructure.Data;
+using Bookong.Infrastructure.Data;
 using Bookong.Web.Components;
 using Microsoft.EntityFrameworkCore;
 using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Services;
 using Bookong.Application.UseCases.Queries.Interfaces;
 using Bookong.Application.UseCases.Queries;
-using Bookong.Application.UseCases.Commands.Interfaces;
-using Bookong.Application.UseCases.Commands;
 using Bookong.Application.Services.Interfaces;
 using Bookong.Web.Services;
+using Bookong.Application.UseCases.Interfaces;
+using Bookong.Application.UseCases;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,9 +20,9 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IGetAvailableBooksQuery, GetAvailableBooksQuery>();
 builder.Services.AddScoped<IGetMaturitaBookSelectionQuery, GetMaturitaBookSelectionQuery>();
 
-// Commands
-builder.Services.AddScoped<IAddBookToMaturitaSelectionCommand, AddBookToMaturitaSelectionCommand>();
-builder.Services.AddScoped<IRemoveBookFromMaturitaSelectionCommand, RemoveBookFromMaturitaSelectionCommand>();
+// Use Cases
+builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase>();
+builder.Services.AddScoped<IDeselectMaturitaBookUseCase, DeselectMaturitaBookUseCase>();
 
 // Session services
 builder.Services.AddDistributedMemoryCache();

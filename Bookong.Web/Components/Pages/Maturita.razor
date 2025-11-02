@@ -1,9 +1,9 @@
-﻿@page "/maturita"
+@page "/maturita"
 @using Bookong.Application.UseCases.Queries.Interfaces
-@using Bookong.Application.UseCases.Commands.Interfaces
+@using Bookong.Application.UseCases.Interfaces
 @using Bookong.Application.DTOs
 @inject IGetMaturitaBookSelectionQuery GetMaturitaBookSelection
-@inject IRemoveBookFromMaturitaSelectionCommand RemoveBookCommand
+@inject IDeselectMaturitaBookUseCase DeselectMaturitaBook
 @inject ILogger<Maturita> Logger
 
 <div class="container my-4">
@@ -245,9 +245,22 @@
     {
         try
         {
-            await RemoveBookCommand.ExecuteAsync(bookId);
-            allBooks = allBooks?.Where(b => b.PublicId != bookId).ToList();
-            ApplyFilters();
+            var dto = new RemoveBookFromPersonalMaturitaListDto
+            {
+                BookPublicId = bookId
+            };
+
+            var result = await DeselectMaturitaBook.Handle(dto);
+
+            if (result.Success)
+            {
+                allBooks = allBooks?.Where(b => b.PublicId != bookId).ToList();
+                ApplyFilters();
+            }
+            else
+            {
+                errorMessage = result.Message;
+            }
         }
         catch (Exception ex)
         {
