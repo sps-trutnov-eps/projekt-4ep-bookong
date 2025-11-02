@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Bookong.Web.Models;
 
 namespace Bookong.Web.Services
@@ -5,15 +8,16 @@ namespace Bookong.Web.Services
     public interface ITeachingMaterialsApi
     {
         Task<List<FolderDto>> GetFoldersAsync();
+        Task<FolderDto> CreateFolderAsync(FolderDto folder);
     }
 
     public class TeachingMaterialsApi : ITeachingMaterialsApi
     {
-        public async Task<List<FolderDto>> GetFoldersAsync()
-        {
-            await Task.Yield(); // Simulace asynchronního naèítání
+        private readonly List<FolderDto> _folders;
 
-            return new List<FolderDto>
+        public TeachingMaterialsApi()
+        {
+            _folders = new List<FolderDto>
             {
                 new FolderDto
                 {
@@ -52,6 +56,22 @@ namespace Bookong.Web.Services
                     }
                 }
             };
+        }
+
+        public async Task<List<FolderDto>> GetFoldersAsync()
+        {
+            await Task.Yield(); // Simulace asynchronního naèítání
+            return _folders.ToList();
+        }
+
+        public Task<FolderDto> CreateFolderAsync(FolderDto folder)
+        {
+            folder.Files ??= new List<FileDto>();
+            folder.Links ??= new List<LinkDto>();
+            folder.StudentMaterials ??= new List<StudentMaterialDto>();
+
+            _folders.Add(folder);
+            return Task.FromResult(folder);
         }
     }
 }
