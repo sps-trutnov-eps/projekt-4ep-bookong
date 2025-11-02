@@ -4,49 +4,85 @@
 @using System.ComponentModel.DataAnnotations
 @inject ITeachingMaterialsApi TeachingMaterialsApi
 
-<h1>Výukové materiály</h1>
+<div class="materials-hero container">
+    <h1 class="materials-title">Výukové materiály</h1>
+    <p class="materials-subtitle">Vytvořte předmět a spravujte materiály rychle a přehledně.</p>
+</div>
 
 <div class="container">
-    <div class="row">
-        <div class="col-6">
-            <EditForm Model="newFolder" OnValidSubmit="CreateFolder" FormName="CreateMaterialForm">
-                <DataAnnotationsValidator />
-                <div class="mb-2">
-                    <InputText class="form-control" @bind-Value="newFolder.Name" placeholder="Název předmětu" />
-                </div>
-                <div class="mb-2">
-                    <InputText class="form-control" @bind-Value="newFolder.Description" placeholder="Popis" />
-                </div>
-                <div class="mb-2">
-                    <InputText class="form-control" @bind-Value="newFolder.CreatedBy" placeholder="Založil (vaše jméno)" />
-                </div>
-                <button type="submit" class="btn btn-primary mb-3">Vytvořit předmět</button>
-                <ValidationSummary />
-            </EditForm>
+    <div class="row gy-4">
+        <div class="col-md-5">
+            <div class="materials-card">
+                <h4 class="mb-3">Vytvořit předmět</h4>
+
+                <EditForm Model="newFolder" OnValidSubmit="CreateFolder" FormName="CreateMaterialForm">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label class="form-label small">Předmět</label>
+                        <InputSelect class="form-select form-control-lg" @bind-Value="newFolder.Name">
+                            <option value="">-- Vyberte předmět --</option>
+                            @foreach (var s in subjects)
+                            {
+                                <option value="@s">@s</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => newFolder.Name)" class="text-danger small mt-1" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small">Popis</label>
+                        <InputText class="form-control" @bind-Value="newFolder.Description" placeholder="Krátký popis" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small">Založil</label>
+                        <InputText class="form-control" @bind-Value="newFolder.CreatedBy" placeholder="Vaše jméno" />
+                    </div>
+
+                    <button class="btn btn-gradient w-100 btn-lg" type="submit">Vytvořit předmět</button>
+                    <ValidationSummary class="mt-2 text-danger" />
+                </EditForm>
+            </div>
         </div>
 
-        <div class="col-6">
-            <h4>Vytvořené předměty</h4>
+        <div class="col-md-7">
+            <h4 class="mb-3">Vytvořené předměty</h4>
 
             @if (folders == null)
             {
-                <p>Načítám...</p>
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border text-primary me-3" role="status"><span class="visually-hidden">Načítám...</span></div>
+                    <div>Načítání předmětů…</div>
+                </div>
             }
             else if (folders.Count == 0)
             {
-                <p>Ještě nejsou vytvořené žádné předměty.</p>
+                <div class="empty-state">
+                    <div class="empty-emoji">📚</div>
+                    <div class="fw-semibold">Zatím žádné předměty</div>
+                    <div class="text-muted small">Vytvořte první předmět pomocí formuláře vpravo.</div>
+                </div>
             }
             else
             {
-                <div class="list-group">
+                <div class="row g-3 created-list">
                     @foreach (var f in folders)
                     {
-                        <div class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">@f.Name</h5>
-                                <small>@f.CreatedBy</small>
+                        <div class="col-sm-6">
+                            <div class="card created-card" style="border-left:6px solid @GetAccentColor(f.Name);">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h5 class="card-title mb-1">@f.Name</h5>
+                                        <small class="text-muted">@f.CreatedBy</small>
+                                    </div>
+                                    <p class="card-text small text-muted mb-1">@f.Description</p>
+                                    <div class="mt-2">
+                                        <span class="badge bg-light text-dark">@((f.Files?.Count) ?? 0) souborů</span>
+                                        <span class="badge bg-light text-dark">@((f.Links?.Count) ?? 0) odkazů</span>
+                                    </div>
+                                </div>
                             </div>
-                            <p class="mb-1">@f.Description</p>
                         </div>
                     }
                 </div>
@@ -59,6 +95,17 @@
     private List<FolderDto>? folders;
     private CreateFolderModel newFolder = new CreateFolderModel();
 
+    private readonly List<string> subjects = new()
+    {
+        "Angličtina",
+        "Počítačové sítě",
+        "Český jazyk",
+        "Matematika",
+        "Vývoj softwaru",
+        "Operační systémy",
+        "Tělocvik"
+    };
+
     protected override async Task OnInitializedAsync()
     {
         folders = await TeachingMaterialsApi.GetFoldersAsync();
@@ -66,12 +113,9 @@
 
     private async Task CreateFolder()
     {
-        if (string.IsNullOrWhiteSpace(newFolder.Name))
-            return;
-
         var folder = new FolderDto
         {
-            Name = newFolder.Name,
+            Name = newFolder.Name ?? string.Empty,
             Description = newFolder.Description ?? string.Empty,
             CreatedBy = string.IsNullOrWhiteSpace(newFolder.CreatedBy) ? "Neznámý" : newFolder.CreatedBy,
             Files = new List<FileDto>(),
@@ -83,6 +127,18 @@
         folders = await TeachingMaterialsApi.GetFoldersAsync();
         newFolder = new CreateFolderModel();
     }
+
+    private string GetAccentColor(string subject) => subject switch
+    {
+        "Angličtina" => "#0d6efd",
+        "Počítačové sítě" => "#6f42c1",
+        "Český jazyk" => "#20c997",
+        "Matematika" => "#fd7e14",
+        "Vývoj softwaru" => "#e83e8c",
+        "Operační systémy" => "#0dcaf0",
+        "Tělocvik" => "#198754",
+        _ => "#6c757d"
+    };
 
     private class CreateFolderModel
     {

@@ -58,3 +58,52 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+:root{
+  --muted:#6b7280;
+  --card-radius:12px;
+}
+
+/* Hero */
+.materials-hero { margin-top:1.5rem; margin-bottom:1rem; }
+.materials-title { font-size:2.25rem; font-weight:700; color:#0f172a; }
+.materials-subtitle { color:var(--muted); }
+
+/* Form card */
+.materials-card{
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border-radius: var(--card-radius);
+  padding:1.25rem;
+  box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+}
+
+/* Gradient button */
+.btn-gradient{
+  background: linear-gradient(90deg,#4f46e5 0%,#0ea5e9 100%);
+  color:#fff; border:none;
+  box-shadow:0 6px 18px rgba(79,70,229,0.18);
+}
+.btn-gradient:hover{ transform: translateY(-2px); transition: transform .15s ease; }
+
+/* Created cards */
+.created-card{
+  border-radius:10px;
+  transition: transform .18s ease, box-shadow .18s ease;
+  background:#fff;
+}
+.created-card:hover{
+  transform: translateY(-6px);
+  box-shadow: 0 16px 30px rgba(15,23,42,0.08);
+}
+
+/* Empty state */
+.empty-state{ text-align:center; padding:2rem; border-radius:10px; color:#94a3b8; background:#f8fafc; }
+.empty-emoji{ font-size:2.4rem; margin-bottom:.5rem; }
+
+/* small tweaks */
+.created-card .badge{ margin-right:.5rem; }
+
+@media (max-width:767px){
+  .materials-title{ font-size:1.5rem; }
+  .materials-card{ padding:.9rem; }
+}
