@@ -2,20 +2,20 @@
 {
     public interface IUnitOfWork
     {
-        IAuthorRepository Authors { get; }
-        IBookLoanRepository BookLoans { get; }
-        IBookRepository Books { get; }
-        IBookReservationRepository BookReservations { get; }
-        IGenreRepository Genres { get; }
-        IKindRepository Kinds { get; }
-        IMaturitaBookAssignmentRequestRepository MaturitaBookAssignmentRequests { get; }
-        IMaturitaBookRepository MaturitaBooks { get; }
-        IMaturitaBookSelectionRepository MaturitaBookSelections { get; }
-        IPeriodRepository Periods { get; }
-        IPublisherRepository Publishers { get; }
-        ITeachingMaterialRepository TeachingMaterials { get; }
-        IUserRepository Users { get; }
-        IWarehouseRepository Warehouses { get; }
+        public IAuthorRepository Authors { get; }
+        public IBookLoanRepository BookLoans { get; }
+        public IBookRepository Books { get; }
+        public IBookReservationRepository BookReservations { get; }
+        public IGenreRepository Genres { get; }
+        public IKindRepository Kinds { get; }
+        public IMaturitaBookAssignmentRequestRepository MaturitaBookAssignmentRequests { get; }
+        public IMaturitaBookRepository MaturitaBooks { get; }
+        public IMaturitaBookSelectionRepository MaturitaBookSelections { get; }
+        public IPeriodRepository Periods { get; }
+        public IPublisherRepository Publishers { get; }
+        public ITeachingMaterialRepository TeachingMaterials { get; }
+        public IUserRepository Users { get; }
+        public IWarehouseRepository Warehouses { get; }
 
         Task CommitAsync();
     }
