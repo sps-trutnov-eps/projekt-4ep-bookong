@@ -5,46 +5,55 @@ using Bookong.Domain.Interfaces;
 
 namespace Bookong.Application.UseCases
 {
-    internal class TeachingMaterialService : ICreateTeachingMaterialUseCase
+    internal class CreateTeachingMaterialUseCase : ICreateTeachingMaterialUseCase
     {
-        private ITeachingMaterialRepository repository;
-        private IUnitOfWork unitOfWork;
+        private readonly ITeachingMaterialRepository _teachingMaterialRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public TeachingMaterialService(ITeachingMaterialRepository r, IUnitOfWork uow)
+        public CreateTeachingMaterialUseCase(
+            ITeachingMaterialRepository teachingMaterialRepository,
+            IUnitOfWork unitOfWork)
         {
-            repository = r;
-            unitOfWork = uow;
+            _teachingMaterialRepository = teachingMaterialRepository;
+            _unitOfWork = unitOfWork;
         }
 
-        public async Task<GenericResponse> ExecuteAsync(CreateTeachingMaterialDto input)
+        public async Task<GenericResponse> ExecuteAsync(CreateTeachingMaterialDto dto)
         {
-            // Validace vstupů pomocí pattern matching
-            if (input is null || string.IsNullOrWhiteSpace(input.Title) || string.IsNullOrWhiteSpace(input.Url))
-                return CreateResp(false, "Titulek i URL musí být vyplněné.");
-
-            // Anonymous local function pro tvorbu entity
-            TeachingMaterial VytvorMaterial(CreateTeachingMaterialDto d)
-                => new TeachingMaterial { Title = d.Title.Trim(), Url = d.Url.Trim() };
-
-            var material = VytvorMaterial(input);
-
-            Action<TeachingMaterial> pridej = m => repository.Add(m);
-            pridej(material);
-
-            await unitOfWork.CommitAsync();
-
-            // Response pomocí výrazu switch
-            return material switch
+            //  1. Validace vstupu
+            if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Url))
             {
-                { Id: var id, PublicId: var pid, Title: var t, Url: var u } =>
-                    CreateResp(true, "Hotovo!",
-                        new { Identifikator = id, Odkaz = u, Nazev = t, Guid = pid }),
-                _ => CreateResp(false, "Neznámá chyba")
+                return new GenericResponse
+                {
+                    Success = false,
+                    Message = "Musíte zadat titulek i URL výukového materiálu."
+                };
+            }
+
+            //  2. Vytvoření entity
+            var newMaterial = new TeachingMaterial
+            {
+                Title = dto.Title.Trim(),
+                Url = dto.Url.Trim()
+            };
+
+            //  3. Uložení do databáze
+            _teachingMaterialRepository.Add(newMaterial);
+            await _unitOfWork.CommitAsync();
+
+            //  4. Vrácení odpovědi
+            return new GenericResponse
+            {
+                Success = true,
+                Message = "Výukový materiál byl úspěšně vytvořen.",
+                Data = new
+                {
+                    newMaterial.Id,
+                    newMaterial.PublicId,
+                    newMaterial.Title,
+                    newMaterial.Url
+                }
             };
         }
-
-        // Helper
-        private static GenericResponse CreateResp(bool ok, string msg, object? data = null)
-            => new GenericResponse { Success = ok, Message = msg, Data = data };
     }
 }
