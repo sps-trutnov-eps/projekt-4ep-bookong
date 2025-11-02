@@ -9,7 +9,7 @@
 <div class="container">
     <div class="row">
         <div class="col-6">
-            <EditForm Model="newFolder" OnValidSubmit="CreateFolder">
+            <EditForm Model="newFolder" OnValidSubmit="CreateFolder" FormName="CreateMaterialForm">
                 <DataAnnotationsValidator />
                 <div class="mb-2">
                     <InputText class="form-control" @bind-Value="newFolder.Name" placeholder="Název předmětu" />
