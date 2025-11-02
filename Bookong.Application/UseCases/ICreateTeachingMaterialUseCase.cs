@@ -23,11 +23,9 @@ namespace Bookong.Application.UseCases
             //  1. Validace vstupu
             if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Url))
             {
-                return new GenericResponse
-                {
-                    Success = false,
-                    Message = "Musíte zadat titulek i URL výukového materiálu."
-                };
+                return GenericResponse.FailureResponse(
+                    "Musíte zadat titulek i URL výukového materiálu."
+                );
             }
 
             //  2. Vytvoření entity
@@ -42,18 +40,16 @@ namespace Bookong.Application.UseCases
             await _unitOfWork.CommitAsync();
 
             //  4. Vrácení odpovědi
-            return new GenericResponse
-            {
-                Success = true,
-                Message = "Výukový materiál byl úspěšně vytvořen.",
-                Data = new
+            return GenericResponse.SuccessResponse(
+                "Výukový materiál byl úspěšně vytvořen.",
+                new
                 {
                     newMaterial.Id,
                     newMaterial.PublicId,
                     newMaterial.Title,
                     newMaterial.Url
                 }
-            };
+            );
         }
     }
 }
