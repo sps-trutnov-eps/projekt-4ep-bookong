@@ -9,7 +9,7 @@ builder.Services.AddDbContext<BookongDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
-builder.Services.AddScoped<Bookong.Web.Services.ITeachingMaterialsApi, Bookong.Web.Services.TeachingMaterialsApi>();
+builder.Services.AddScoped<Bookong.Web.Services.TeachingMaterialsApi, Bookong.Web.Services.TeachingMaterialsApi>();
 
 
 // Add services to the container.
