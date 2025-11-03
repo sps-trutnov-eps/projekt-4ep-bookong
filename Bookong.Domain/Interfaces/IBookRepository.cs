@@ -18,5 +18,8 @@ namespace Bookong.Domain.Interfaces
         Task<int> CountAsync();
 
         Task<IEnumerable<Book>> GetForExportAsync(int[] ids);
+
+        Task<int[]> GetAllIDsAsync();
+
     }
 }

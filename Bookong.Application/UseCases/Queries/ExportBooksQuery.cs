@@ -1,8 +1,10 @@
-﻿using System.IO;
-using ClosedXML.Excel;
-using Bookong.Application.DTOs;
+﻿using Bookong.Application.DTOs;
 using Bookong.Application.UseCases.Queries.Interfaces;
 using Bookong.Domain.Interfaces;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Office2019.Word.Cid;
+using System.IO;
 
 namespace Bookong.Application.UseCases.Queries
 {
@@ -76,5 +78,14 @@ namespace Bookong.Application.UseCases.Queries
             workbook.SaveAs(stream);
             return stream.ToArray();
         }
+
+        public async Task<byte[]> ExportAllToExcelAsync()
+        {
+            int[] books = await _uow.Books.GetAllIDsAsync();
+
+            return await ExportToExcelAsync(books);
+        }
+
+
     }
 }

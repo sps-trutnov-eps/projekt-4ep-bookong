@@ -177,7 +177,12 @@ namespace Bookong.Infrastructure.Repositories
             return await query.ToListAsync();
         }
 
-
+        public async Task<int[]> GetAllIDsAsync()
+        {
+            return await _context.Books
+                .Select(b => b.Id)
+                .ToArrayAsync();
+        }
 
     }
 }
