@@ -14,5 +14,7 @@ namespace Bookong.Domain.Interfaces
         void Add(Book book);
         void Update(Book book);
         void Delete(Book book);
+
+        Task<int> CountAsync();
     }
 }

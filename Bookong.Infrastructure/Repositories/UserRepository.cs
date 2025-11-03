@@ -70,5 +70,11 @@ namespace Bookong.Infrastructure.Repositories
         {
             _context.Users.Update(user);
         }
+
+        public async Task<int?> CountAsync()
+        {
+            var count = await _context.Users.CountAsync();
+            return count;
+        }
     }
 }
