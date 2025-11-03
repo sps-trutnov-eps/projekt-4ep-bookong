@@ -16,5 +16,7 @@ namespace Bookong.Domain.Interfaces
         void Delete(Book book);
 
         Task<int> CountAsync();
+
+        Task<IEnumerable<Book>> GetForExportAsync(int[] ids);
     }
 }
