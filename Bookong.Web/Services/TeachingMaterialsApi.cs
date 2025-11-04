@@ -9,6 +9,8 @@ namespace Bookong.Web.Services
     {
         Task<List<FolderDto>> GetFoldersAsync();
         Task<FolderDto> CreateFolderAsync(FolderDto folder);
+        Task UpdateFolderAsync(FolderDto folder);  // EDIT
+        Task DeleteFolderAsync(FolderDto folder);  // DELETE
     }
 
     public class TeachingMaterialsApi : ITeachingMaterialsApi
@@ -34,6 +36,27 @@ namespace Bookong.Web.Services
 
             _folders.Add(folder);
             return Task.FromResult(folder);
+        }
+
+        public Task UpdateFolderAsync(FolderDto folder)
+        {
+            var existing = _folders.FirstOrDefault(f => f.Name == folder.Name && f.CreatedBy == folder.CreatedBy);
+            if (existing != null)
+            {
+                existing.Description = folder.Description;
+                // pøípadnì i další vlastnosti/editace
+            }
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteFolderAsync(FolderDto folder)
+        {
+            var existing = _folders.FirstOrDefault(f => f.Name == folder.Name && f.CreatedBy == folder.CreatedBy);
+            if (existing != null)
+            {
+                _folders.Remove(existing);
+            }
+            return Task.CompletedTask;
         }
     }
 }

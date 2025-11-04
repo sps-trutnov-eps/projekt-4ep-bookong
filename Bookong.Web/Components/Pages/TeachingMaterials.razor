@@ -13,9 +13,18 @@
     <div class="row gy-4">
         <div class="col-md-5">
             <div class="materials-card">
-                <h4 class="mb-3">Vytvořit předmět</h4>
+                <h4 class="mb-3">
+                    @if (editingFolder != null)
+                    {
+                        <span>Upravit předmět</span>
+                    }
+                    else
+                    {
+                        <span>Vytvořit předmět</span>
+                    }
+                </h4>
 
-                <EditForm Model="newFolder" OnValidSubmit="CreateFolder" FormName="CreateMaterialForm">
+                <EditForm Model="newFolder" OnValidSubmit="HandleFormSubmit" FormName="CreateMaterialForm">
                     <DataAnnotationsValidator />
                     <div class="mb-3">
                         <label class="form-label small">Předmět</label>
@@ -36,7 +45,13 @@
                         <label class="form-label small">Založil</label>
                         <InputText class="form-control" @bind-Value="newFolder.CreatedBy" placeholder="Vaše jméno" />
                     </div>
-                    <button class="btn btn-gradient w-100 btn-lg" type="submit">Vytvořit předmět</button>
+                    <button class="btn btn-gradient w-100 btn-lg" type="submit">
+                        @(editingFolder != null ? "Uložit změny" : "Vytvořit předmět")
+                    </button>
+                    @if (editingFolder != null)
+                    {
+                        <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="CancelEdit">Zrušit</button>
+                    }
                     <ValidationSummary class="mt-2 text-danger" />
                 </EditForm>
             </div>
@@ -76,6 +91,10 @@
                                         <span class="badge bg-light text-dark">@((f.Files?.Count) ?? 0) souborů</span>
                                         <span class="badge bg-light text-dark">@((f.Links?.Count) ?? 0) odkazů</span>
                                     </div>
+                                    <div class="mt-3">
+                                        <button class="btn btn-outline-primary btn-sm me-2" @onclick="() => StartEdit(f)">Upravit</button>
+                                        <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteFolder(f)">Smazat</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -88,7 +107,8 @@
 
 @code {
     private List<FolderDto>? folders;
-    private CreateFolderModel newFolder = new CreateFolderModel();
+    private CreateFolderModel newFolder = new();
+    private FolderDto? editingFolder = null;
 
     private readonly List<string> subjects = new()
     {
@@ -98,7 +118,17 @@
         "Matematika",
         "Vývoj softwaru",
         "Operační systémy",
-        "Tělocvik"
+        "Tělocvik",
+        "Občanská nauka",
+        "Ekonomika",
+        "Mechatronika",
+        "Webové stránky",
+        "Dějepis",
+        "Fyzika",
+        "Aplikační software",
+        "Informatika",
+        "Chemie a ekologie",
+        "Hardware"
     };
 
     protected override async Task OnInitializedAsync()
@@ -106,21 +136,55 @@
         folders = await TeachingMaterialsApi.GetFoldersAsync();
     }
 
-    private async Task CreateFolder()
+    private async Task HandleFormSubmit()
     {
-        var folder = new FolderDto
+        if (editingFolder != null)
         {
-            Name = newFolder.Name ?? string.Empty,
-            Description = newFolder.Description ?? string.Empty,
-            CreatedBy = string.IsNullOrWhiteSpace(newFolder.CreatedBy) ? "Neznámý" : newFolder.CreatedBy,
-            Files = new List<FileDto>(),
-            Links = new List<LinkDto>(),
-            StudentMaterials = new List<StudentMaterialDto>()
-        };
+            editingFolder.Name = newFolder.Name ?? string.Empty;
+            editingFolder.Description = newFolder.Description ?? string.Empty;
+            editingFolder.CreatedBy = string.IsNullOrWhiteSpace(newFolder.CreatedBy) ? "Neznámý" : newFolder.CreatedBy;
+            await TeachingMaterialsApi.UpdateFolderAsync(editingFolder);
+            editingFolder = null;
+        }
+        else
+        {
+            var folder = new FolderDto
+            {
+                Name = newFolder.Name ?? string.Empty,
+                Description = newFolder.Description ?? string.Empty,
+                CreatedBy = string.IsNullOrWhiteSpace(newFolder.CreatedBy) ? "Neznámý" : newFolder.CreatedBy,
+                Files = new List<FileDto>(),
+                Links = new List<LinkDto>(),
+                StudentMaterials = new List<StudentMaterialDto>()
+            };
 
-        await TeachingMaterialsApi.CreateFolderAsync(folder);
+            await TeachingMaterialsApi.CreateFolderAsync(folder);
+        }
         folders = await TeachingMaterialsApi.GetFoldersAsync();
         newFolder = new CreateFolderModel();
+    }
+
+    private void StartEdit(FolderDto folder)
+    {
+        editingFolder = folder;
+        newFolder = new CreateFolderModel
+        {
+            Name = folder.Name,
+            Description = folder.Description,
+            CreatedBy = folder.CreatedBy
+        };
+    }
+
+    private void CancelEdit()
+    {
+        editingFolder = null;
+        newFolder = new CreateFolderModel();
+    }
+
+    private async Task DeleteFolder(FolderDto folder)
+    {
+        await TeachingMaterialsApi.DeleteFolderAsync(folder);
+        folders = await TeachingMaterialsApi.GetFoldersAsync();
     }
 
     private string GetAccentColor(string subject) => subject switch
@@ -132,6 +196,16 @@
         "Vývoj softwaru" => "#e83e8c",
         "Operační systémy" => "#0dcaf0",
         "Tělocvik" => "#198754",
+        "Občanská nauka" => "#ffc107",
+        "Ekonomika" => "#b02a37",
+        "Mechatronika" => "#5347ad",
+        "Webové stránky" => "#4285f4",
+        "Dějepis" => "#6c757d",
+        "Fyzika" => "#2274a5",
+        "Aplikační software" => "#9d4edd",
+        "Informatika" => "#0d9488",
+        "Chemie a ekologie" => "#17823a",
+        "Hardware" => "#b45309",
         _ => "#6c757d"
     };
 
