@@ -6,7 +6,7 @@
 
 <div class="materials-hero container">
     <h1 class="materials-title">Výukové materiály</h1>
-    <p class="materials-subtitle">Vytvořte předmět a spravujte materiály rychle a přehledně.</p>
+    <p class="materials-subtitle">Vytvořte předmět v rámci svého oboru a spravujte je přehledně.</p>
 </div>
 
 <div class="container">
@@ -26,17 +26,33 @@
 
                 <EditForm Model="newFolder" OnValidSubmit="HandleFormSubmit" FormName="CreateMaterialForm">
                     <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label class="form-label small">Obor</label>
+                        <InputSelect class="form-select form-control-lg" @bind-Value="selectedMajor">
+                            <option value="">-- Vyberte obor --</option>
+                            @foreach (var major in majorsWithSubjects.Keys)
+                            {
+                                <option value="@major">@major</option>
+                            }
+                        </InputSelect>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label small">Předmět</label>
-                        <InputSelect class="form-select form-control-lg" @bind-Value="newFolder.Name">
+                        <InputSelect class="form-select form-control-lg" @bind-Value="newFolder.Name" disabled="@string.IsNullOrWhiteSpace(selectedMajor)">
                             <option value="">-- Vyberte předmět --</option>
-                            @foreach (var s in subjects)
+                            @if (!string.IsNullOrWhiteSpace(selectedMajor))
                             {
-                                <option value="@s">@s</option>
+                                foreach (var s in FilteredSubjects)
+                                {
+                                    <option value="@s">@s</option>
+                                }
                             }
                         </InputSelect>
                         <ValidationMessage For="@(() => newFolder.Name)" class="text-danger small mt-1" />
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label small">Popis</label>
                         <InputText class="form-control" @bind-Value="newFolder.Description" placeholder="Krátký popis" />
@@ -77,7 +93,7 @@
             else
             {
                 <div class="row g-3 created-list">
-                    @foreach (var f in folders)
+                    @foreach (var f in folders.Where(f => string.IsNullOrWhiteSpace(selectedMajor) || FilteredSubjects.Contains(f.Name)))
                     {
                         <div class="col-sm-6">
                             <div class="card created-card" style="border-left:6px solid @GetAccentColor(f.Name);">
@@ -109,27 +125,27 @@
     private List<FolderDto>? folders;
     private CreateFolderModel newFolder = new();
     private FolderDto? editingFolder = null;
+    private string? selectedMajor;
 
-    private readonly List<string> subjects = new()
+    private readonly Dictionary<string, List<string>> majorsWithSubjects = new()
     {
-        "Angličtina",
-        "Počítačové sítě",
-        "Český jazyk",
-        "Matematika",
-        "Vývoj softwaru",
-        "Operační systémy",
-        "Tělocvik",
-        "Občanská nauka",
-        "Ekonomika",
-        "Mechatronika",
-        "Webové stránky",
-        "Dějepis",
-        "Fyzika",
-        "Aplikační software",
-        "Informatika",
-        "Chemie a ekologie",
-        "Hardware"
+        // Zúžený testovací příklad
+        ["Elektronické počítačové systémy"] = new()
+        {
+            "Matematika",
+            "Dějepis",
+            "Fyzika"
+        },
+        ["Informatika a Management"] = new()
+        {
+            "Angličtina",
+            "Webové stránky",
+            "Ekonomika"
+        }
     };
+
+    private List<string> FilteredSubjects =>
+        string.IsNullOrWhiteSpace(selectedMajor) ? new() : majorsWithSubjects[selectedMajor];
 
     protected override async Task OnInitializedAsync()
     {
@@ -161,7 +177,7 @@
             await TeachingMaterialsApi.CreateFolderAsync(folder);
         }
         folders = await TeachingMaterialsApi.GetFoldersAsync();
-        newFolder = new CreateFolderModel();
+        newFolder = new();
     }
 
     private void StartEdit(FolderDto folder)
@@ -173,6 +189,7 @@
             Description = folder.Description,
             CreatedBy = folder.CreatedBy
         };
+        selectedMajor = majorsWithSubjects.FirstOrDefault(x => x.Value.Contains(folder.Name)).Key;
     }
 
     private void CancelEdit()
@@ -189,23 +206,12 @@
 
     private string GetAccentColor(string subject) => subject switch
     {
-        "Angličtina" => "#0d6efd",
-        "Počítačové sítě" => "#6f42c1",
-        "Český jazyk" => "#20c997",
         "Matematika" => "#fd7e14",
-        "Vývoj softwaru" => "#e83e8c",
-        "Operační systémy" => "#0dcaf0",
-        "Tělocvik" => "#198754",
-        "Občanská nauka" => "#ffc107",
-        "Ekonomika" => "#b02a37",
-        "Mechatronika" => "#5347ad",
-        "Webové stránky" => "#4285f4",
         "Dějepis" => "#6c757d",
         "Fyzika" => "#2274a5",
-        "Aplikační software" => "#9d4edd",
-        "Informatika" => "#0d9488",
-        "Chemie a ekologie" => "#17823a",
-        "Hardware" => "#b45309",
+        "Angličtina" => "#0d6efd",
+        "Webové stránky" => "#4285f4",
+        "Ekonomika" => "#b02a37",
         _ => "#6c757d"
     };
 

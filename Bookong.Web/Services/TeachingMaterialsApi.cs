@@ -44,7 +44,7 @@ namespace Bookong.Web.Services
             if (existing != null)
             {
                 existing.Description = folder.Description;
-                // pøípadnì i další vlastnosti/editace
+                
             }
             return Task.CompletedTask;
         }
