@@ -17,7 +17,6 @@ namespace Bookong.Web.Services
 
         public TeachingMaterialsApi()
         {
-            // Zaèínáme prázdným seznamem — žádné "statické" ukázky
             _folders = new List<FolderDto>();
         }
 

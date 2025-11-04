@@ -17,7 +17,6 @@
 
                 <EditForm Model="newFolder" OnValidSubmit="CreateFolder" FormName="CreateMaterialForm">
                     <DataAnnotationsValidator />
-
                     <div class="mb-3">
                         <label class="form-label small">Předmět</label>
                         <InputSelect class="form-select form-control-lg" @bind-Value="newFolder.Name">
@@ -29,17 +28,14 @@
                         </InputSelect>
                         <ValidationMessage For="@(() => newFolder.Name)" class="text-danger small mt-1" />
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label small">Popis</label>
                         <InputText class="form-control" @bind-Value="newFolder.Description" placeholder="Krátký popis" />
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label small">Založil</label>
                         <InputText class="form-control" @bind-Value="newFolder.CreatedBy" placeholder="Vaše jméno" />
                     </div>
-
                     <button class="btn btn-gradient w-100 btn-lg" type="submit">Vytvořit předmět</button>
                     <ValidationSummary class="mt-2 text-danger" />
                 </EditForm>
@@ -48,7 +44,6 @@
 
         <div class="col-md-7">
             <h4 class="mb-3">Vytvořené předměty</h4>
-
             @if (folders == null)
             {
                 <div class="d-flex align-items-center">
