@@ -156,5 +156,33 @@ namespace Bookong.Infrastructure.Repositories
         {
             return await _context.Books.CountAsync();
         }
+
+        public async Task<IEnumerable<Bookong.Domain.Entities.Book>> GetForExportAsync(int[] ids)
+        {
+            var query = _context.Books
+            .AsNoTracking()
+            .Include(b => b.Author)
+            .Include(b => b.Genre)
+            .Include(b => b.Kind)
+            .Include(b => b.Period)
+            .Include(b => b.Publisher)
+            .Include(b => b.Warehouse)
+            .AsQueryable();
+
+            if (ids != null && ids.Length > 0)
+            {
+                query = query.Where(b => ids.Contains(b.Id));
+            }
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<int[]> GetAllIDsAsync()
+        {
+            return await _context.Books
+                .Select(b => b.Id)
+                .ToArrayAsync();
+        }
+
     }
 }

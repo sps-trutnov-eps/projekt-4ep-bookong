@@ -5,6 +5,7 @@
 @layout MainLayout
 @inject IJSRuntime JS
 @inject IGetLibraryStatisticsQuery LibraryStatsQuery
+@inject IExportBooksQuery ExportBooksQuery
 
 <!-- Hero Section with white background -->
 <div class="bg-white pb-5" style="min-height: 80vh;">
@@ -16,6 +17,25 @@
         <p class="lead text-muted mb-4" style="font-size: 1.1rem;">
             Přehled výpůjček knih a správa výpůjček
         </p>
+
+        <div class="mb-5 d-flex justify-content-center gap-3">
+            <!-- Export všech knih -->
+            <button class="btn btn-primary btn-lg shadow d-flex align-items-center gap-2 px-4 py-2"
+                    @onclick="() => ExportToExcel()">
+                <i class="bi bi-cloud-arrow-down fs-4"></i>
+                <span class="fw-semibold">Export všech knih</span>
+            </button>
+
+            <!-- Export konkrétních knih -->
+            <button class="btn btn-outline-primary btn-lg shadow d-flex align-items-center gap-2 px-4 py-2"
+                    @onclick="() => ExportToExcel(new[] { 1, 2, 3 })">
+                <i class="bi bi-journal-arrow-down fs-4"></i>
+                <span class="fw-semibold">Export knih [1, 2, 3]</span>
+            </button>
+        </div>
+
+
+
 
         @if (isLoading)
         {
@@ -191,4 +211,40 @@
             isLoading = false;
         }
     }
+
+    private async Task DownloadFileFromBytesAsync(string fileName, byte[] bytes)
+    {
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("downloadFileFromBytes", fileName, base64);
+    }
+
+
+    private async Task ExportToExcel(int[]? ids = null)
+    {
+        try
+        {
+            byte[] bytes;
+
+            if (ids != null && ids.Any())
+                bytes = await ExportBooksQuery.ExportToExcelAsync(ids);
+            else
+                bytes = await ExportBooksQuery.ExportAllToExcelAsync();
+
+            if (bytes == null || bytes.Length == 0)
+            {
+                await JS.InvokeVoidAsync("alert", "⚠️ Žádná data k exportu.");
+                return;
+            }
+
+            var fileName = $"Knihy_{DateTime.Now:yyyy-MM-dd_HH-mm}.xlsx";
+            await DownloadFileFromBytesAsync(fileName, bytes);
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"❌ Chyba při exportu: {ex.Message}");
+        }
+    }
+
 }
+
+
