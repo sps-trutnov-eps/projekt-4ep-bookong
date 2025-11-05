@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Bookong.Application.DTOs
+﻿namespace Bookong.Application.DTOs
 {
-    internal class TeachingMaterialDetailsDto
+    public class TeachingMaterialDetailsDto
     {
+        public int Id { get; set; }
+        public Guid PublicId { get; set; }
+        public string Title { get; set; }
+        public string Url { get; set; }
+        // Přidej další vlastnosti, pokud potřebuješ
     }
 }
