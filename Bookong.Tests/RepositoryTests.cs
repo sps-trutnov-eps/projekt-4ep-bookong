@@ -56,11 +56,11 @@ namespace Bookong.Tests
  .Options;
  using var context = new BookongDbContext(options);
  var repository = new BookRepository(context);
- var book = new Book { Name = "Test Book", Pages =100 };
+ var book = new Book { Name = "Test Book", Pages = 100 };
  repository.Add(book);
  await context.SaveChangesAsync();
  var books = await repository.GetAllAsync();
- Assert.Contains(books, b => b.Name == "Test Book" && b.Pages ==100);
+ Assert.Contains(books, b => b.Name == "Test Book" && b.Pages == 100);
  }
 
  [Fact]
