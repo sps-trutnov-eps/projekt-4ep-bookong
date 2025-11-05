@@ -31,7 +31,7 @@ namespace Bookong.Application.UseCases
             //  2. Vytvoření entity
             var newMaterial = new TeachingMaterial
             {
-                Title = dto.Title.Trim(),       
+                Title = dto.Title.Trim(),
                 Url = dto.Url.Trim()
             };
 
@@ -42,12 +42,12 @@ namespace Bookong.Application.UseCases
             //  4. Vrácení odpovědi
             return GenericResponse.SuccessResponse(
                 "Výukový materiál byl úspěšně vytvořen.",
-                new
+                new TeachingMaterialDetailsDto
                 {
-                    newMaterial.Id,
-                    newMaterial.PublicId,
-                    newMaterial.Title,
-                    newMaterial.Url
+                    Id = newMaterial.Id,
+                    PublicId = newMaterial.PublicId,
+                    Title = newMaterial.Title,
+                    Url = newMaterial.Url
                 }
             );
         }
