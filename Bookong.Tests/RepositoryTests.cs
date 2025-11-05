@@ -11,7 +11,7 @@ namespace Bookong.Tests
  public class RepositoryTests
  {
  [Fact]
- public async Task GenreRepository_AddAndGetById_WorksWithInMemoryDb()
+ public async Task GenreRepo_AddGet()
  {
  var options = new DbContextOptionsBuilder<BookongDbContext>()
  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -29,7 +29,7 @@ namespace Bookong.Tests
  }
 
  [Fact]
- public async Task AuthorRepository_AddAndGet_WorksWithInMemoryDb()
+ public async Task AuthorRepo_AddGet()
  {
  var options = new DbContextOptionsBuilder<BookongDbContext>()
  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -49,7 +49,7 @@ namespace Bookong.Tests
  }
 
  [Fact]
- public async Task BookRepository_AddAndGet_WorksWithInMemoryDb()
+ public async Task BookRepo_AddGet()
  {
  var options = new DbContextOptionsBuilder<BookongDbContext>()
  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -64,7 +64,7 @@ namespace Bookong.Tests
  }
 
  [Fact]
- public async Task KindRepository_AddAndGet_WorksWithInMemoryDb()
+ public async Task KindRepo_AddGet()
  {
  var options = new DbContextOptionsBuilder<BookongDbContext>()
  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -79,7 +79,7 @@ namespace Bookong.Tests
  }
 
  [Fact]
- public async Task PeriodRepository_AddAndGet_WorksWithInMemoryDb()
+ public async Task PeriodRepo_AddGet()
  {
  var options = new DbContextOptionsBuilder<BookongDbContext>()
  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -94,7 +94,7 @@ namespace Bookong.Tests
  }
 
  [Fact]
- public async Task PublisherRepository_AddAndGet_WorksWithInMemoryDb()
+ public async Task PublisherRepo_AddGet()
  {
  var options = new DbContextOptionsBuilder<BookongDbContext>()
  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -112,7 +112,7 @@ namespace Bookong.Tests
  }
 
  [Fact]
- public async Task WarehouseRepository_AddAndGet_WorksWithInMemoryDb()
+ public async Task WarehouseRepo_AddGet()
  {
  var options = new DbContextOptionsBuilder<BookongDbContext>()
  .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
