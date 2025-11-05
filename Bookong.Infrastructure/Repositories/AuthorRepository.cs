@@ -40,7 +40,7 @@ namespace Bookong.Infrastructure.Repositories
         {
             var query = _context.Authors
                 .AsNoTracking()
-                .Where(a => a.FirstName.Contains(name) || a.MiddleName.Contains(name) || a.LastName.Contains(name))
+                .Where(a => a.FirstName.Contains(name) || (a.MiddleName != null && a.MiddleName.Contains(name)) || a.LastName.Contains(name))
                 .OrderBy(a => a.LastName)
                 .ThenBy(a => a.FirstName);
 
