@@ -1,0 +1,68 @@
+@page "/formular"
+@using System.ComponentModel.DataAnnotations
+
+<PageTitle>Formuláø - Pøidat knihu</PageTitle>
+
+<h1>Pøidat knihu</h1>
+
+@if (submitted)
+{
+ <div class="alert alert-success">Kniha byla odeslána: <strong>@Model.Titulek</strong> od <strong>@Model.Autor</strong> (@Model.Rok)</div>
+}
+
+<EditForm Model="Model" OnValidSubmit="HandleValidSubmit">
+ <DataAnnotationsValidator />
+ <ValidationSummary />
+
+ <div class="mb-3">
+ <label class="form-label">Titulek</label>
+ <InputText class="form-control" @bind-Value="Model.Titulek" />
+ <ValidationMessage For="() => Model.Titulek" />
+ </div>
+
+ <div class="mb-3">
+ <label class="form-label">Autor</label>
+ <InputText class="form-control" @bind-Value="Model.Autor" />
+ <ValidationMessage For="() => Model.Autor" />
+ </div>
+
+ <div class="mb-3">
+ <label class="form-label">Rok vydání</label>
+ <InputNumber class="form-control" @bind-Value="Model.Rok" />
+ <ValidationMessage For="() => Model.Rok" />
+ </div>
+
+ <div class="mb-3">
+ <label class="form-label">ISBN</label>
+ <InputText class="form-control" @bind-Value="Model.ISBN" />
+ <ValidationMessage For="() => Model.ISBN" />
+ </div>
+
+ <button type="submit" class="btn btn-primary">Odeslat</button>
+</EditForm>
+
+@code {
+ private BookFormModel Model { get; set; } = new BookFormModel();
+ private bool submitted = false;
+
+ private void HandleValidSubmit()
+ {
+ // Zde byste typicky poslali data na server nebo volali službu.
+ submitted = true;
+ }
+
+ private class BookFormModel
+ {
+ [Required(ErrorMessage = "Titulek je povinný")]
+ public string? Titulek { get; set; }
+
+ [Required(ErrorMessage = "Autor je povinný")]
+ public string? Autor { get; set; }
+
+ [Range(0,9999, ErrorMessage = "Zadejte platný rok")]
+ public int? Rok { get; set; }
+
+ [RegularExpression("^[0-9Xx-]{10,17}$", ErrorMessage = "Neplatné ISBN")]
+ public string? ISBN { get; set; }
+ }
+}
