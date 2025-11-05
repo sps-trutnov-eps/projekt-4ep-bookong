@@ -128,7 +128,6 @@
                             <thead class="table-light">
                                 <tr>
                                     <th style="width:4%">#</th>
-                                    <th style="width:18%">ID</th>
                                     <th>Název knihy</th>
                                     <th class="d-none d-md-table-cell">Autor</th>
                                     <th class="text-end">Počet vypůjčení</th>
@@ -140,7 +139,6 @@
                                     var b = dashboardBooks[i];
                                     <tr>
                                         <td>@(i + 1)</td>
-                                        <td class="text-monospace text-muted">@b.PublicId.ToString()</td>
                                         <td class="fw-medium">@b.Title</td>
                                         <td class="d-none d-md-table-cell">@b.AuthorFullName</td>
                                         <td class="text-end">
