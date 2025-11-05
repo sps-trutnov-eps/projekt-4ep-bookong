@@ -6,6 +6,8 @@
 @inject IJSRuntime JS
 @inject IGetLibraryStatisticsQuery LibraryStatsQuery
 @inject IExportBooksQuery ExportBooksQuery
+@inject IGetAvailableBooksQuery GetAvailableBooks
+@inject ILogger<Dashboard> Logger
 
 <!-- Hero Section with white background -->
 <div class="bg-white pb-5" style="min-height: 80vh;">
@@ -17,6 +19,14 @@
         <p class="lead text-muted mb-4" style="font-size: 1.1rem;">
             Přehled výpůjček knih a správa výpůjček
         </p>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @errorMessage
+                <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+            </div>
+        }
 
         <div class="mb-5 d-flex justify-content-center gap-3">
             <!-- Export všech knih -->
@@ -33,9 +43,6 @@
                 <span class="fw-semibold">Export knih [1, 2, 3]</span>
             </button>
         </div>
-
-
-
 
         @if (isLoading)
         {
@@ -97,6 +104,55 @@
                     </div>
                 </div>
             </div>    
+
+            <!-- Seznam knih (přesunutý z Books.razor, upravený pouze pro přehled na dashboardu) -->
+            <div class="border rounded-3 shadow-sm bg-body mb-4 p-3">
+                <h2 class="h5 mb-3">Seznam knih</h2>
+
+                @if (isBooksLoading)
+                {
+                    <div class="d-flex justify-content-center py-3">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                }
+                else if (dashboardBooks == null || !dashboardBooks.Any())
+                {
+                    <div class="text-center">
+                        <p class="text-muted mb-0">Žádné knihy k zobrazení.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:4%">#</th>
+                                    <th style="width:18%">ID</th>
+                                    <th>Název knihy</th>
+                                    <th class="d-none d-md-table-cell">Autor</th>
+                                    <th class="text-end">Počet vypůjčení</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < dashboardBooks.Count; i++)
+                                {
+                                    var b = dashboardBooks[i];
+                                    <tr>
+                                        <td>@(i + 1)</td>
+                                        <td class="text-monospace text-muted">@b.PublicId.ToString()</td>
+                                        <td class="fw-medium">@b.Title</td>
+                                        <td class="d-none d-md-table-cell">@b.AuthorFullName</td>
+                                        <td class="text-end">
+                                            <span class="text-muted">N/A</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
         }
         else
         {
@@ -123,19 +179,45 @@
     private LibraryStatisticsDto? stats;
     private bool isLoading = true;
 
+    // Books for dashboard
+    private List<BookListItemDto> dashboardBooks = new();
+    private bool isBooksLoading = true;
+
+    private string? errorMessage;
+
     protected override async Task OnInitializedAsync()
     {
+        isLoading = true;
+        isBooksLoading = true;
+        errorMessage = null;
+
+        // Sekvenční načítání — NEparalelizovat EF dotazy přes stejný scoped DbContext
         try
         {
             stats = await LibraryStatsQuery.ExecuteAsync();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading statistics: {ex.Message}");
+            Logger.LogError(ex, "Error loading statistics for dashboard");
+            errorMessage = "Nepodařilo se načíst statistiky.";
+        }
+
+        try
+        {
+            var books = await GetAvailableBooks.ExecuteAsync();
+            dashboardBooks = books?.ToList() ?? new();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading books for dashboard");
+            errorMessage = errorMessage == null
+                ? "Nepodařilo se načíst seznam knih."
+                : errorMessage + " (seznam knih).";
         }
         finally
         {
             isLoading = false;
+            isBooksLoading = false;
         }
     }
 
