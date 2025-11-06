@@ -157,7 +157,7 @@ namespace Bookong.Infrastructure.Repositories
             return await _context.Books.CountAsync();
         }
 
-        public async Task<IEnumerable<Bookong.Domain.Entities.Book>> GetForExportAsync(int[] ids)
+        public async Task<IEnumerable<Bookong.Domain.Entities.Book>> GetByIdsAsync(int[] ids)
         {
             var query = _context.Books
             .AsNoTracking()
@@ -177,7 +177,7 @@ namespace Bookong.Infrastructure.Repositories
             return await query.ToListAsync();
         }
 
-        public async Task<int[]> GetAllIDsAsync()
+        public async Task<int[]> GetAllIdsAsync()
         {
             return await _context.Books
                 .Select(b => b.Id)

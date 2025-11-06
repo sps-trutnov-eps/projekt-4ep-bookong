@@ -19,7 +19,7 @@ namespace Bookong.Application.UseCases.Queries
 
         public async Task<IEnumerable<BookExportDto>> ExecuteAsync(int[] ids)
         {
-            var books = (await _uow.Books.GetForExportAsync(ids)).ToList();
+            var books = (await _uow.Books.GetByIdsAsync(ids)).ToList();
 
             return books.Select(b => new BookExportDto
             {
@@ -81,7 +81,7 @@ namespace Bookong.Application.UseCases.Queries
 
         public async Task<byte[]> ExportAllToExcelAsync()
         {
-            int[] books = await _uow.Books.GetAllIDsAsync();
+            int[] books = await _uow.Books.GetAllIdsAsync();
 
             return await ExportToExcelAsync(books);
         }
