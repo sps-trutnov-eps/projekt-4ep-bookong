@@ -124,14 +124,14 @@ public class SomeUseCase : ISomeUseCase
 
     public SomeUseCase(IUnitOfWork unitOfWork)
     {
-      _unitOfWork = unitOfWork;
-     _books = unitOfWork.Books;
+                _unitOfWork = unitOfWork;
+                _books = unitOfWork.Books;
     }
 
     public async Task<GenericResponse> Handle(SomeDto dto)
     {
         var book = await _books.GetByIdAsync(dto.BookId);
-  // ... business logic
+        // ... business logic
         await _unitOfWork.CommitAsync(); // Always commit!
         return GenericResponse.SuccessResponse("Success", book);
     }
@@ -146,7 +146,7 @@ public class SomeUseCase : ISomeUseCase
     private async Task HandleSubmit()
     {
         var response = await SelectMaturitaBook.Handle(dto);
-  if (response.Success) { /* success */ }
+        if (response.Success) { /* success */ }
         else { /* show error */ }
     }
 }
@@ -311,14 +311,14 @@ public class FakeBookRepository : IBookRepository
 {
     private readonly List<Book> _books = new();
     public List<Book> AddedBooks => _books;
- 
+    
     public void Add(Book book) => _books.Add(book);
     
     public Task<Book?> GetByIdAsync(int id) 
         => Task.FromResult(_books.FirstOrDefault(b => b.Id == id));
 
     public Task<IEnumerable<Book>> GetAllAsync() 
-  => Task.FromResult<IEnumerable<Book>>(_books);
+        => Task.FromResult<IEnumerable<Book>>(_books);
 }
 
 public class FakeUnitOfWork : IUnitOfWork
@@ -328,12 +328,12 @@ public class FakeUnitOfWork : IUnitOfWork
     
     public FakeUnitOfWork(IBookRepository books)
     {
-   Books = books;
+        Books = books;
     }
     
     public Task CommitAsync()
     {
-      CommitCalled = true;
+        CommitCalled = true;
         return Task.CompletedTask;
     }
 }
@@ -380,36 +380,36 @@ public class CreateBookUseCaseTests
     [Fact]
     public async Task ExecuteAsync_ValidDto_CreatesBookAndReturnsSuccess()
     {
-      // Arrange
-        var fakeBooks = new FakeBookRepository();
-    var fakeUnitOfWork = new FakeUnitOfWork(fakeBooks);
-        var useCase = new CreateBookUseCase(fakeUnitOfWork);
-        var dto = new CreateBookDto { Title = "Test Book", AuthorId = 1 };
-        
-     // Act
-  var result = await useCase.ExecuteAsync(dto);
-        
-        // Assert
-        Assert.True(result.Success);
- Assert.Single(fakeBooks.AddedBooks);
-        Assert.True(fakeUnitOfWork.CommitCalled);
+                // Arrange
+                var fakeBooks = new FakeBookRepository();
+                var fakeUnitOfWork = new FakeUnitOfWork(fakeBooks);
+                var useCase = new CreateBookUseCase(fakeUnitOfWork);
+                var dto = new CreateBookDto { Title = "Test Book", AuthorId = 1 };
+
+                // Act
+                var result = await useCase.ExecuteAsync(dto);
+
+                // Assert
+                Assert.True(result.Success);
+                Assert.Single(fakeBooks.AddedBooks);
+                Assert.True(fakeUnitOfWork.CommitCalled);
     }
     
     [Fact]
     public async Task ExecuteAsync_InvalidDto_ReturnsFailure()
- {
-        // Arrange
-        var fakeBooks = new FakeBookRepository();
- var fakeUnitOfWork = new FakeUnitOfWork(fakeBooks);
-        var useCase = new CreateBookUseCase(fakeUnitOfWork);
-        var dto = new CreateBookDto { Title = null }; // Invalid
-        
-        // Act
-  var result = await useCase.ExecuteAsync(dto);
+    {
+                // Arrange
+                var fakeBooks = new FakeBookRepository();
+                var fakeUnitOfWork = new FakeUnitOfWork(fakeBooks);
+                var useCase = new CreateBookUseCase(fakeUnitOfWork);
+                var dto = new CreateBookDto { Title = null }; // Invalid
 
-        // Assert
-   Assert.False(result.Success);
-   Assert.NotEmpty(result.Message);
+                // Act
+                var result = await useCase.ExecuteAsync(dto);
+
+                // Assert
+                Assert.False(result.Success);
+                Assert.NotEmpty(result.Message);
     }
 }
 ```
@@ -439,7 +439,7 @@ Bookong.Tests/
   │   └── BookEntityTests.cs
   └── Fakes/
       ├── FakeBookRepository.cs
-    ├── FakeUnitOfWork.cs
+      ├── FakeUnitOfWork.cs
       └── TestDataBuilder.cs
 ```
 
