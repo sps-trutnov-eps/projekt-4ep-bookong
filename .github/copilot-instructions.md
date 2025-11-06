@@ -124,8 +124,8 @@ public class SomeUseCase : ISomeUseCase
 
     public SomeUseCase(IUnitOfWork unitOfWork)
     {
-                _unitOfWork = unitOfWork;
-                _books = unitOfWork.Books;
+        _unitOfWork = unitOfWork;
+        _books = unitOfWork.Books;
     }
 
     public async Task<GenericResponse> Handle(SomeDto dto)
@@ -380,36 +380,36 @@ public class CreateBookUseCaseTests
     [Fact]
     public async Task ExecuteAsync_ValidDto_CreatesBookAndReturnsSuccess()
     {
-                // Arrange
-                var fakeBooks = new FakeBookRepository();
-                var fakeUnitOfWork = new FakeUnitOfWork(fakeBooks);
-                var useCase = new CreateBookUseCase(fakeUnitOfWork);
-                var dto = new CreateBookDto { Title = "Test Book", AuthorId = 1 };
+    // Arrange
+    var fakeBooks = new FakeBookRepository();
+    var fakeUnitOfWork = new FakeUnitOfWork(fakeBooks);
+    var useCase = new CreateBookUseCase(fakeUnitOfWork);
+    var dto = new CreateBookDto { Title = "Test Book", AuthorId = 1 };
 
-                // Act
-                var result = await useCase.ExecuteAsync(dto);
+    // Act
+    var result = await useCase.ExecuteAsync(dto);
 
-                // Assert
-                Assert.True(result.Success);
-                Assert.Single(fakeBooks.AddedBooks);
-                Assert.True(fakeUnitOfWork.CommitCalled);
+    // Assert
+    Assert.True(result.Success);
+    Assert.Single(fakeBooks.AddedBooks);
+    Assert.True(fakeUnitOfWork.CommitCalled);
     }
     
     [Fact]
     public async Task ExecuteAsync_InvalidDto_ReturnsFailure()
     {
-                // Arrange
-                var fakeBooks = new FakeBookRepository();
-                var fakeUnitOfWork = new FakeUnitOfWork(fakeBooks);
-                var useCase = new CreateBookUseCase(fakeUnitOfWork);
-                var dto = new CreateBookDto { Title = null }; // Invalid
+        // Arrange
+        var fakeBooks = new FakeBookRepository();
+        var fakeUnitOfWork = new FakeUnitOfWork(fakeBooks);
+        var useCase = new CreateBookUseCase(fakeUnitOfWork);
+        var dto = new CreateBookDto { Title = null }; // Invalid
 
-                // Act
-                var result = await useCase.ExecuteAsync(dto);
+        // Act
+        var result = await useCase.ExecuteAsync(dto);
 
-                // Assert
-                Assert.False(result.Success);
-                Assert.NotEmpty(result.Message);
+        // Assert
+        Assert.False(result.Success);
+        Assert.NotEmpty(result.Message);
     }
 }
 ```
