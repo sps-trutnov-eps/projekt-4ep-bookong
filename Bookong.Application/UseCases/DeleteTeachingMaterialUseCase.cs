@@ -6,26 +6,28 @@ namespace Bookong.Application.UseCases
 {
     public class DeleteTeachingMaterialUseCase : IDeleteTeachingMaterialUseCase
     {
-        private readonly ITeachingMaterialRepository _teachingMaterialRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public DeleteTeachingMaterialUseCase(
-            ITeachingMaterialRepository teachingMaterialRepository,
-            IUnitOfWork unitOfWork)
+        public DeleteTeachingMaterialUseCase(IUnitOfWork unitOfWork)
         {
-            _teachingMaterialRepository = teachingMaterialRepository;
             _unitOfWork = unitOfWork;
         }
 
         public async Task<GenericResponse> ExecuteAsync(int id)
         {
-            var material = await _teachingMaterialRepository.GetByIdAsync(id);
+            // 1. Najdi materiál
+            var material = await _unitOfWork.TeachingMaterials.GetByIdAsync(id);
+            
             if (material == null)
             {
                 return GenericResponse.FailureResponse("Výukový materiál nebyl nalezen.");
             }
-            _teachingMaterialRepository.Delete(material);
+
+            // 2. Smaž materiál
+            _unitOfWork.TeachingMaterials.Delete(material);
             await _unitOfWork.CommitAsync();
+
+            // 3. Vrať úspěch
             return GenericResponse.SuccessResponse("Výukový materiál byl úspěšně smazán.");
         }
     }
