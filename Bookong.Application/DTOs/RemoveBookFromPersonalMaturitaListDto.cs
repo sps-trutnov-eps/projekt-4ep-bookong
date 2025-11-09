@@ -1,6 +1,6 @@
 namespace Bookong.Application.DTOs
 {
-    public class AddBookToPersonalMaturitaListDto
+    public class RemoveBookFromPersonalMaturitaListDto
     {
         public Guid BookPublicId { get; set; }
     }
