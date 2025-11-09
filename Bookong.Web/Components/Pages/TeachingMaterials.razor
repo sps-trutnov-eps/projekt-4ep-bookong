@@ -6,7 +6,7 @@
 
 <div class="materials-hero container">
     <h1 class="materials-title">Výukové materiály</h1>
-    <p class="materials-subtitle">Vytvořte předmět, autora, popis a odkaz, datum se doplní automaticky.</p>
+    <p class="materials-subtitle">Povinně vyplňte předmět, obor, autora, popis a odkaz. Datum se doplní automaticky.</p>
 </div>
 
 <div class="container">
@@ -33,8 +33,14 @@
                         <ValidationMessage For="@(() => newFolder.Name)" class="text-danger small mt-1" />
                     </div>
                     <div class="mb-3">
+                        <label class="form-label small">Obor</label>
+                        <InputText class="form-control" @bind-Value="newFolder.Field" placeholder="Název oboru" />
+                        <ValidationMessage For="@(() => newFolder.Field)" class="text-danger small mt-1" />
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label small">Autor</label>
                         <InputText class="form-control" @bind-Value="newFolder.CreatedBy" placeholder="Vaše jméno" />
+                        <ValidationMessage For="@(() => newFolder.CreatedBy)" class="text-danger small mt-1" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label small">Popis</label>
@@ -44,7 +50,7 @@
                         <label class="form-label small">URL odkaz</label>
                         <InputText class="form-control" @bind-Value="newFolder.LinkUrl" placeholder="https://..." />
                     </div>
-                    <!-- date and time will set automatically -->
+                    <!-- Datum a čas se nastaví automaticky v modelu -->
                     <button class="btn btn-gradient w-100 btn-lg" type="submit">
                         @(editingFolder != null ? "Uložit změny" : "Vytvořit předmět")
                     </button>
@@ -86,6 +92,9 @@
                                         <h5 class="card-title mb-1">@f.Name</h5>
                                         <small class="text-muted">@f.CreatedBy</small>
                                     </div>
+                                    <p class="card-text small mb-1">
+                                        <b>Obor:</b> @f.Field
+                                    </p>
                                     <p class="card-text small text-muted mb-1">@f.Description</p>
                                     <p>
                                         <a href="@f.LinkUrl" target="_blank">@f.LinkUrl</a><br />
@@ -120,6 +129,7 @@
         if (editingFolder != null)
         {
             editingFolder.Name = newFolder.Name ?? string.Empty;
+            editingFolder.Field = newFolder.Field ?? string.Empty;
             editingFolder.Description = newFolder.Description ?? string.Empty;
             editingFolder.CreatedBy = string.IsNullOrWhiteSpace(newFolder.CreatedBy) ? "Neznámý" : newFolder.CreatedBy;
             editingFolder.LinkUrl = newFolder.LinkUrl ?? string.Empty;
@@ -132,6 +142,7 @@
             var folder = new FolderDto
             {
                 Name = newFolder.Name ?? string.Empty,
+                Field = newFolder.Field ?? string.Empty,
                 Description = newFolder.Description ?? string.Empty,
                 CreatedBy = string.IsNullOrWhiteSpace(newFolder.CreatedBy) ? "Neznámý" : newFolder.CreatedBy,
                 LinkUrl = newFolder.LinkUrl ?? string.Empty,
@@ -152,6 +163,7 @@
         newFolder = new FolderDto
         {
             Name = folder.Name,
+            Field = folder.Field,
             Description = folder.Description,
             CreatedBy = folder.CreatedBy,
             LinkUrl = folder.LinkUrl

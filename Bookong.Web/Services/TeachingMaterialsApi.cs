@@ -33,18 +33,19 @@ namespace Bookong.Web.Services
             folder.Files ??= new List<FileDto>();
             folder.Links ??= new List<LinkDto>();
             folder.StudentMaterials ??= new List<StudentMaterialDto>();
-            folder.CreatedAt = System.DateTime.Now; // Nastaví èas automaticky
+            folder.CreatedAt = System.DateTime.Now;
             _folders.Add(folder);
             return Task.FromResult(folder);
         }
 
         public Task UpdateFolderAsync(FolderDto folder)
         {
-            var existing = _folders.FirstOrDefault(f => f.Name == folder.Name && f.CreatedBy == folder.CreatedBy);
+            var existing = _folders.FirstOrDefault(f => f.Name == folder.Name && f.CreatedBy == folder.CreatedBy && f.Field == folder.Field);
             if (existing != null)
             {
                 existing.Description = folder.Description;
                 existing.LinkUrl = folder.LinkUrl;
+                existing.Field = folder.Field;
                 existing.CreatedAt = folder.CreatedAt;
             }
             return Task.CompletedTask;
@@ -52,7 +53,7 @@ namespace Bookong.Web.Services
 
         public Task DeleteFolderAsync(FolderDto folder)
         {
-            var existing = _folders.FirstOrDefault(f => f.Name == folder.Name && f.CreatedBy == folder.CreatedBy);
+            var existing = _folders.FirstOrDefault(f => f.Name == folder.Name && f.CreatedBy == folder.CreatedBy && f.Field == folder.Field);
             if (existing != null)
             {
                 _folders.Remove(existing);
