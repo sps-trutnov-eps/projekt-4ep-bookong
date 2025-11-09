@@ -6,7 +6,7 @@
 
 <div class="materials-hero container">
     <h1 class="materials-title">Výukové materiály</h1>
-    <p class="materials-subtitle">Vytvořte předmět v rámci svého oboru a spravujte je přehledně.</p>
+    <p class="materials-subtitle">Vytvořte předmět, autora, popis a odkaz, datum se doplní automaticky.</p>
 </div>
 
 <div class="container">
@@ -28,39 +28,23 @@
                     <DataAnnotationsValidator />
 
                     <div class="mb-3">
-                        <label class="form-label small">Obor</label>
-                        <InputSelect class="form-select form-control-lg" @bind-Value="selectedMajor">
-                            <option value="">-- Vyberte obor --</option>
-                            @foreach (var major in majorsWithSubjects.Keys)
-                            {
-                                <option value="@major">@major</option>
-                            }
-                        </InputSelect>
-                    </div>
-
-                    <div class="mb-3">
                         <label class="form-label small">Předmět</label>
-                        <InputSelect class="form-select form-control-lg" @bind-Value="newFolder.Name" disabled="@string.IsNullOrWhiteSpace(selectedMajor)">
-                            <option value="">-- Vyberte předmět --</option>
-                            @if (!string.IsNullOrWhiteSpace(selectedMajor))
-                            {
-                                foreach (var s in FilteredSubjects)
-                                {
-                                    <option value="@s">@s</option>
-                                }
-                            }
-                        </InputSelect>
+                        <InputText class="form-control" @bind-Value="newFolder.Name" placeholder="Název předmětu" />
                         <ValidationMessage For="@(() => newFolder.Name)" class="text-danger small mt-1" />
                     </div>
-
                     <div class="mb-3">
-                        <label class="form-label small">Popis</label>
-                        <InputText class="form-control" @bind-Value="newFolder.Description" placeholder="Krátký popis" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small">Založil</label>
+                        <label class="form-label small">Autor</label>
                         <InputText class="form-control" @bind-Value="newFolder.CreatedBy" placeholder="Vaše jméno" />
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Popis</label>
+                        <InputTextArea class="form-control" @bind-Value="newFolder.Description" placeholder="Krátký popis" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">URL odkaz</label>
+                        <InputText class="form-control" @bind-Value="newFolder.LinkUrl" placeholder="https://..." />
+                    </div>
+                    <!-- date and time will set automatically -->
                     <button class="btn btn-gradient w-100 btn-lg" type="submit">
                         @(editingFolder != null ? "Uložit změny" : "Vytvořit předmět")
                     </button>
@@ -93,20 +77,20 @@
             else
             {
                 <div class="row g-3 created-list">
-                    @foreach (var f in folders.Where(f => string.IsNullOrWhiteSpace(selectedMajor) || FilteredSubjects.Contains(f.Name)))
+                    @foreach (var f in folders)
                     {
                         <div class="col-sm-6">
-                            <div class="card created-card" style="border-left:6px solid @GetAccentColor(f.Name);">
+                            <div class="card created-card">
                                 <div class="card-body p-3">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <h5 class="card-title mb-1">@f.Name</h5>
                                         <small class="text-muted">@f.CreatedBy</small>
                                     </div>
                                     <p class="card-text small text-muted mb-1">@f.Description</p>
-                                    <div class="mt-2">
-                                        <span class="badge bg-light text-dark">@((f.Files?.Count) ?? 0) souborů</span>
-                                        <span class="badge bg-light text-dark">@((f.Links?.Count) ?? 0) odkazů</span>
-                                    </div>
+                                    <p>
+                                        <a href="@f.LinkUrl" target="_blank">@f.LinkUrl</a><br />
+                                        <span class="text-muted small">Vytvořeno: @f.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
+                                    </p>
                                     <div class="mt-3">
                                         <button class="btn btn-outline-primary btn-sm me-2" @onclick="() => StartEdit(f)">Upravit</button>
                                         <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteFolder(f)">Smazat</button>
@@ -123,29 +107,8 @@
 
 @code {
     private List<FolderDto>? folders;
-    private CreateFolderModel newFolder = new();
+    private FolderDto newFolder = new();
     private FolderDto? editingFolder = null;
-    private string? selectedMajor;
-
-    private readonly Dictionary<string, List<string>> majorsWithSubjects = new()
-    {
-        // Zúžený testovací příklad
-        ["Elektronické počítačové systémy"] = new()
-        {
-            "Matematika",
-            "Dějepis",
-            "Fyzika"
-        },
-        ["Informatika a Management"] = new()
-        {
-            "Angličtina",
-            "Webové stránky",
-            "Ekonomika"
-        }
-    };
-
-    private List<string> FilteredSubjects =>
-        string.IsNullOrWhiteSpace(selectedMajor) ? new() : majorsWithSubjects[selectedMajor];
 
     protected override async Task OnInitializedAsync()
     {
@@ -159,6 +122,8 @@
             editingFolder.Name = newFolder.Name ?? string.Empty;
             editingFolder.Description = newFolder.Description ?? string.Empty;
             editingFolder.CreatedBy = string.IsNullOrWhiteSpace(newFolder.CreatedBy) ? "Neznámý" : newFolder.CreatedBy;
+            editingFolder.LinkUrl = newFolder.LinkUrl ?? string.Empty;
+            editingFolder.CreatedAt = DateTime.Now;
             await TeachingMaterialsApi.UpdateFolderAsync(editingFolder);
             editingFolder = null;
         }
@@ -169,11 +134,12 @@
                 Name = newFolder.Name ?? string.Empty,
                 Description = newFolder.Description ?? string.Empty,
                 CreatedBy = string.IsNullOrWhiteSpace(newFolder.CreatedBy) ? "Neznámý" : newFolder.CreatedBy,
+                LinkUrl = newFolder.LinkUrl ?? string.Empty,
                 Files = new List<FileDto>(),
                 Links = new List<LinkDto>(),
-                StudentMaterials = new List<StudentMaterialDto>()
+                StudentMaterials = new List<StudentMaterialDto>(),
+                CreatedAt = DateTime.Now
             };
-
             await TeachingMaterialsApi.CreateFolderAsync(folder);
         }
         folders = await TeachingMaterialsApi.GetFoldersAsync();
@@ -183,43 +149,24 @@
     private void StartEdit(FolderDto folder)
     {
         editingFolder = folder;
-        newFolder = new CreateFolderModel
+        newFolder = new FolderDto
         {
             Name = folder.Name,
             Description = folder.Description,
-            CreatedBy = folder.CreatedBy
+            CreatedBy = folder.CreatedBy,
+            LinkUrl = folder.LinkUrl
         };
-        selectedMajor = majorsWithSubjects.FirstOrDefault(x => x.Value.Contains(folder.Name)).Key;
     }
 
     private void CancelEdit()
     {
         editingFolder = null;
-        newFolder = new CreateFolderModel();
+        newFolder = new FolderDto();
     }
 
     private async Task DeleteFolder(FolderDto folder)
     {
         await TeachingMaterialsApi.DeleteFolderAsync(folder);
         folders = await TeachingMaterialsApi.GetFoldersAsync();
-    }
-
-    private string GetAccentColor(string subject) => subject switch
-    {
-        "Matematika" => "#fd7e14",
-        "Dějepis" => "#6c757d",
-        "Fyzika" => "#2274a5",
-        "Angličtina" => "#0d6efd",
-        "Webové stránky" => "#4285f4",
-        "Ekonomika" => "#b02a37",
-        _ => "#6c757d"
-    };
-
-    private class CreateFolderModel
-    {
-        [Required(ErrorMessage = "Zadejte název předmětu.")]
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public string? CreatedBy { get; set; }
     }
 }

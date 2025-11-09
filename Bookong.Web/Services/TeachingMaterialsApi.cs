@@ -9,8 +9,8 @@ namespace Bookong.Web.Services
     {
         Task<List<FolderDto>> GetFoldersAsync();
         Task<FolderDto> CreateFolderAsync(FolderDto folder);
-        Task UpdateFolderAsync(FolderDto folder);  // EDIT
-        Task DeleteFolderAsync(FolderDto folder);  // DELETE
+        Task UpdateFolderAsync(FolderDto folder);
+        Task DeleteFolderAsync(FolderDto folder);
     }
 
     public class TeachingMaterialsApi : ITeachingMaterialsApi
@@ -33,7 +33,7 @@ namespace Bookong.Web.Services
             folder.Files ??= new List<FileDto>();
             folder.Links ??= new List<LinkDto>();
             folder.StudentMaterials ??= new List<StudentMaterialDto>();
-
+            folder.CreatedAt = System.DateTime.Now; // Nastaví èas automaticky
             _folders.Add(folder);
             return Task.FromResult(folder);
         }
@@ -44,7 +44,8 @@ namespace Bookong.Web.Services
             if (existing != null)
             {
                 existing.Description = folder.Description;
-                
+                existing.LinkUrl = folder.LinkUrl;
+                existing.CreatedAt = folder.CreatedAt;
             }
             return Task.CompletedTask;
         }
