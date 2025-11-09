@@ -1,68 +1,155 @@
 @page "/formular"
 @using System.ComponentModel.DataAnnotations
+@using Bookong.Application.DTOs
 
-<PageTitle>Formul�� - P�idat knihu</PageTitle>
+<PageTitle>Formulář - Přidat knihu</PageTitle>
 
-<h1>P�idat knihu</h1>
+<div class="container mt-4">
+ <h1>Přidat knihu</h1>
 
-@if (submitted)
-{
- <div class="alert alert-success">Kniha byla odesl�na: <strong>@Model.Titulek</strong> od <strong>@Model.Autor</strong> (@Model.Rok)</div>
-}
+ @if (submitted)
+ {
+ <div class="alert alert-success">Kniha byla odeslána: <strong>@Model.Title</strong></div>
+ }
 
-<EditForm Model="Model" OnValidSubmit="HandleValidSubmit">
+ <EditForm Model="Model" OnValidSubmit="HandleValidSubmit">
  <DataAnnotationsValidator />
- <ValidationSummary />
+ <ValidationSummary class="alert alert-danger" />
 
  <div class="mb-3">
- <label class="form-label">Titulek</label>
- <InputText class="form-control" @bind-Value="Model.Titulek" />
- <ValidationMessage For="() => Model.Titulek" />
+ <label class="form-label">Název</label>
+ <InputText class="form-control" @bind-Value="Model.Title" />
+ <ValidationMessage For="() => Model.Title" class="text-danger" />
  </div>
 
  <div class="mb-3">
  <label class="form-label">Autor</label>
- <InputText class="form-control" @bind-Value="Model.Autor" />
- <ValidationMessage For="() => Model.Autor" />
- </div>
-
- <div class="mb-3">
- <label class="form-label">Rok vyd�n�</label>
- <InputNumber class="form-control" @bind-Value="Model.Rok" />
- <ValidationMessage For="() => Model.Rok" />
+ <InputSelect class="form-select" @bind-Value="Model.AuthorId">
+ <option value="">-- Vyberte autora --</option>
+ @foreach (var a in Authors)
+ {
+ <option value="@a.Id">@a.Name</option>
+ }
+ </InputSelect>
+ <ValidationMessage For="() => Model.AuthorId" class="text-danger" />
  </div>
 
  <div class="mb-3">
  <label class="form-label">ISBN</label>
  <InputText class="form-control" @bind-Value="Model.ISBN" />
- <ValidationMessage For="() => Model.ISBN" />
+ <ValidationMessage For="() => Model.ISBN" class="text-danger" />
+ </div>
+
+ <div class="row">
+ <div class="col-md-4 mb-3">
+ <label class="form-label">Žánr</label>
+ <InputSelect class="form-select" @bind-Value="Model.GenreId">
+ <option value="">-- Vyberte žánr --</option>
+ @foreach (var g in Genres)
+ {
+ <option value="@g.Id">@g.Name</option>
+ }
+ </InputSelect>
+ <ValidationMessage For="() => Model.GenreId" class="text-danger" />
+ </div>
+
+ <div class="col-md-4 mb-3">
+ <label class="form-label">Literární druh</label>
+ <InputSelect class="form-select" @bind-Value="Model.KindId">
+ <option value="">-- Vyberte druh --</option>
+ @foreach (var k in Kinds)
+ {
+ <option value="@k.Id">@k.Name</option>
+ }
+ </InputSelect>
+ <ValidationMessage For="() => Model.KindId" class="text-danger" />
+ </div>
+
+ <div class="col-md-4 mb-3">
+ <label class="form-label">Historické období</label>
+ <InputSelect class="form-select" @bind-Value="Model.PeriodId">
+ <option value="">-- Vyberte období --</option>
+ @foreach (var p in Periods)
+ {
+ <option value="@p.Id">@p.Name</option>
+ }
+ </InputSelect>
+ <ValidationMessage For="() => Model.PeriodId" class="text-danger" />
+ </div>
+ </div>
+
+ <div class="mb-3">
+ <label class="form-label">Počet stran</label>
+ <InputNumber class="form-control" @bind-Value="Model.Pages" />
+ <ValidationMessage For="() => Model.Pages" class="text-danger" />
+ </div>
+
+ <div class="mb-3">
+ <label class="form-label">Datum vydání</label>
+ <InputDate class="form-control" @bind-Value="Model.DateRelease" />
+ <ValidationMessage For="() => Model.DateRelease" class="text-danger" />
+ </div>
+
+ <div class="mb-3">
+ <label class="form-label">Sklad</label>
+ <InputSelect class="form-select" @bind-Value="Model.WarehouseId">
+ <option value="">-- Vyberte sklad --</option>
+ @foreach (var w in Warehouses)
+ {
+ <option value="@w.Id">@w.Name</option>
+ }
+ </InputSelect>
+ <ValidationMessage For="() => Model.WarehouseId" class="text-danger" />
  </div>
 
  <button type="submit" class="btn btn-primary">Odeslat</button>
-</EditForm>
+ </EditForm>
+
+ <div class="mt-4 text-muted small">
+ <!-- TODO: Replace placeholder lists with queries/UseCases registered in DI -->
+ </div>
+</div>
 
 @code {
- private BookFormModel Model { get; set; } = new BookFormModel();
+ private CreateBookDto Model { get; set; } = new CreateBookDto();
  private bool submitted = false;
+
+ // Placeholder data - replace with injected queries/usecases that fetch real data
+ private List<SelectItem> Authors = new()
+ {
+ new SelectItem(1, "Jan Novák"),
+ new SelectItem(2, "Petr Svoboda")
+ };
+
+ private List<SelectItem> Genres = new()
+ {
+ new SelectItem(1, "Populárně naučná"),
+ new SelectItem(2, "Sci-fi")
+ };
+
+ private List<SelectItem> Kinds = new()
+ {
+ new SelectItem(1, "Povídka"),
+ new SelectItem(2, "Román")
+ };
+
+ private List<SelectItem> Periods = new()
+ {
+ new SelectItem(1, "Středověk"),
+ new SelectItem(2, "Novověk")
+ };
+
+ private List<SelectItem> Warehouses = new()
+ {
+ new SelectItem(1, "Hlavní sklad"),
+ new SelectItem(2, "Vedlejší sklad")
+ };
 
  private void HandleValidSubmit()
  {
- // Zde byste typicky poslali data na server nebo volali slu�bu.
+ // TODO: Zavolat CreateBook UseCase a zpracovat GenericResponse
  submitted = true;
  }
 
- private class BookFormModel
- {
- [Required(ErrorMessage = "Titulek je povinn�")]
- public string? Titulek { get; set; }
-
- [Required(ErrorMessage = "Autor je povinn�")]
- public string? Autor { get; set; }
-
- [Range(0,9999, ErrorMessage = "Zadejte platn� rok")]
- public int? Rok { get; set; }
-
- [RegularExpression("^[0-9Xx-]{10,17}$", ErrorMessage = "Neplatn� ISBN")]
- public string? ISBN { get; set; }
- }
+ private record SelectItem(int Id, string Name);
 }
