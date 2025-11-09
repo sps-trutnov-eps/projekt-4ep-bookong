@@ -33,6 +33,7 @@
 .search-glass input {
   color: #fff;
   background: transparent;
+  height: 48px;
 }
 
 /* Form card (glass look) */
@@ -87,6 +88,48 @@
 .empty-state {
   border-radius: 12px;
   background: linear-gradient(180deg,#fff,#f4f7ff);
+}
+
+/* Hero buttons */
+.hero-buttons .btn {
+  border-radius: 12px;
+  padding: .45rem .8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+/* white button with subtle shadow */
+.btn-white-shadow {
+  background: rgba(255,255,255,0.98);
+  color: #0f172a;
+  border: 0;
+  box-shadow: 0 6px 20px rgba(2,6,23,0.06);
+}
+.btn-white-shadow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(2,6,23,0.08);
+}
+
+/* outline light button tweak */
+.btn-outline-light {
+  border-color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.95);
+}
+.btn-outline-light:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+
+/* ensure icon spacing */
+.hero-buttons svg { opacity: .95; }
+
+/* accessibility: focus states */
+.hero-buttons .btn:focus {
+  outline: 3px solid rgba(99,102,241,0.14);
+  outline-offset: 2px;
 }
 
 /* Responsive tweaks */
