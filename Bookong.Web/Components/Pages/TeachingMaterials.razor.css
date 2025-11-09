@@ -1,0 +1,45 @@
+.materials-hero {
+  background: linear-gradient(135deg, var(--bs-primary) 0%, rgba(13,110,253,0.85) 60%);
+  color: white;
+  border-radius: 12px;
+}
+
+.materials-title {
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.materials-subtitle {
+  opacity: 0.95;
+}
+
+.card.created-card {
+  transition: transform .15s ease, box-shadow .15s ease;
+  border-radius: 12px;
+}
+
+.card.created-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(13,110,253,0.08);
+}
+
+.created-list .card .text-truncate {
+  max-height: 3.6rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.empty-state {
+  border-radius: 12px;
+  background: linear-gradient(180deg,#fff,#f8f9ff);
+}
+
+.btn-primary {
+  box-shadow: 0 6px 18px rgba(13,110,253,0.12);
+}
+
+.form-control.rounded-pill {
+  border-radius: 50rem;
+}
