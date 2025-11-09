@@ -6,6 +6,5 @@
         public Guid PublicId { get; set; }
         public string Title { get; set; }
         public string Url { get; set; }
-        // Přidej další vlastnosti, pokud potřebuješ
     }
 }
