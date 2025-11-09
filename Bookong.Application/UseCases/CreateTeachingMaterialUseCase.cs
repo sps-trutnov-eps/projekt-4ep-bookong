@@ -24,11 +24,24 @@ namespace Bookong.Application.UseCases
                 );
             }
 
+            // TODO: Získat aktuálního uživatele a jeho UserId
+            // Zde je potřeba získat userId, např. z kontextu nebo parametru
+            int userId = 0; // TODO: Zde nastavte správné UserId aktuálního uživatele
+
+            // Nejdříve načteme uživatele z databáze
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return GenericResponse.FailureResponse("User not found.");
+            }
+
             // 2. Create entity
             var newMaterial = new TeachingMaterial
             {
                 Title = dto.Title.Trim(),
-                Url = dto.Url.Trim()
+                Url = dto.Url.Trim(),
+                UserId = userId,
+                User = user // Použijeme načteného uživatele místo vytváření nové instance
             };
 
             // 3. Save to database
