@@ -37,54 +37,17 @@ namespace Bookong.Infrastructure.Repositories
 
         public async Task<TeachingMaterial?> GetByPublicIdAsync(Guid publicId)
         {
-            return await _context.TeachingMaterials
-                .FirstOrDefaultAsync(t => t.PublicId == publicId);
+            return await _context.TeachingMaterials.FirstOrDefaultAsync(t => t.PublicId == publicId);
         }
 
-        public async Task<PagedResult<TeachingMaterial>> GetByTitleAsync(string title, int pageNumber = 1, int pageSize = 25)
+        public Task<PagedResult<TeachingMaterial>> GetByTitleAsync(string title, int pageNumber = 1, int pageSize = 25)
         {
-            // Query to search by title
-            var query = _context.TeachingMaterials
-                .Where(t => t.Title.Contains(title));
-
-            // Total number of results
-            var totalCount = await query.CountAsync();
-
-            // Paginated results
-            var items = await query
-                .OrderBy(t => t.Title)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            return new PagedResult<TeachingMaterial>
-            {
-                Items = items,
-                TotalCount = totalCount,
-                PageNumber = pageNumber,
-                PageSize = pageSize
-            };
+            throw new NotImplementedException(); // Doplníš později podle potřeby
         }
 
-        public async Task<PagedResult<TeachingMaterial>> GetPagedAsync(int pageNumber = 1, int pageSize = 25)
+        public Task<PagedResult<TeachingMaterial>> GetPagedAsync(int pageNumber = 1, int pageSize = 25)
         {
-            // Total number of records
-            var totalCount = await _context.TeachingMaterials.CountAsync();
-
-            // Paginated results
-            var items = await _context.TeachingMaterials
-                .OrderBy(t => t.Title)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            return new PagedResult<TeachingMaterial>
-            {
-                Items = items,
-                TotalCount = totalCount,
-                PageNumber = pageNumber,
-                PageSize = pageSize
-            };
+            throw new NotImplementedException(); // Doplníš později podle potřeby
         }
 
         public void Update(TeachingMaterial teachingMaterial)
