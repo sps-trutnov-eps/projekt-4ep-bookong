@@ -43,14 +43,14 @@ namespace Bookong.Infrastructure.Repositories
 
         public async Task<PagedResult<TeachingMaterial>> GetByTitleAsync(string title, int pageNumber = 1, int pageSize = 25)
         {
-            // Query pro vyhledání podle názvu
+            // Query to search by title
             var query = _context.TeachingMaterials
                 .Where(t => t.Title.Contains(title));
 
-            // Celkový počet výsledků
+            // Total number of results
             var totalCount = await query.CountAsync();
 
-            // Stránkované výsledky
+            // Paginated results
             var items = await query
                 .OrderBy(t => t.Title)
                 .Skip((pageNumber - 1) * pageSize)
@@ -68,10 +68,10 @@ namespace Bookong.Infrastructure.Repositories
 
         public async Task<PagedResult<TeachingMaterial>> GetPagedAsync(int pageNumber = 1, int pageSize = 25)
         {
-            // Celkový počet záznamů
+            // Total number of records
             var totalCount = await _context.TeachingMaterials.CountAsync();
 
-            // Stránkované výsledky
+            // Paginated results
             var items = await _context.TeachingMaterials
                 .OrderBy(t => t.Title)
                 .Skip((pageNumber - 1) * pageSize)

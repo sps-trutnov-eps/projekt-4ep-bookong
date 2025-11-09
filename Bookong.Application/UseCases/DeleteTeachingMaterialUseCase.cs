@@ -15,20 +15,20 @@ namespace Bookong.Application.UseCases
 
         public async Task<GenericResponse> ExecuteAsync(int id)
         {
-            // 1. Najdi materiál
+            // 1. Find the material
             var material = await _unitOfWork.TeachingMaterials.GetByIdAsync(id);
             
             if (material == null)
             {
-                return GenericResponse.FailureResponse("Výukový materiál nebyl nalezen.");
+                return GenericResponse.FailureResponse("The teaching material was not found.");
             }
 
-            // 2. Smaž materiál
+            // 2. Delete the material
             _unitOfWork.TeachingMaterials.Delete(material);
             await _unitOfWork.CommitAsync();
 
-            // 3. Vrať úspěch
-            return GenericResponse.SuccessResponse("Výukový materiál byl úspěšně smazán.");
+            // 3. Return success
+            return GenericResponse.SuccessResponse("The teaching material has been successfully deleted.");
         }
     }
 }
