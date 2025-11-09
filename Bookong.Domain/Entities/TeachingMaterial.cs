@@ -11,5 +11,8 @@ namespace Bookong.Domain.Entities
         public required string Title { get; set; }
 
         public required string Url { get; set; }
+
+        public required int UserId { get; set; }
+        public required User User { get; set; }
     }
 }
