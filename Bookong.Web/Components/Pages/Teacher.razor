@@ -1,0 +1,176 @@
+﻿@page "/teacher"
+@using Bookong.Application.DTOs
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-6 fw-semibold mb-0">Správa maturitních knih – učitel</h1>
+        <button class="btn btn-success">
+            + Přidat novou knihu
+        </button>
+    </div>
+
+    <!-- Filtr (vyhledávání, žánr, typ) -->
+    <div class="border rounded-3 shadow-sm bg-body mb-4 p-3">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-6 col-lg-5">
+                <label class="form-label">Vyhledávání</label>
+                <input class="form-control" placeholder="Zadejte název nebo autora" @bind="searchTerm" @bind:event="oninput" />
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <label class="form-label">Žánr</label>
+                <select class="form-select" @bind="selectedGenre">
+                    <option value="">Vše</option>
+                    @foreach (var g in genres)
+                    {
+                        <option value="@g">@g</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <label class="form-label">Typ</label>
+                <select class="form-select" @bind="selectedKind">
+                    <option value="">Vše</option>
+                    @foreach (var k in kinds)
+                    {
+                        <option value="@k">@k</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12 col-md-12 col-lg-3 d-grid d-md-flex gap-2 justify-content-end">
+                <button class="btn btn-primary" @onclick="ApplyFilters">Filtrovat</button>
+                <button class="btn btn-outline-secondary" @onclick="ClearFilters">Vymazat filtr</button>
+            </div>
+        </div>
+    </div>
+
+    @if (teacherBooks is null)
+    {
+        <div class="d-flex align-items-center gap-2 text-muted">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            <span>Načítání knih…</span>
+        </div>
+    }
+    else if (!displayedBooks.Any())
+    {
+        <p class="text-muted">Žádné knihy odpovídající filtru.</p>
+    }
+    else
+    {
+        <div class="border rounded-3 shadow-sm bg-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Název knihy</th>
+                            <th>Autor</th>
+                            <th>Žánr</th>
+                            <th>Typ</th>
+                            <th class="text-center" style="width: 320px;">Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in displayedBooks)
+                        {
+                            <tr>
+                                <td>@b.Title</td>
+                                <td>@b.AuthorFullName</td>
+                                <td>@b.Genre</td>
+                                <td>@b.Kind</td>
+                                <td class="text-center">
+                                    <div class="d-flex gap-2 justify-content-center flex-nowrap">
+                                        <button class="btn btn-outline-success btn-sm">Přidat do třídy</button>
+                                        <button class="btn btn-outline-primary btn-sm">Upravit</button>
+                                        <button class="btn btn-outline-danger btn-sm">Odebrat</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<BookListItemDto>? teacherBooks;
+    private List<BookListItemDto> displayedBooks = new();
+
+    private string searchTerm = string.Empty;
+    private string selectedGenre = string.Empty;
+    private string selectedKind = string.Empty;
+
+    private List<string> genres = new();
+    private List<string> kinds = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulace načítání dat (zatím jen mock)
+        await Task.Delay(300);
+
+        teacherBooks = new()
+        {
+            new BookListItemDto
+            {
+                Title = "Babička",
+                AuthorFullName = "Božena Němcová",
+                Genre = "Próza",
+                Kind = "Román"
+            },
+            new BookListItemDto
+            {
+                Title = "Kytice",
+                AuthorFullName = "Karel Jaromír Erben",
+                Genre = "Poezie",
+                Kind = "Sbírka"
+            },
+            new BookListItemDto
+            {
+                Title = "Revizor",
+                AuthorFullName = "Nikolaj V. Gogol",
+                Genre = "Drama",
+                Kind = "Komedie"
+            }
+        };
+
+        // Naplnit možnosti filtrů
+        genres = teacherBooks.Select(x => x.Genre).Where(x => !string.IsNullOrEmpty(x)).Distinct().ToList();
+        kinds = teacherBooks.Select(x => x.Kind).Where(x => !string.IsNullOrEmpty(x)).Distinct().ToList();
+
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        if (teacherBooks is null)
+        {
+            displayedBooks = new List<BookListItemDto>();
+            return;
+        }
+
+        var query = teacherBooks.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var q = searchTerm.Trim().ToLowerInvariant();
+            query = query.Where(b => (b.Title != null && b.Title.ToLowerInvariant().Contains(q)) ||
+                                     (b.AuthorFullName != null && b.AuthorFullName.ToLowerInvariant().Contains(q)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedGenre))
+            query = query.Where(b => b.Genre == selectedGenre);
+
+        if (!string.IsNullOrWhiteSpace(selectedKind))
+            query = query.Where(b => b.Kind == selectedKind);
+
+        displayedBooks = query.ToList();
+    }
+
+    private void ClearFilters()
+    {
+        searchTerm = string.Empty;
+        selectedGenre = string.Empty;
+        selectedKind = string.Empty;
+        ApplyFilters();
+    }
+}
