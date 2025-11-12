@@ -9,6 +9,7 @@ using Bookong.Application.Services.Interfaces;
 using Bookong.Web.Services;
 using Bookong.Application.UseCases.Interfaces;
 using Bookong.Application.UseCases;
+using Bookong.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,7 @@ builder.Services.AddRazorComponents()
 
 
 builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
+builder.Services.AddScoped<IActiveDirectoryService, ActiveDirectoryService>();
 
 var app = builder.Build();
 

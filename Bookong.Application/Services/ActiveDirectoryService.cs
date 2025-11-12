@@ -1,6 +1,5 @@
 ﻿using Bookong.Application.DTOs;
 using Bookong.Application.Services.Interfaces;
-
 using System.Net;
 
 
@@ -14,12 +13,6 @@ namespace Bookong.Application.Services
         // TODO: Implement real AD calls. Placeholders to avoid build errors.
         public Task<bool> ValidateCredetialsAsync(string username, string password)
         {
-
-
-
-
-
-
             return Task.FromResult(false);
         }
 
