@@ -1,4 +1,4 @@
-﻿@using Bookong.Web.Components.Layout
+@using Bookong.Web.Components.Layout
 @using Bookong.Application.UseCases.Queries.Interfaces
 @using Bookong.Application.DTOs
 @page "/dashboard"
@@ -36,12 +36,13 @@
                 <span class="fw-semibold">Export všech knih</span>
             </button>
 
-            <!-- Export konkrétních knih -->
-            <button class="btn btn-outline-primary btn-lg shadow d-flex align-items-center gap-2 px-4 py-2"
+            @* TODO: Stylově doladit export knih, aby vypadal dobře v rozložení stránky *@
+            @* Export konkrétních knih - zakomentováno, protože knihy se dají vyfiltrovat v Excelu *@
+            @* <button class="btn btn-outline-primary btn-lg shadow d-flex align-items-center gap-2 px-4 py-2"
                     @onclick="() => ExportToExcel(new[] { 1, 2, 3 })">
                 <i class="bi bi-journal-arrow-down fs-4"></i>
                 <span class="fw-semibold">Export knih [1, 2, 3]</span>
-            </button>
+            </button> *@
         </div>
 
         @if (isLoading)
