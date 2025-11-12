@@ -1,9 +1,9 @@
-﻿@page "/books"
+@page "/books"
 @using Bookong.Application.UseCases.Queries.Interfaces
-@using Bookong.Application.UseCases.Commands.Interfaces
+@using Bookong.Application.UseCases.Interfaces
 @using Bookong.Application.DTOs
 @inject IGetAvailableBooksQuery GetAvailableBooks
-@inject IAddBookToMaturitaSelectionCommand AddToMaturitaSelection
+@inject ISelectMaturitaBookUseCase SelectMaturitaBook
 @inject NavigationManager NavigationManager
 @inject ILogger<Books> Logger
 
@@ -208,8 +208,21 @@
             processingBookId = bookId;
             StateHasChanged();
 
-            await AddToMaturitaSelection.ExecuteAsync(bookId);
-            NavigationManager.NavigateTo("/maturita", true);
+            var dto = new AddBookToPersonalMaturitaListDto
+            {
+                BookPublicId = bookId
+            };
+
+            var result = await SelectMaturitaBook.Handle(dto);
+
+            if (result.Success)
+            {
+                NavigationManager.NavigateTo("/maturita", true);
+            }
+            else
+            {
+                errorMessage = result.Message;
+            }
         }
         catch (Exception ex)
         {

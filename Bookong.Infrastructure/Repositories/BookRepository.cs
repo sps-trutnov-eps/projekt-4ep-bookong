@@ -151,5 +151,10 @@ namespace Bookong.Infrastructure.Repositories
         {
             _context.Books.Update(book);
         }
+
+        public async Task<int> CountAsync()
+        {
+            return await _context.Books.CountAsync();
+        }
     }
 }
