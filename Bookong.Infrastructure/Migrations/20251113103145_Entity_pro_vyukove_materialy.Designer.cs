@@ -4,6 +4,7 @@ using Bookong.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bookong.Infrastructure.Migrations
 {
     [DbContext(typeof(BookongDbContext))]
-    partial class BookongDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251113103145_Entity_pro_vyukove_materialy")]
+    partial class Entity_pro_vyukove_materialy
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

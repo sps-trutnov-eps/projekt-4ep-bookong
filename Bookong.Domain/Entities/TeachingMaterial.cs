@@ -10,6 +10,10 @@ namespace Bookong.Domain.Entities
 
         public required string Title { get; set; }
 
+        public string? Description { get; set; }
+
         public required string Url { get; set; }
+
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
     }
 }
