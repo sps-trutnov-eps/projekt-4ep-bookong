@@ -20,15 +20,24 @@
         </div>
     </div>
 
-    <div class="mt-4 d-flex gap-2">
+    <div class="mt-4 d-flex gap-2 flex-column">
         <div class="flex-grow-1">
             <div class="input-group shadow-sm search-glass">
-                <span class="input-group-text bg-transparent border-0">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 21l-4.35-4.35"></path><circle cx="11" cy="11" r="6"></circle></svg>
-                </span>
-                <input class="form-control form-control-lg border-0" placeholder="Hledat předmět, obor nebo autora..." @bind="searchTerm" />
+                <span class="input-group-text bg-transparent border-0">🔍</span>
+                <input class="form-control form-control-lg border-0" placeholder="Hledat..." @bind="searchTerm" />
             </div>
         </div>
+
+        @if (!compactView)  @* expanded: show extra filters *@
+        {
+            <div class="d-flex gap-2 mt-2 flex-wrap">
+                <InputText class="form-control form-control-sm" placeholder="Obor" @bind-Value="filterField" />
+                <InputText class="form-control form-control-sm" placeholder="Autor" @bind-Value="filterAuthor" />
+                <input type="date" class="form-control form-control-sm" @bind="filterFrom" />
+                <input type="date" class="form-control form-control-sm" @bind="filterTo" />
+                <button class="btn btn-sm btn-outline-light" @onclick="ApplyFilters">Použít</button>
+            </div>
+        }
     </div>
 </div>
 
@@ -227,14 +236,29 @@
         folders = await TeachingMaterialsApi.GetFoldersAsync();
     }
 
+    private string filterField = string.Empty;
+    private string filterAuthor = string.Empty;
+    private DateTime? filterFrom;
+    private DateTime? filterTo;
+
     private IReadOnlyList<FolderDto> FilteredFolders =>
-        string.IsNullOrWhiteSpace(searchTerm) || folders == null
-            ? (IReadOnlyList<FolderDto>)(folders ?? new List<FolderDto>())
-            : folders.Where(f =>
-                (f.Name ?? "").Contains(searchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-                (f.Field ?? "").Contains(searchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-                (f.CreatedBy ?? "").Contains(searchTerm, StringComparison.CurrentCultureIgnoreCase)
-            ).ToList();
+        (folders ?? new List<FolderDto>())
+          .Where(f =>
+            (string.IsNullOrWhiteSpace(searchTerm) ||
+             (f.Name ?? "").Contains(searchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+             (f.Field ?? "").Contains(searchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+             (f.CreatedBy ?? "").Contains(searchTerm, StringComparison.CurrentCultureIgnoreCase))
+            && (string.IsNullOrWhiteSpace(filterField) || (f.Field ?? "").Contains(filterField, StringComparison.CurrentCultureIgnoreCase))
+            && (string.IsNullOrWhiteSpace(filterAuthor) || (f.CreatedBy ?? "").Contains(filterAuthor, StringComparison.CurrentCultureIgnoreCase))
+            && (!filterFrom.HasValue || f.CreatedAt.Date >= filterFrom.Value.Date)
+            && (!filterTo.HasValue || f.CreatedAt.Date <= filterTo.Value.Date)
+          )
+          .ToList();
+
+    private void ApplyFilters()
+    {
+        // if needed, reset paging or trigger UI update (StateHasChanged not required if bound)
+    }
 
     private async Task HandleFormSubmit()
     {
