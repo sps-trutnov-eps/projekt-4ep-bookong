@@ -1,6 +1,8 @@
 ﻿@page "/teacher"
 @using Bookong.Application.DTOs
+@using Microsoft.EntityFrameworkCore
 @inject Bookong.Domain.Interfaces.IUnitOfWork UnitOfWork
+@inject Bookong.Infrastructure.Data.BookongDbContext DbContext
 
 <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -73,13 +75,21 @@
                         @foreach (var b in displayedBooks)
                         {
                             <tr>
-                                <td>@b.Title</td>
+                                <td>
+                                    @b.Title
+                                    @if (blueMarks.Contains(b.PublicId))
+                                    {
+                                        <span class="badge bg-primary ms-2">●</span>
+                                    }
+                                </td>
                                 <td>@b.AuthorFullName</td>
                                 <td>@b.Genre</td>
                                 <td>@b.Kind</td>
                                 <td class="text-center">
                                     <div class="d-flex gap-2 justify-content-center flex-nowrap">
-                                        <button class="btn btn-outline-success btn-sm">Přidat do třídy</button>
+                                        <button class="btn btn-outline-success btn-sm" @onclick="() => ToggleBlueMarkAsync(b)">
+                                            @(blueMarks.Contains(b.PublicId) ? "Odebrat z třídy" : "Přidat do třídy")
+                                        </button>
                                         <button class="btn btn-outline-primary btn-sm">Upravit</button>
                                         <button class="btn btn-outline-danger btn-sm">Odebrat</button>
                                     </div>
@@ -97,6 +107,9 @@
     private List<BookListItemDto>? teacherBooks;
     private List<BookListItemDto> displayedBooks = new();
 
+    // track blue-marked books by PublicId without changing domain/DTO
+    private HashSet<Guid> blueMarks = new();
+
     private string searchTerm = string.Empty;
     private string selectedGenre = string.Empty;
     private string selectedKind = string.Empty;
@@ -106,12 +119,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Načíst knihy z databáze
         teacherBooks = new List<BookListItemDto>();
 
         try
         {
             var books = await UnitOfWork.Books.GetAllAsync();
+
+            // load blue marks from dbo.Books.HasBlueMark using raw SQL so we don't need to change domain models
+            await LoadBlueMarksAsync();
 
             teacherBooks = books.Select(b => new BookListItemDto
             {
@@ -136,6 +151,39 @@
             // Pokud načítání selže, necháme teacherBooks null -> zobrazí se spinner
             teacherBooks = null;
             displayedBooks = new List<BookListItemDto>();
+        }
+    }
+
+    private async Task LoadBlueMarksAsync()
+    {
+        blueMarks.Clear();
+
+        var conn = DbContext.Database.GetDbConnection();
+        try
+        {
+            if (conn.State != System.Data.ConnectionState.Open)
+                await conn.OpenAsync();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT PublicId, HasBlueMark FROM dbo.Books";
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                if (!reader.IsDBNull(0))
+                {
+                    var publicId = reader.GetGuid(0);
+                    var hasMark = !reader.IsDBNull(1) && reader.GetBoolean(1);
+                    if (hasMark) blueMarks.Add(publicId);
+                }
+            }
+        }
+        finally
+        {
+            // do not close shared connection explicitly; DbContext manages it
+            // but ensure it's closed if we opened it here
+            if (conn.State == System.Data.ConnectionState.Open)
+                await conn.CloseAsync();
         }
     }
 
@@ -171,5 +219,46 @@
         selectedGenre = string.Empty;
         selectedKind = string.Empty;
         ApplyFilters();
+    }
+
+    private async Task ToggleBlueMarkAsync(BookListItemDto dto)
+    {
+        // Toggle in DB
+        var newValue = !blueMarks.Contains(dto.PublicId);
+
+        var conn = DbContext.Database.GetDbConnection();
+        try
+        {
+            if (conn.State != System.Data.ConnectionState.Open)
+                await conn.OpenAsync();
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE dbo.Books SET HasBlueMark = @val WHERE PublicId = @pid";
+
+            var p1 = cmd.CreateParameter();
+            p1.ParameterName = "@val";
+            p1.Value = newValue ?1 :0;
+            p1.DbType = System.Data.DbType.Boolean;
+            cmd.Parameters.Add(p1);
+
+            var p2 = cmd.CreateParameter();
+            p2.ParameterName = "@pid";
+            p2.Value = dto.PublicId;
+            p2.DbType = System.Data.DbType.Guid;
+            cmd.Parameters.Add(p2);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+        finally
+        {
+            if (conn.State == System.Data.ConnectionState.Open)
+                await conn.CloseAsync();
+        }
+
+        // update local cache and UI
+        if (newValue) blueMarks.Add(dto.PublicId);
+        else blueMarks.Remove(dto.PublicId);
+
+        StateHasChanged();
     }
 }
