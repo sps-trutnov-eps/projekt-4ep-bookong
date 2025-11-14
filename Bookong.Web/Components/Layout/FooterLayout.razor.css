@@ -1,3 +1,4 @@
+/* Footer-specific styles (kept local) */
 footer {
     background: #0a4db8 !important; /* Darker blue to match header - overrides Bootstrap bg-primary */
 }

@@ -12,6 +12,8 @@
     box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
 }
 
+/* Header-specific overlay menu and decorative elements */
+
 /* Header with decorative wave elements */
 header {
     position: relative;
@@ -27,7 +29,7 @@ header {
     z-index: 1;
 }
 
-/* Full-screen overlay menu - now slides from left to right */
+/* Full-screen overlay menu - slides from left to right */
 .overlay-menu {
     position: fixed;
     top: 0;
