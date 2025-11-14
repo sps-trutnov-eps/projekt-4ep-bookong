@@ -96,4 +96,5 @@ Být součástí Bookong - moderní řešení pro správu školní knihovny a v�
 
 **Status**: Aktivní vývoj 🔄  
 **Poslední aktualizace**: 2025  
-**Vedení projektu**: Tým SPS Trutnov
+**Vedení projektu**: Jakub Hlaváček
+**Členové**: Josef Budinský, Patrik Vítek, Dominik Jáci
