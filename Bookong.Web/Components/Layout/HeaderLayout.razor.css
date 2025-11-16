@@ -17,7 +17,8 @@
 /* Header with decorative wave elements */
 header {
     position: relative;
-    background: #0a4db8 !important; /* Darker blue */
+    /* Use hero gradient colors for navbar background to match TeachingMaterials hero */
+    background: linear-gradient(135deg, var(--hero-gradient-a, #3b82f6) 0%, var(--hero-gradient-b, #6d28d9) 70%) !important;
     overflow: hidden;
 }
 
@@ -36,7 +37,8 @@ header {
     right: -100%;
     width: 100%;
     height: 100vh;
-    background: linear-gradient(135deg, #0a4db8 0%, #083d96 100%); /* Darker gradient */
+    /* Match overlay to header gradient for visual continuity */
+    background: linear-gradient(135deg, var(--hero-gradient-a, #0a4db8) 0%, var(--hero-gradient-b, #083d96) 100%);
     z-index: 9999;
     transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     display: flex;
