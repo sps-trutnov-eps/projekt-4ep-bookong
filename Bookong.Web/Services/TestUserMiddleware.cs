@@ -12,7 +12,7 @@ namespace Bookong.Web.Services
 
         public async Task InvokeAsync(HttpContext context, BookongDbContext db, ISessionService session)
         {
-            // Session may not be available during prerendering; do nothing in that case.
+            // Session may not be available during prerendering; do nothing in that case.Ahoj
             if (context.Session is not null)
             {
                 var existing = await session.GetAsync(SessionKey);
@@ -31,7 +31,7 @@ namespace Bookong.Web.Services
                             OrganizationalUnit = "TestOU"
                         };
                         db.Users.Add(user);
-                        await db.SaveChangesAsync();
+                        await db.SaveChangesAsync(); 
                     }
 
                     await session.SetAsync(SessionKey, user.PublicId.ToString());

@@ -25,6 +25,8 @@ builder.Services.AddScoped<IGetMaturitaBookSelectionQuery, GetMaturitaBookSelect
 builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase>();
 builder.Services.AddScoped<IDeselectMaturitaBookUseCase, DeselectMaturitaBookUseCase>();
 builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
+builder.Services.AddScoped<ITeachingMaterialsApi, TeachingMaterialsApi>();
+
 
 // Session services
 builder.Services.AddDistributedMemoryCache();
