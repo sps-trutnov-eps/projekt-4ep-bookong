@@ -13,6 +13,8 @@ html, body {
   /* Footer uses a darker variant so wave and footer are visually distinct */
   --footer-gradient-a: #0a4db8;
   --footer-gradient-b: #4c1d95;
+  /* Solid footer preview color (darker) */
+  --footer-solid: #071735;
   --btn-gradient-a: #4f46e5;
   --btn-gradient-b: #06b6d4;
   --card-radius: 12px;
@@ -60,6 +62,20 @@ a, .btn-link {
 .btn:not(.btn-link):not([class*="btn-outline"]).focus {
   outline: 3px solid rgba(99,102,241,0.14);
   outline-offset: 2px;
+}
+
+/* Page hero title - reusable class for large page headings (consistent with Portal/Statistics) */
+.page-hero-title {
+  font-weight: 700; /* similar to fw-bold */
+  font-size: 3rem;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+
+@media (max-width: 767.98px) {
+  .page-hero-title {
+    font-size: 2rem;
+  }
 }
 
 /* Focus outlines for interactive elements */
