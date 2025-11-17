@@ -25,6 +25,7 @@ namespace Bookong.Application.UseCases.Queries
                 .Where(b => b.Borrowable)
                 .Select(b => new BookListItemDto
                 {
+                    InternalId = b.Id,
                     PublicId = b.PublicId,
                     Title = b.Name,
                     AuthorFullName = $"{b.Author.FirstName} {b.Author.LastName}",

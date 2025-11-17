@@ -1,4 +1,4 @@
-﻿using Bookong.Domain.Common.Models;
+using Bookong.Domain.Common.Models;
 using Bookong.Domain.Entities;
 using Bookong.Domain.Queries;
 
@@ -21,5 +21,7 @@ namespace Bookong.Domain.Interfaces
 
         Task<int[]> GetAllIdsAsync();
 
+        // QR Code generation based on book's PublicId
+        byte[] GenerateQrCodeImage(Guid bookPublicId);
     }
 }

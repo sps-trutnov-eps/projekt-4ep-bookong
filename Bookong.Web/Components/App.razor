@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -23,6 +23,18 @@
             } else {
                 document.body.classList.remove('menu-open');
             }
+        };
+
+        // Download file function for Excel/file exports
+        window.downloadFile = function (fileName, contentType, base64String) {
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', `data:${contentType};base64,${base64String}`);
+            linkElement.setAttribute('download', fileName);
+            linkElement.style.display = 'none';
+
+            document.body.appendChild(linkElement);
+            linkElement.click();
+            document.body.removeChild(linkElement);
         };
     </script>
 </body>

@@ -26,6 +26,8 @@ builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase
 builder.Services.AddScoped<IDeselectMaturitaBookUseCase, DeselectMaturitaBookUseCase>();
 builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
 builder.Services.AddScoped<IExportBooksQuery, ExportBooksQuery>();
+builder.Services.AddScoped<IExportBookQrCodesQueryV2, ExportBookQrCodesQueryV2>();
+
 // Session services
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>

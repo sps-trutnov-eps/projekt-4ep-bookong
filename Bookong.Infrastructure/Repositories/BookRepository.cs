@@ -1,9 +1,12 @@
-﻿using Bookong.Domain.Common.Models;
+using Bookong.Domain.Common.Models;
 using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
 using Bookong.Domain.Queries;
 using Bookong.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using QRCoder;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace Bookong.Infrastructure.Repositories
 {
@@ -184,5 +187,16 @@ namespace Bookong.Infrastructure.Repositories
                 .ToArrayAsync();
         }
 
+        public byte[] GenerateQrCodeImage(Guid bookPublicId)
+        {
+            using var qrGenerator = new QRCodeGenerator();
+            using var qrCodeData = qrGenerator.CreateQrCode(bookPublicId.ToString(), QRCodeGenerator.ECCLevel.Q);
+            using var qrCode = new QRCode(qrCodeData);
+            using var qrCodeImage = qrCode.GetGraphic(10);
+
+            using var ms = new MemoryStream();
+            qrCodeImage.Save(ms, ImageFormat.Png);
+            return ms.ToArray();
+        }
     }
 }

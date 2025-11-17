@@ -1,11 +1,13 @@
 @using Bookong.Web.Components.Layout
 @using Bookong.Application.UseCases.Queries.Interfaces
 @using Bookong.Application.DTOs
+@using Microsoft.JSInterop
 @page "/dashboard"
 @layout MainLayout
 @inject IJSRuntime JS
 @inject IGetLibraryStatisticsQuery LibraryStatsQuery
 @inject IExportBooksQuery ExportBooksQuery
+@inject IExportBookQrCodesQueryV2 ExportBookQrCodes
 @inject IGetAvailableBooksQuery GetAvailableBooks
 @inject ILogger<Dashboard> Logger
 
@@ -132,6 +134,7 @@
                                     <th>Název knihy</th>
                                     <th class="d-none d-md-table-cell">Autor</th>
                                     <th class="text-end">Počet vypůjčení</th>
+                                    <th class="text-center" style="width:10%">QR kód</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -144,6 +147,16 @@
                                         <td class="d-none d-md-table-cell">@b.AuthorFullName</td>
                                         <td class="text-end">
                                             <span class="text-muted">N/A</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-primary" 
+                                                    @onclick="() => ExportBookQrCode(b.InternalId)"
+                                                    title="Exportovat QR kód této knihy">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                                    <path d="M0 0h7v7H0V0zm8 0h7v7H8V0zM0 8h7v7H0V8zm8 0h7v7H8V8z"/>
+                                                    <path d="M1 1h5v5H1V1zm8 0h5v5H9V1zM1 9h5v5H1V9zm8 0h5v5H9V9z" fill="white"/>
+                                                </svg>
+                                            </button>
                                         </td>
                                     </tr>
                                 }
@@ -250,6 +263,28 @@
         catch (Exception ex)
         {
             await JS.InvokeVoidAsync("alert", $"❌ Chyba při exportu: {ex.Message}");
+        }
+    }
+
+    private async Task ExportBookQrCode(int bookId)
+    {
+        try
+        {
+            var excelBytes = await ExportBookQrCodes.ExportToExcelAsync(new int[] { bookId });
+  
+            if (excelBytes == null || excelBytes.Length == 0)
+            {
+                await JS.InvokeVoidAsync("alert", "⚠️ Nepodařilo se vygenerovat QR kód.");
+                return;
+            }
+
+            var fileName = $"QR_Kod_Kniha_{bookId}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            await DownloadFileFromBytesAsync(fileName, excelBytes);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error exporting QR code for book {BookId}", bookId);
+            await JS.InvokeVoidAsync("alert", $"❌ Chyba při exportu QR kódu: {ex.Message}");
         }
     }
 
