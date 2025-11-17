@@ -3,192 +3,102 @@
 @using Bookong.Web.Models
 @using System.ComponentModel.DataAnnotations
 @inject ITeachingMaterialsApi TeachingMaterialsApi
-@inject IJSRuntime JS
 
 <div class="materials-hero container py-5 mb-4">
-    <div class="d-flex align-items-center justify-content-between">
-        <div>
-            <h1 class="materials-title mb-1">Výukové materiály <span class="badge bg-white text-dark ms-2 shadow-sm">@((folders?.Count) ?? 0)</span></h1>
-            <p class="materials-subtitle mb-0">Rychle najděte a spravujte studijní předměty — moderní, čisté a responzivní rozhraní.</p>
-        </div>
-        <div class="hero-buttons d-flex gap-2 align-items-center">
-            <button class="btn btn-white-shadow btn-sm" @onclick="NewItem" title="Vytvořit nový předmět">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="me-1"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Nový
-            </button>
-            <button class="btn btn-outline-light btn-sm" @onclick="ToggleView" title="Přepnout zobrazení">@((compactView) ? "Rozšířený" : "Kompaktní")</button>
-        </div>
-    </div>
-
-    <div class="mt-4 d-flex gap-2 flex-column">
-        <div class="flex-grow-1">
-            <div class="input-group shadow-sm search-glass">
-                <span class="input-group-text bg-transparent border-0">🔍</span>
-                <input class="form-control form-control-lg border-0" placeholder="Hledat..." @bind="searchTerm" />
+    <h1 class="materials-title mb-3">Výukové materiály <span class="badge bg-white text-dark ms-2 shadow-sm">@((folders?.Count) ?? 0)</span></h1>
+    <p class="materials-subtitle mb-4">Rychle najděte a spravujte studijní předměty – moderní, čisté a responzivní rozhraní.</p>
+    <EditForm Model="formModel" OnValidSubmit="HandleFormSubmit">
+        <DataAnnotationsValidator />
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <InputText class="form-control" @bind-Value="formModel.Name" placeholder="Název předmětu" />
+                <ValidationMessage For="@(() => formModel.Name)" class="text-danger small" />
+            </div>
+            <div class="col-md-2">
+                <InputText class="form-control" @bind-Value="formModel.Field" placeholder="Název oboru" />
+                <ValidationMessage For="@(() => formModel.Field)" class="text-danger small" />
+            </div>
+            <div class="col-md-2">
+                <InputText class="form-control" @bind-Value="formModel.CreatedBy" placeholder="Vaše jméno" />
+                <ValidationMessage For="@(() => formModel.CreatedBy)" class="text-danger small" />
+            </div>
+            <div class="col-md-3">
+                <InputTextArea class="form-control" @bind-Value="formModel.Description" placeholder="Krátký popis" rows="1" />
+                <ValidationMessage For="@(() => formModel.Description)" class="text-danger small" />
+            </div>
+            <div class="col-md-2">
+                <InputText class="form-control" @bind-Value="formModel.LinkUrl" placeholder="https://..." />
+                <ValidationMessage For="@(() => formModel.LinkUrl)" class="text-danger small" />
+            </div>
+            <div class="col-12 mt-2">
+                <button class="btn btn-gradient w-100" type="submit">
+                    @(editingFolder != null ? "Uložit změny" : "Vytvořit předmět")
+                </button>
+                @if (editingFolder != null)
+                {
+                    <button type="button" class="btn btn-outline-secondary w-100 mt-2" @onclick="CancelEdit">Zrušit</button>
+                }
             </div>
         </div>
-
-        @if (!compactView)  @* expanded: show extra filters *@
-        {
-            <div class="d-flex gap-2 mt-2 flex-wrap">
-                <InputText class="form-control form-control-sm" placeholder="Obor" @bind-Value="filterField" />
-                <InputText class="form-control form-control-sm" placeholder="Autor" @bind-Value="filterAuthor" />
-                <input type="date" class="form-control form-control-sm" @bind="filterFrom" />
-                <input type="date" class="form-control form-control-sm" @bind="filterTo" />
-                <button class="btn btn-sm btn-outline-light" @onclick="ApplyFilters">Použít</button>
-            </div>
-        }
-    </div>
+    </EditForm>
 </div>
 
-<div class="container">
-    <div class="row gy-4">
-        <div class="col-lg-5">
-            <div class="card form-card shadow-sm border-0 p-3 mb-3">
-                <h5 class="mb-3 text-muted">
-                    @if (editingFolder != null) { <span>Upravit předmět</span> } else { <span>Vytvořit předmět</span> }
-                </h5>
-
-                <EditForm Model="formModel" OnValidSubmit="HandleFormSubmit" FormName="CreateMaterialForm">
-                    <DataAnnotationsValidator />
-
-                    <div class="mb-3">
-                        <label class="form-label small">Předmět</label>
-                        <div class="input-group">
-                            <span class="input-group-text icon-left">📘</span>
-                            <input class="form-control form-control-lg rounded-pill" @bind="formModel.Name" placeholder="Název předmětu" @ref="nameInputRef" />
-                        </div>
-                        <ValidationMessage For="@(() => formModel.Name)" class="text-danger small mt-1" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small">Obor</label>
-                        <div class="input-group">
-                            <span class="input-group-text icon-left">🏷️</span>
-                            <InputText class="form-control rounded-pill" @bind-Value="formModel.Field" placeholder="Název oboru" />
-                        </div>
-                        <ValidationMessage For="@(() => formModel.Field)" class="text-danger small mt-1" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small">Autor</label>
-                        <div class="input-group">
-                            <span class="input-group-text icon-left">👤</span>
-                            <InputText class="form-control rounded-pill" @bind-Value="formModel.CreatedBy" placeholder="Vaše jméno" />
-                        </div>
-                        <ValidationMessage For="@(() => formModel.CreatedBy)" class="text-danger small mt-1" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small">Popis</label>
-                        <InputTextArea class="form-control" @bind-Value="formModel.Description" placeholder="Krátký popis" rows="4" />
-                        <ValidationMessage For="@(() => formModel.Description)" class="text-danger small mt-1" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small">URL odkaz</label>
-                        <div class="input-group">
-                            <span class="input-group-text icon-left">🔗</span>
-                            <InputText class="form-control rounded-pill" @bind-Value="formModel.LinkUrl" placeholder="https://..." />
-                        </div>
-                        <ValidationMessage For="@(() => formModel.LinkUrl)" class="text-danger small mt-1" />
-                    </div>
-
-                    <div class="d-grid">
-                        <button class="btn btn-gradient btn-lg rounded-pill" type="submit" disabled="@isSaving">
-                            @if (isSaving)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                @(editingFolder != null ? "Ukládám..." : "Vytvářím...")
-                            }
-                            else
-                            {
-                                @(editingFolder != null ? "Uložit změny" : "Vytvořit předmět")
-                            }
-                        </button>
-                    </div>
-
-                    @if (editingFolder != null)
-                    {
-                        <div class="mt-2">
-                            <button type="button" class="btn btn-outline-secondary w-100" @onclick="CancelEdit">Zrušit</button>
-                        </div>
-                    }
-
-                    <ValidationSummary class="mt-2 text-danger" />
-                </EditForm>
-            </div>
-        </div>
-
-        <div class="col-lg-7">
-            <h5 class="mb-3">Vytvořené předměty</h5>
-
-            @if (folders == null)
-            {
-                <div class="row g-3">
-                    @for (int i = 0; i < 4; i++)
-                    {
-                        <div class="col-sm-6">
-                            <div class="card created-card skeleton-card">
-                                <div class="card-body p-3">
-                                    <div class="skeleton-line short mb-2"></div>
-                                    <div class="skeleton-line mid mb-2"></div>
-                                    <div class="skeleton-line long"></div>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-            else if (FilteredFolders.Count == 0)
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <h4 class="mb-4 text-center">Vytvořené předměty</h4>
+            @if (folders == null || folders.Count == 0)
             {
                 <div class="empty-state card p-4 text-center border-0 shadow-sm">
                     <div class="empty-emoji mb-2">📚</div>
                     <div class="fw-semibold">Zatím žádné předměty</div>
-                    <div class="text-muted small">Vytvořte první předmět pomocí formuláře vlevo.</div>
+                    <div class="text-muted small">Vytvořte první předmět pomocí lišty nahoře.</div>
                 </div>
             }
             else
             {
-                <div class="row g-3 created-list">
-                    @foreach (var f in FilteredFolders)
+                <!-- GRID layout – na větších monitorech 2 až 3 sloupce  -->
+                <div class="row g-4">
+                    @foreach (var f in folders)
                     {
-                        <div class="col-sm-6">
-                            <div class="card created-card h-100 shadow-sm border-0">
-                                <div class="card-body p-3 d-flex flex-column">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <h6 class="card-title mb-1">@f.Name</h6>
-                                            <div class="text-muted small">@f.Field</div>
+                        var collapseId = $"collapse_{f.Name.GetHashCode()}";
+                        <div class="col-md-6 col-lg-4">
+                            <!-- Dvě/3 karty vedle sebe -->
+                            <div class="accordion" id="@($"accordion_{collapseId}")">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="@($"heading_{collapseId}")">
+                                        <button class="accordion-button collapsed" type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="@($"#{collapseId}")"
+                                                aria-expanded="false" aria-controls="@collapseId">
+                                            <b>@f.Name</b> | <span class="small text-muted">@f.Field</span>
+                                        </button>
+                                    </h2>
+                                    <div class="accordion-collapse collapse"
+                                         id="@collapseId"
+                                         aria-labelledby="@($"heading_{collapseId}")"
+                                         data-bs-parent="@($"accordion_{collapseId}")">
+                                        <div class="accordion-body">
+                                            <p><b>Autor:</b> @f.CreatedBy</p>
+                                            <p><b>Popis:</b> @f.Description</p>
+                                            <p><b>Odkaz:</b> <a href="@f.LinkUrl" target="_blank">@f.LinkUrl</a></p>
+                                            <p class="mt-2 text-muted small">Vytvořeno: @f.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
+                                            @if (f.StudentMaterials != null && f.StudentMaterials.Count > 0)
+                                            {
+                                                <hr />
+                                                <h6>Poznámky / Materiály:</h6>
+                                                <ul>
+                                                    @foreach (var note in f.StudentMaterials)
+                                                    {
+                                                        <li><b>@note.Title</b>: @note.Description</li>
+                                                    }
+                                                </ul>
+                                            }
+                                            <div class="d-flex gap-2 mt-3">
+                                                <button class="btn btn-sm btn-outline-primary" @onclick="() => StartEdit(f)">Upravit</button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteFolder(f)">Smazat</button>
+                                            </div>
                                         </div>
-                                        <small class="text-muted">@f.CreatedBy</small>
-                                    </div>
-
-                                    <p class="card-text small text-muted mb-2 text-truncate">@f.Description</p>
-
-                                    <div class="mt-auto d-flex justify-content-between align-items-center">
-                                        <a href="@f.LinkUrl" target="_blank" class="link-primary small text-truncate d-block me-3" title="@f.LinkUrl">@f.LinkUrl</a>
-                                        <div class="btn-group">
-                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => StartEdit(f)" title="Upravit">
-                                                <!-- Pencil icon (edit) -->
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"></path>
-                                                    <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
-                                                </svg>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteFolder(f)" title="Smazat">
-                                                <!-- Cross icon (delete) -->
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M6 6l12 12"></path>
-                                                    <path d="M18 6L6 18"></path>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-2 d-flex justify-content-between align-items-center small text-muted">
-                                        <span>Vytvořeno: @f.CreatedAt.ToString("dd.MM.yyyy")</span>
-                                        <span class="badge bg-light text-dark">Soubory: @f.Files?.Count ?? 0</span>
                                     </div>
                                 </div>
                             </div>
@@ -201,111 +111,60 @@
 </div>
 
 @code {
-    private List<FolderDto>? folders;
-    private FolderDto? editingFolder = null;
-    private bool isSaving = false;
-    private bool compactView = false;
-    private string searchTerm = string.Empty;
-
-    // ElementReference pro fokusování vstupu při kliknutí na "Nový"
-    private ElementReference nameInputRef;
-
-    // Lokální model formuláře s validací (vše povinné)
+    private List<FolderDto> folders = new();
     private FormFolderModel formModel = new();
+    private FolderDto editingFolder = null;
 
     public class FormFolderModel
     {
         [Required(ErrorMessage = "Název předmětu je povinný.")]
         public string? Name { get; set; }
-
         [Required(ErrorMessage = "Obor je povinný.")]
         public string? Field { get; set; }
-
         [Required(ErrorMessage = "Autor je povinný.")]
         public string? CreatedBy { get; set; }
-
         [Required(ErrorMessage = "Popis je povinný.")]
         public string? Description { get; set; }
-
         [Required(ErrorMessage = "URL odkaz je povinný.")]
         public string? LinkUrl { get; set; }
     }
 
     protected override async Task OnInitializedAsync()
     {
-        folders = await TeachingMaterialsApi.GetFoldersAsync();
-    }
-
-    private string filterField = string.Empty;
-    private string filterAuthor = string.Empty;
-    private DateTime? filterFrom;
-    private DateTime? filterTo;
-
-    private IReadOnlyList<FolderDto> FilteredFolders =>
-        (folders ?? new List<FolderDto>())
-          .Where(f =>
-            (string.IsNullOrWhiteSpace(searchTerm) ||
-             (f.Name ?? "").Contains(searchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-             (f.Field ?? "").Contains(searchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-             (f.CreatedBy ?? "").Contains(searchTerm, StringComparison.CurrentCultureIgnoreCase))
-            && (string.IsNullOrWhiteSpace(filterField) || (f.Field ?? "").Contains(filterField, StringComparison.CurrentCultureIgnoreCase))
-            && (string.IsNullOrWhiteSpace(filterAuthor) || (f.CreatedBy ?? "").Contains(filterAuthor, StringComparison.CurrentCultureIgnoreCase))
-            && (!filterFrom.HasValue || f.CreatedAt.Date >= filterFrom.Value.Date)
-            && (!filterTo.HasValue || f.CreatedAt.Date <= filterTo.Value.Date)
-          )
-          .ToList();
-
-    private void ApplyFilters()
-    {
-        // if needed, reset paging or trigger UI update (StateHasChanged not required if bound)
+        folders = await TeachingMaterialsApi.GetFoldersAsync() ?? new();
     }
 
     private async Task HandleFormSubmit()
     {
-        if (isSaving) return;
-        isSaving = true;
-        try
+        if (editingFolder != null)
         {
-            if (editingFolder != null)
+            editingFolder.Name = formModel.Name ?? "";
+            editingFolder.Field = formModel.Field ?? "";
+            editingFolder.Description = formModel.Description ?? "";
+            editingFolder.CreatedBy = formModel.CreatedBy ?? "";
+            editingFolder.LinkUrl = formModel.LinkUrl ?? "";
+            editingFolder.CreatedAt = DateTime.Now;
+            await TeachingMaterialsApi.UpdateFolderAsync(editingFolder);
+            editingFolder = null;
+        }
+        else
+        {
+            var folder = new FolderDto
             {
-                editingFolder.Name = formModel.Name ?? string.Empty;
-                editingFolder.Field = formModel.Field ?? string.Empty;
-                editingFolder.Description = formModel.Description ?? string.Empty;
-                editingFolder.CreatedBy = formModel.CreatedBy ?? string.Empty;
-                editingFolder.LinkUrl = formModel.LinkUrl ?? string.Empty;
-                editingFolder.CreatedAt = DateTime.Now;
-                await TeachingMaterialsApi.UpdateFolderAsync(editingFolder);
-                editingFolder = null;
-            }
-            else
-            {
-                var folder = new FolderDto
-                {
-                    Name = formModel.Name ?? string.Empty,
-                    Field = formModel.Field ?? string.Empty,
-                    Description = formModel.Description ?? string.Empty,
-                    CreatedBy = formModel.CreatedBy ?? string.Empty,
-                    LinkUrl = formModel.LinkUrl ?? string.Empty,
-                    Files = new List<FileDto>(),
-                    Links = new List<LinkDto>(),
-                    StudentMaterials = new List<StudentMaterialDto>(),
-                    CreatedAt = DateTime.Now
-                };
-                await TeachingMaterialsApi.CreateFolderAsync(folder);
-            }
-
-            folders = await TeachingMaterialsApi.GetFoldersAsync();
-            formModel = new FormFolderModel();
-            searchTerm = string.Empty;
+                Name = formModel.Name ?? "",
+                Field = formModel.Field ?? "",
+                Description = formModel.Description ?? "",
+                CreatedBy = formModel.CreatedBy ?? "",
+                LinkUrl = formModel.LinkUrl ?? "",
+                Files = new List<FileDto>(),
+                Links = new List<LinkDto>(),
+                StudentMaterials = new List<StudentMaterialDto>(),
+                CreatedAt = DateTime.Now
+            };
+            await TeachingMaterialsApi.CreateFolderAsync(folder);
         }
-        catch
-        {
-            // Přidejte notifikaci o chybě dle projektu (Alert komponenta)
-        }
-        finally
-        {
-            isSaving = false;
-        }
+        folders = await TeachingMaterialsApi.GetFoldersAsync() ?? new();
+        formModel = new FormFolderModel();
     }
 
     private void StartEdit(FolderDto folder)
@@ -330,28 +189,6 @@
     private async Task DeleteFolder(FolderDto folder)
     {
         await TeachingMaterialsApi.DeleteFolderAsync(folder);
-        folders = await TeachingMaterialsApi.GetFoldersAsync();
-    }
-
-    private void ToggleView()
-    {
-        compactView = !compactView;
-    }
-
-    // Nový: reset formuláře + fokus + scroll do view
-    private async Task NewItem()
-    {
-        editingFolder = null;
-        formModel = new FormFolderModel();
-        // krátké yield aby Blazor renderoval ref
-        await Task.Yield();
-        try
-        {
-            await JS.InvokeVoidAsync("blazorHelpers.focusAndScroll", nameInputRef);
-        }
-        catch
-        {
-            // Pokud skript není načtený, tichý fallback (bez JS)
-        }
+        folders = await TeachingMaterialsApi.GetFoldersAsync() ?? new();
     }
 }
