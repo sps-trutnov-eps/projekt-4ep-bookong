@@ -1,14 +1,13 @@
-@page "/books"
+@page "/maturita"
 @using Bookong.Application.UseCases.Queries.Interfaces
 @using Bookong.Application.UseCases.Interfaces
 @using Bookong.Application.DTOs
-@inject IGetAvailableBooksQuery GetAvailableBooks
-@inject ISelectMaturitaBookUseCase SelectMaturitaBook
-@inject NavigationManager NavigationManager
-@inject ILogger<Books> Logger
+@inject IGetMaturitaBookSelectionQuery GetMaturitaBookSelection
+@inject IDeselectMaturitaBookUseCase DeselectMaturitaBook
+@inject ILogger<Maturita> Logger
 
 <div class="container my-4">
-    <h1 class="display-6 fw-semibold mb-4">Seznam knih</h1>
+    <h1 class="display-6 fw-semibold mb-4">Maturitní seznam</h1>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -76,10 +75,11 @@
             </div>
         </div>
     }
-    else if (filteredItems == null || !filteredItems.Any())
+    else if (filteredBooks == null || !filteredBooks.Any())
     {
         <div class="text-center">
-            <p class="text-muted mb-3">Žádné knihy k zobrazení.</p>
+            <p class="text-muted mb-3">Zatím nemáte vybrané žádné knihy k maturitě.</p>
+            <a href="/books" class="btn btn-primary">Přejít na výběr knih</a>
         </div>
     }
     else
@@ -90,7 +90,7 @@
                     <thead class="table-light">
                         <tr>
                             <th style="width:4%">#</th>
-                            <th>Název knihy</th>
+                            <th>Název</th>
                             <th class="d-none d-md-table-cell">Autor</th>
                             <th class="d-none d-lg-table-cell">Žánr</th>
                             <th class="d-none d-xl-table-cell">Typ</th>
@@ -98,9 +98,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @for (int i = 0; i < filteredItems.Count; i++)
+                        @for (int i = 0; i < filteredBooks.Count; i++)
                         {
-                            var book = filteredItems[i];
+                            var book = filteredBooks[i];
                             <tr>
                                 <td>@(i + 1)</td>
                                 <td class="fw-medium">@book.Title</td>
@@ -108,20 +108,10 @@
                                 <td class="d-none d-lg-table-cell">@book.Genre</td>
                                 <td class="d-none d-xl-table-cell">@book.Kind</td>
                                 <td class="text-end">
-                                    <div class="btn-group">
-                                        <a class="btn btn-sm btn-outline-primary" href="@($"/books/{book.PublicId}")">Detail</a>
-                                        <button type="button" class="btn btn-sm btn-outline-success" @onclick="() => OnAddToSelection(book.PublicId)">
-                                            @if (isProcessing && processingBookId == book.PublicId)
-                                            {
-                                                <span class="spinner-border spinner-border-sm" role="status"></span>
-                                                <span class="ms-1">Přidávám...</span>
-                                            }
-                                            else
-                                            {
-                                                <span>Přidat do seznamu</span>
-                                            }
-                                        </button>
-                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger"
+                                            @onclick="() => OnRemoveBook(book.PublicId)">
+                                        Odstranit
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -133,64 +123,62 @@
 </div>
 
 @code {
-    private List<BookListItemDto>? items;
-    private List<BookListItemDto> filteredItems = new();
-    private bool isProcessing;
+    private List<BookListItemDto>? allBooks;
+    private List<BookListItemDto> filteredBooks = new();
     private bool isLoading = true;
-    private Guid processingBookId;
     private string? errorMessage;
 
-    // Temporary filter inputs
+    // Temporary variables for filter inputs
     private string tempSearchText = "";
     private string? tempSelectedAuthor;
     private string? tempSelectedGenre;
     private string? tempSelectedType;
 
-    // Applied filters
+    // Actual filter values applied
     private string searchText = "";
     private string? selectedAuthor;
     private string? selectedGenre;
     private string? selectedType;
 
     private List<string> authors = new();
-    private List<string> genres = new();
     private List<string> types = new();
+    private List<string> genres = new();
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             isLoading = true;
-            Logger.LogInformation("Loading books...");
-            items = (await GetAvailableBooks.ExecuteAsync()).ToList();
 
-            authors = items
-                .Where(b => !string.IsNullOrWhiteSpace(b.AuthorFullName))
-                .Select(b => b.AuthorFullName!.Trim())
+            allBooks = (await GetMaturitaBookSelection.ExecuteAsync()).ToList();
+
+            authors = allBooks
+                .Select(b => (b.AuthorFullName ?? string.Empty).Trim())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(a => a)
                 .ToList();
 
-            genres = items
-                .Where(b => !string.IsNullOrWhiteSpace(b.Genre))
-                .Select(b => b.Genre!.Trim())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(g => g)
-                .ToList();
-
-            types = items
-                .Where(b => !string.IsNullOrWhiteSpace(b.Kind))
-                .Select(b => b.Kind!.Trim())
+            types = allBooks
+                .Select(b => (b.Kind ?? string.Empty).Trim())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(t => t)
+                .ToList();
+
+            genres = allBooks
+                .Select(b => (b.Genre ?? string.Empty).Trim())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(g => g)
                 .ToList();
 
             ApplyFilters();
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error loading books");
-            errorMessage = "Nepodařilo se načíst seznam knih.";
+            Logger.LogError(ex, "Error loading maturita book selection");
+            errorMessage = "Nepodařilo se načíst seznam vybraných knih.";
         }
         finally
         {
@@ -198,58 +186,21 @@
         }
     }
 
-    private async Task OnAddToSelection(Guid bookId)
-    {
-        if (isProcessing) return;
-
-        try
-        {
-            isProcessing = true;
-            processingBookId = bookId;
-            StateHasChanged();
-
-            var dto = new AddBookToPersonalMaturitaListDto
-            {
-                BookPublicId = bookId
-            };
-
-            var result = await SelectMaturitaBook.Handle(dto);
-
-            if (result.Success)
-            {
-                NavigationManager.NavigateTo("/maturita", true);
-            }
-            else
-            {
-                errorMessage = result.Message;
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error adding book to selection");
-            errorMessage = "Knihu se nepodařilo přidat do seznamu.";
-        }
-        finally
-        {
-            isProcessing = false;
-            StateHasChanged();
-        }
-    }
-
     private void ApplyFilters()
     {
+        // Apply temporary values to actual filter fields
         searchText = tempSearchText;
         selectedAuthor = tempSelectedAuthor;
         selectedGenre = tempSelectedGenre;
         selectedType = tempSelectedType;
 
-        if (items == null)
+        if (allBooks == null)
         {
-            filteredItems = new();
+            filteredBooks = new();
             return;
         }
 
-        var q = items.AsEnumerable();
+        var q = allBooks.AsEnumerable();
 
         if (!string.IsNullOrWhiteSpace(searchText))
         {
@@ -271,7 +222,7 @@
         if (!string.IsNullOrWhiteSpace(selectedType))
             q = q.Where(b => string.Equals(b.Kind, selectedType, StringComparison.OrdinalIgnoreCase));
 
-        filteredItems = q.ToList();
+        filteredBooks = q.ToList();
         StateHasChanged();
     }
 
@@ -288,5 +239,33 @@
         selectedType = null;
 
         ApplyFilters();
+    }
+
+    private async Task OnRemoveBook(Guid bookId)
+    {
+        try
+        {
+            var dto = new RemoveBookFromPersonalMaturitaListDto
+            {
+                BookPublicId = bookId
+            };
+
+            var result = await DeselectMaturitaBook.Handle(dto);
+
+            if (result.Success)
+            {
+                allBooks = allBooks?.Where(b => b.PublicId != bookId).ToList();
+                ApplyFilters();
+            }
+            else
+            {
+                errorMessage = result.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Chyba při odstraňování knihy");
+            errorMessage = "Knihu se nepodařilo odstranit.";
+        }
     }
 }
