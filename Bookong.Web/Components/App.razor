@@ -16,6 +16,15 @@
 <body>
     <Routes @rendermode="InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>
+    <script>
+        window.toggleBodyLock = (lock) => {
+            if (lock) {
+                document.body.classList.add('menu-open');
+            } else {
+                document.body.classList.remove('menu-open');
+            }
+        };
+    </script>
 </body>
 
 </html>
