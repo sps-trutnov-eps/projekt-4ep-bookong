@@ -1,8 +1,13 @@
-﻿namespace Bookong.Application.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Bookong.Application.DTOs
 {
     public class CreateTeachingMaterialDto
     {
-        public required string Title { get; set; }
-        public required string Url { get; set; }
+        [Required(ErrorMessage = "Zadejte titulek výukového materiálu.")]
+        public string? Title { get; set; }
+
+        [Required(ErrorMessage = "Zadejte URL výukového materiálu.")]
+        public string? Url { get; set; }
     }
 }
