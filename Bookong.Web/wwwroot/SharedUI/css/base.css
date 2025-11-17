@@ -144,11 +144,6 @@ h1:focus {
     text-align: start;
 }
 
-/* Portal Page Styles */
-.card:hover {
-    transform: translateY(-5px);
-}
-
 /* Generic hover utility used across components/layouts */
 .hover-bg-light:hover {
     background-color: rgba(255, 255, 255, 0.1);
@@ -328,4 +323,25 @@ h1:focus {
   }
 
   [data-tm="materials-hero"] h1 { font-size: 1.3rem; }
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--elevated-shadow) !important;
+}
+
+/* Icon circle */
+.icon-circle {
+  width: 4rem;
+  height: 4rem;
+}
+
+/* Icon circle with gradient background */
+.icon-circle-gradient {
+  background: linear-gradient(135deg, #0a4db8, #583d96);
 }

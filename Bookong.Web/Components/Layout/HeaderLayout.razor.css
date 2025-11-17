@@ -1,15 +1,10 @@
-.hover-bg-light:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    transition: background-color 0.2s ease;
-}
-
 .navbar-brand:hover {
     transform: scale(1.02);
     transition: transform 0.2s ease;
 }
 
 .navbar-toggler:focus {
-    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
 }
 
 /* Header-specific overlay menu and decorative elements */
