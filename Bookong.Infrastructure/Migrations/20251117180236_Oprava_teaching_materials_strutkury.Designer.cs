@@ -4,6 +4,7 @@ using Bookong.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bookong.Infrastructure.Migrations
 {
     [DbContext(typeof(BookongDbContext))]
-    partial class BookongDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251117180236_Oprava_teaching_materials_strutkury")]
+    partial class Oprava_teaching_materials_strutkury
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -744,11 +747,6 @@ namespace Bookong.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Address");
-                });
-
-            modelBuilder.Entity("Bookong.Domain.Entities.User", b =>
-                {
-                    b.Navigation("TeachingMaterials");
                 });
 #pragma warning restore 612, 618
         }
