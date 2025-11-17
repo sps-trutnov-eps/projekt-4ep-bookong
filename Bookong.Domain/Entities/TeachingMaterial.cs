@@ -15,5 +15,14 @@ namespace Bookong.Domain.Entities
         public required string Url { get; set; }
 
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+
+        public int UserId { get; set; }
+        public User? User { get; set; }
+
+        public int SubjectId { get; set; }
+        public Subject? Subject { get; set; }
+
+        public int BranchId { get; set; }
+        public Branch? Branch { get; set; }
     }
 }
