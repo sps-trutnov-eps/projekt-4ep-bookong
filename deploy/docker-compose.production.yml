@@ -8,6 +8,8 @@ services:
       - SA_PASSWORD=${SA_PASSWORD}
     volumes:
       - bookong-production-sqldata:/var/opt/mssql
+    networks:
+      - bookong-production-internal
     restart: unless-stopped
 
   app:
@@ -22,10 +24,26 @@ services:
       - ConnectionStrings__DefaultConnection=Server=db,1433;Database=BookongDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;Encrypt=False
     depends_on:
       - db
-    ports:
-      - "8080:8080"
+    networks:
+      - bookong-production-internal
+      - traefik-public
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bookong-production.rule=Host(`bookong.spstrutnov.cz`)"
+      - "traefik.http.routers.bookong-production.entrypoints=https"
+      - "traefik.http.routers.bookong-production.tls=true"
+      - "traefik.http.routers.bookong-production.tls.certresolver=cloudflare"
+      - "traefik.http.services.bookong-production.loadbalancer.server.port=8080"
+      - "traefik.docker.network=traefik-public"
     restart: unless-stopped
 
 volumes:
   bookong-production-sqldata:
     name: bookong-production-sqldata
+
+networks:
+  bookong-production-internal:
+    name: bookong-production-internal
+  traefik-public:
+    name: traefik-public
+    external: true

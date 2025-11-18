@@ -11,7 +11,9 @@ Tento adresář obsahuje minimální setup pro nasazení aplikace jako Docker co
     - `curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg`
     - `echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") $(. /etc/os-release; echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null`
     - `sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin`
-- Otevřený port `8080` (prod) a `5080` (staging) nebo reverzní proxy před aplikací
+- **Traefik** reverse proxy pro HTTPS (viz `deploy/traefik/` adresář)
+- Otevřené porty `80` a `443` pro Traefik
+- DNS záznamy: `bookong.spstrutnov.cz`, `staging.bookong.spstrutnov.cz` směřují na server
 
 ## Jak to funguje
 - CI/CD (GitHub Actions) po pushi do větve `staging` nebo `main` přes SSH spustí na serveru skript `deploy/deploy.sh`.
@@ -21,14 +23,37 @@ Tento adresář obsahuje minimální setup pro nasazení aplikace jako Docker co
 
 ## Konfigurace tajemství (GitHub)
 V repozitáři nastavte v Settings → Secrets and variables → Actions tyto Secrets:
-- `SSH_HOST` – hostname/IP serveru
-- `SSH_USER` – uživatel s právy k Dockeru (často člen skupiny `docker`)
-- `SSH_PRIVATE_KEY` – privátní klíč (PEM) pro přístup na server
+- `SSH_HOST` – hostname/IP serveru (např. `bookong.spstrutnov.cz`)
+- `SSH_USER` – uživatel s právy k Dockeru (např. `deploy`, člen skupiny `docker`)
+- `SSH_PRIVATE_KEY` – privátní klíč (PEM) pro přístup na server přes SSH
 - `SSH_PORT` – volitelné, default `22`
 
 Volitelné repo Variables (doporučeno):
 - `APP_DIR` – cílový adresář na serveru (default: `~/apps/bookong`)
 - `REPO_URL` – URL tohoto repozitáře (default se dopočítá z GitHub kontextu)
+
+### Nastavení přístupu serveru k privátnímu repozitáři
+Na serveru jako `deploy` uživatel:
+```bash
+# Vygeneruj deploy klíč
+ssh-keygen -t ed25519 -C "deploy@bookong" -f ~/.ssh/github_deploy_key -N ""
+
+# Zobraz veřejný klíč
+cat ~/.ssh/github_deploy_key.pub
+```
+Přidej klíč jako **Deploy Key** v GitHub repo → Settings → Deploy keys (read-only stačí).
+
+Konfigurace SSH:
+```bash
+cat >> ~/.ssh/config << 'EOF'
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/github_deploy_key
+  StrictHostKeyChecking no
+EOF
+chmod 600 ~/.ssh/config
+```
 
 ## Prostředí (env soubory)
 Vzorové soubory jsou připravené:
@@ -48,9 +73,11 @@ Na serveru (v kořeni repozitáře):
 - Staging: `bash deploy/deploy.sh staging`
 - Production: `bash deploy/deploy.sh production`
 
-## Služby a porty
-- Staging: app na `:5080`, DB neveřejná
-- Production: app na `:8080`, DB neveřejná
+## Služby a domény
+- **Production**: `https://bookong.spstrutnov.cz` (main branch)
+- **Staging**: `https://staging.bookong.spstrutnov.cz` (staging branch)
+- **Traefik Dashboard**: `https://traefik.bookong.spstrutnov.cz`
+- Databáze jsou dostupné pouze v interní síti kontejnerů
 
 ## Obnova a data
 - Data SQL jsou v named volumes: `bookong-staging-sqldata`, `bookong-production-sqldata`.

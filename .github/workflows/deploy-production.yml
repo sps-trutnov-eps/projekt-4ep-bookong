@@ -3,6 +3,7 @@ name: Deploy Production
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:  # Umožní ruční spuštění z GitHub UI
 
 jobs:
   deploy:
@@ -16,11 +17,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           script_stop: true
-          envs: APP_DIR,REPO_URL
           script: |
             set -e
             : "${APP_DIR:=${HOME}/apps/bookong}"
-            : "${REPO_URL:=${{ github.server_url }}/${{ github.repository }}}"
+            REPO_URL="git@github.com:${{ github.repository }}.git"
             if [ ! -d "$APP_DIR" ]; then
               mkdir -p "$APP_DIR"
               git clone --depth=1 --branch main "$REPO_URL" "$APP_DIR"
