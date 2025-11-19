@@ -6,6 +6,8 @@
 @inject ISelectMaturitaBookUseCase SelectMaturitaBook
 @inject NavigationManager NavigationManager
 @inject ILogger<Books> Logger
+@inject Bookong.Domain.Interfaces.IUnitOfWork UnitOfWork
+@inject Bookong.Application.Services.Interfaces.ISessionService SessionService
 
 <div class="container my-4">
     <h1 class="display-6 fw-semibold mb-4">Seznam knih</h1>
@@ -101,6 +103,7 @@
                         @for (int i = 0; i < filteredItems.Count; i++)
                         {
                             var book = filteredItems[i];
+                            var isAvailable = availableBookPublicIds.Contains(book.PublicId);
                             <tr>
                                 <td>@(i + 1)</td>
                                 <td class="fw-medium">@book.Title</td>
@@ -110,11 +113,17 @@
                                 <td class="text-end">
                                     <div class="btn-group">
                                         <a class="btn btn-sm btn-outline-primary" href="@($"/books/{book.PublicId}")">Detail</a>
-                                        <button type="button" class="btn btn-sm btn-outline-success" @onclick="() => OnAddToSelection(book.PublicId)">
+                                        <button type="button" class="btn btn-sm btn-outline-success"
+                                                disabled="@(!isAvailable || isProcessing && processingBookId == book.PublicId)"
+                                                @onclick="() => OnAddToSelection(book.PublicId)">
                                             @if (isProcessing && processingBookId == book.PublicId)
                                             {
                                                 <span class="spinner-border spinner-border-sm" role="status"></span>
                                                 <span class="ms-1">Přidávám...</span>
+                                            }
+                                            else if (!isAvailable)
+                                            {
+                                                <span title="Kniha není dostupná k maturitě">Nedostupná</span>
                                             }
                                             else
                                             {
@@ -156,6 +165,9 @@
     private List<string> genres = new();
     private List<string> types = new();
 
+    // availability
+    private HashSet<Guid> availableBookPublicIds = new();
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -185,6 +197,8 @@
                 .OrderBy(t => t)
                 .ToList();
 
+            await LoadAvailabilityAsync();
+
             ApplyFilters();
         }
         catch (Exception ex)
@@ -198,9 +212,34 @@
         }
     }
 
+    private async Task LoadAvailabilityAsync()
+    {
+        availableBookPublicIds.Clear();
+
+        // try to get teacher id from session, fallback to 1
+        var teacherIdStr = await SessionService.GetAsync("TeacherAvailabilityUserId");
+        var teacherId = 1;
+        if (!string.IsNullOrEmpty(teacherIdStr) && int.TryParse(teacherIdStr, out var parsed))
+            teacherId = parsed;
+
+        var selections = await UnitOfWork.MaturitaBookSelections.GetByUserWithDetailsAsync(teacherId);
+        foreach (var s in selections)
+        {
+            if (s.Book != null)
+                availableBookPublicIds.Add(s.Book.PublicId);
+        }
+    }
+
     private async Task OnAddToSelection(Guid bookId)
     {
         if (isProcessing) return;
+
+        // protect: ensure book is available
+        if (!availableBookPublicIds.Contains(bookId))
+        {
+            errorMessage = "Tato kniha není dostupná k maturitě.";
+            return;
+        }
 
         try
         {

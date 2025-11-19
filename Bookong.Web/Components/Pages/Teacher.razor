@@ -1,8 +1,8 @@
 ﻿@page "/teacher"
 @using Bookong.Application.DTOs
-@using Microsoft.EntityFrameworkCore
+@using Bookong.Domain.Entities
 @inject Bookong.Domain.Interfaces.IUnitOfWork UnitOfWork
-@inject Bookong.Infrastructure.Data.BookongDbContext DbContext
+@inject Bookong.Application.Services.Interfaces.ISessionService SessionService
 
 <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -87,8 +87,8 @@
                                 <td>@b.Kind</td>
                                 <td class="text-center">
                                     <div class="d-flex gap-2 justify-content-center flex-nowrap">
-                                        <button class="btn btn-outline-success btn-sm" @onclick="() => ToggleBlueMarkAsync(b)">
-                                            @(blueMarks.Contains(b.PublicId) ? "Odebrat z třídy" : "Přidat do třídy")
+                                        <button class="btn btn-outline-success btn-sm" @onclick="() => ToggleAvailableAsync(b)">
+                                            @(blueMarks.Contains(b.PublicId) ? "Odebrat z dostupných" : "Přidat do dostupných")
                                         </button>
                                         <button class="btn btn-outline-primary btn-sm">Upravit</button>
                                         <button class="btn btn-outline-danger btn-sm">Odebrat</button>
@@ -107,7 +107,7 @@
     private List<BookListItemDto>? teacherBooks;
     private List<BookListItemDto> displayedBooks = new();
 
-    // track blue-marked books by PublicId without changing domain/DTO
+    // track available books by PublicId (stored in MaturitaBookSelections using teacher user id)
     private HashSet<Guid> blueMarks = new();
 
     private string searchTerm = string.Empty;
@@ -125,8 +125,8 @@
         {
             var books = await UnitOfWork.Books.GetAllAsync();
 
-            // load blue marks from dbo.Books.HasBlueMark using raw SQL so we don't need to change domain models
-            await LoadBlueMarksAsync();
+            // load available books from MaturitaBookSelections for current user (teacher)
+            await LoadAvailableAsync();
 
             teacherBooks = books.Select(b => new BookListItemDto
             {
@@ -154,36 +154,29 @@
         }
     }
 
-    private async Task LoadBlueMarksAsync()
+    private async Task<int> ResolveCurrentUserIdAsync()
+    {
+        var publicIdStr = await SessionService.GetAsync("CurrentUserPublicId");
+        if (!string.IsNullOrEmpty(publicIdStr) && Guid.TryParse(publicIdStr, out var pubId))
+        {
+            var user = await UnitOfWork.Users.GetByPublicIdAsync(pubId);
+            if (user != null) return user.Id;
+        }
+
+        var first = (await UnitOfWork.Users.GetAllAsync()).FirstOrDefault();
+        return first?.Id ?? 1;
+    }
+
+    private async Task LoadAvailableAsync()
     {
         blueMarks.Clear();
 
-        var conn = DbContext.Database.GetDbConnection();
-        try
+        var teacherId = await ResolveCurrentUserIdAsync();
+        var items = await UnitOfWork.MaturitaBookSelections.GetByUserWithDetailsAsync(teacherId);
+        foreach (var it in items)
         {
-            if (conn.State != System.Data.ConnectionState.Open)
-                await conn.OpenAsync();
-
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT PublicId, HasBlueMark FROM dbo.Books";
-
-            using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                if (!reader.IsDBNull(0))
-                {
-                    var publicId = reader.GetGuid(0);
-                    var hasMark = !reader.IsDBNull(1) && reader.GetBoolean(1);
-                    if (hasMark) blueMarks.Add(publicId);
-                }
-            }
-        }
-        finally
-        {
-            // do not close shared connection explicitly; DbContext manages it
-            // but ensure it's closed if we opened it here
-            if (conn.State == System.Data.ConnectionState.Open)
-                await conn.CloseAsync();
+            if (it.Book != null)
+                blueMarks.Add(it.Book.PublicId);
         }
     }
 
@@ -221,43 +214,35 @@
         ApplyFilters();
     }
 
-    private async Task ToggleBlueMarkAsync(BookListItemDto dto)
+    private async Task ToggleAvailableAsync(BookListItemDto dto)
     {
-        // Toggle in DB
-        var newValue = !blueMarks.Contains(dto.PublicId);
+        // find book entity
+        var book = await UnitOfWork.Books.GetByPublicIdAsync(dto.PublicId);
+        if (book == null) return;
 
-        var conn = DbContext.Database.GetDbConnection();
-        try
+        var teacherId = await ResolveCurrentUserIdAsync();
+
+        // check existing availability for teacher user
+        var existing = (await UnitOfWork.MaturitaBookSelections.GetByUserWithDetailsAsync(teacherId))
+            .FirstOrDefault(s => s.BookId == book.Id);
+
+        if (existing != null)
         {
-            if (conn.State != System.Data.ConnectionState.Open)
-                await conn.OpenAsync();
-
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = "UPDATE dbo.Books SET HasBlueMark = @val WHERE PublicId = @pid";
-
-            var p1 = cmd.CreateParameter();
-            p1.ParameterName = "@val";
-            p1.Value = newValue ?1 :0;
-            p1.DbType = System.Data.DbType.Boolean;
-            cmd.Parameters.Add(p1);
-
-            var p2 = cmd.CreateParameter();
-            p2.ParameterName = "@pid";
-            p2.Value = dto.PublicId;
-            p2.DbType = System.Data.DbType.Guid;
-            cmd.Parameters.Add(p2);
-
-            await cmd.ExecuteNonQueryAsync();
+            UnitOfWork.MaturitaBookSelections.Delete(existing);
+            await UnitOfWork.CommitAsync();
+            blueMarks.Remove(dto.PublicId);
         }
-        finally
+        else
         {
-            if (conn.State == System.Data.ConnectionState.Open)
-                await conn.CloseAsync();
+            var selection = new MaturitaBookSelection
+            {
+                BookId = book.Id,
+                UserId = teacherId
+            };
+            UnitOfWork.MaturitaBookSelections.Add(selection);
+            await UnitOfWork.CommitAsync();
+            blueMarks.Add(dto.PublicId);
         }
-
-        // update local cache and UI
-        if (newValue) blueMarks.Add(dto.PublicId);
-        else blueMarks.Remove(dto.PublicId);
 
         StateHasChanged();
     }
