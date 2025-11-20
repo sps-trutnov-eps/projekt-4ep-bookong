@@ -23,5 +23,11 @@ namespace Bookong.Web.Services
             _ctx.HttpContext!.Session.Remove(key);
             return Task.CompletedTask;
         }
+
+        public Task ClearAsync()
+        {
+            _ctx.HttpContext!.Session.Clear();
+            return Task.CompletedTask;
+        }
     }
 }

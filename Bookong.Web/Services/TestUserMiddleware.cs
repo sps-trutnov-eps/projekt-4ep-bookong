@@ -12,13 +12,14 @@ namespace Bookong.Web.Services
 
         public async Task InvokeAsync(HttpContext context, BookongDbContext db, ISessionService session)
         {
-            // Session may not be available during prerendering; do nothing in that case.
             if (context.Session is not null)
             {
+                var path = context.Request.Path.Value?.ToLowerInvariant();
+                var isLoginPage = path != null && path.Contains("/login");
+
                 var existing = await session.GetAsync(SessionKey);
-                if (string.IsNullOrEmpty(existing))
+                if (string.IsNullOrEmpty(existing) && !isLoginPage)
                 {
-                    // Find the first user or create a test user.
                     var user = await db.Users.OrderBy(u => u.Id).FirstOrDefaultAsync();
                     if (user == null)
                     {

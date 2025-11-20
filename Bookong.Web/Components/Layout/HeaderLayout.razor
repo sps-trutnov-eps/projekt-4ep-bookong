@@ -1,4 +1,5 @@
-﻿@inject Bookong.Application.Services.Interfaces.ISessionService SessionService
+﻿@rendermode InteractiveServer
+@inject Bookong.Application.Services.Interfaces.ISessionService SessionService
 @inject NavigationManager Navigation
 
 <header class="fixed-top bg-primary position-sticky">
@@ -116,14 +117,31 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await CheckLoginStatus();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await CheckLoginStatus();
+    }
+
+    private async Task CheckLoginStatus()
+    {
         var user = await SessionService.GetAsync("CurrentUserPublicId");
-        isLoggedIn = !string.IsNullOrEmpty(user);
+        var newLoginStatus = !string.IsNullOrEmpty(user);
+        
+        if (isLoggedIn != newLoginStatus)
+        {
+            isLoggedIn = newLoginStatus;
+            StateHasChanged();
+        }
     }
 
     private async Task HandleLogout()
     {
-        await SessionService.RemoveAsync("CurrentUserPublicId");
+        await SessionService.ClearAsync();
         isLoggedIn = false;
-        Navigation.NavigateTo("/login", true);
+        StateHasChanged();
+        Navigation.NavigateTo("/login", forceLoad: true);
     }
 }

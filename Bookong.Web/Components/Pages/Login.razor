@@ -4,6 +4,8 @@
 @using System.ComponentModel.DataAnnotations
 @using Bookong.Application.DTOs
 @inject Bookong.Application.UseCases.Interfaces.ILoginUserUseCase LoginUserUseCase
+@inject Bookong.Application.Services.Interfaces.ISessionService SessionService
+@inject NavigationManager Navigation
 
 <div class="login-wrapper d-flex flex-column align-items-center justify-content-center text-center">
 
@@ -15,7 +17,7 @@
   
   @if (!string.IsNullOrEmpty(debugMessage))
      {
-      <div class="alert alert-info" role="alert">
+      <div class="alert @(isError ? "alert-danger" : "alert-info")" role="alert">
             @debugMessage
         </div>
      }
@@ -32,7 +34,17 @@
             <ValidationMessage For="@(() => loginModel.Password)" />
       </div>
 
-            <button type="submit" class="btn btn-primary w-100">Přihlásit se</button>
+            <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Přihlašování...</span>
+                }
+                else
+                {
+                    <span>Přihlásit se</span>
+                }
+            </button>
         </EditForm>
     </div>
 </div>
@@ -40,23 +52,45 @@
 @code {
     private LoginModel loginModel { get; set; } = new();
     private string? debugMessage;
+    private bool isError = false;
+    private bool isLoading = false;
 
     private async Task LoginUserAsync()
     {
-        // Create request with user credentials
-        var request = new LoginUserRequest
-   {
-         Email = loginModel.Username,
-   Password = loginModel.Password
-        };
+        isLoading = true;
+        isError = false;
+        debugMessage = null;
 
-        // Execute use case - credentials will be stored in LoginUserUseCase.StoredEmail and LoginUserUseCase.StoredPassword
-        var response = await LoginUserUseCase.ExecuteAsync(request);
-    
-        // Show debug message
-        debugMessage = response.Message;
-        
-        // You can now inspect LoginUserUseCase.StoredEmail and LoginUserUseCase.StoredPassword in debugger
+        try
+        {
+            var request = new LoginUserRequest
+            {
+                Email = loginModel.Username,
+                Password = loginModel.Password
+            };
+
+            var response = await LoginUserUseCase.ExecuteAsync(request);
+
+            if (response.UserId != Guid.Empty)
+            {
+                await SessionService.SetAsync("CurrentUserPublicId", response.UserId.ToString());
+                Navigation.NavigateTo("/portalpage", forceLoad: true);
+            }
+            else
+            {
+                debugMessage = response.Message;
+                isError = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            debugMessage = $"Chyba při přihlašování: {ex.Message}";
+            isError = true;
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     public class LoginModel
