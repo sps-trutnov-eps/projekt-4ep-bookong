@@ -11,7 +11,6 @@
         public IMaturitaBookAssignmentRequestRepository MaturitaBookAssignmentRequests { get; }
         public IMaturitaBookRepository MaturitaBooks { get; }
         public IMaturitaBookSelectionRepository MaturitaBookSelections { get; }
-        public IMaturitaAvailableBookRepository MaturitaAvailableBooks { get; }
         public IPeriodRepository Periods { get; }
         public IPublisherRepository Publishers { get; }
         public ITeachingMaterialRepository TeachingMaterials { get; }

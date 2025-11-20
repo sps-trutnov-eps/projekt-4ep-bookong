@@ -19,7 +19,6 @@ namespace Bookong.Infrastructure.Data
         public DbSet<Address> Addresses { get; set; }
         public DbSet<MaturitaBook> MaturitaBooks { get; set; }
         public DbSet<MaturitaBookSelection> MaturitaBookSelections { get; set; }
-        public DbSet<MaturitaAvailableBook> MaturitaAvailableBooks { get; set; }
         public DbSet<Publisher> Publishers { get; set; }
         public DbSet<MaturitaBookAssignmentRequest> MaturitaBookAssignmentRequests { get; set; }
         public DbSet<BookReservation> BookReservations { get; set; }

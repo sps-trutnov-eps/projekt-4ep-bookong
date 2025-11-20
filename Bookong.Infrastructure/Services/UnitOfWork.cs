@@ -19,7 +19,6 @@ namespace Bookong.Infrastructure.Services
         public IMaturitaBookAssignmentRequestRepository MaturitaBookAssignmentRequests { get; }
         public IMaturitaBookRepository MaturitaBooks { get; }
         public IMaturitaBookSelectionRepository MaturitaBookSelections { get; }
-        public IMaturitaAvailableBookRepository MaturitaAvailableBooks { get; }
         public IPeriodRepository Periods { get; }
         public IPublisherRepository Publishers { get; }
         public ITeachingMaterialRepository TeachingMaterials { get; }
@@ -38,7 +37,6 @@ namespace Bookong.Infrastructure.Services
             MaturitaBookAssignmentRequests = new MaturitaBookAssignmentRequestRepository(_context);
             MaturitaBooks = new MaturitaBookRepository(_context);
             MaturitaBookSelections = new MaturitaBookSelectionRepository(_context);
-            MaturitaAvailableBooks = new MaturitaAvailableBookRepository(_context);
             Periods = new PeriodRepository(_context);
             Publishers = new PublisherRepository(_context);
             TeachingMaterials = new TeachingMaterialRepository(_context);
