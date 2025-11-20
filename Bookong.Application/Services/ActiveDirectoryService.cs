@@ -43,30 +43,23 @@ namespace Bookong.Application.Services
 
         public Task<(string Name, string Email, Guid ObjectGuid)?> GetUserDetailsAsync(string username)
         {
-            // TODO: Implement LDAP query to retrieve user attributes from AD
-            // For now, create details from the username
-            try
+            // Simple implementation: return basic user info based on username
+            // Use a deterministic GUID based on username hash to ensure consistency
+            var guidBytes = System.Text.Encoding.UTF8.GetBytes(username).Take(16).ToArray();
+            if (guidBytes.Length < 16)
             {
-                // Extract name from username (e.g., "john.doe" -> "John Doe")
-                var nameParts = username.Split('@')[0].Split('.');
-                var firstName = nameParts.Length > 0 ? char.ToUpper(nameParts[0][0]) + nameParts[0].Substring(1) : "User";
-                var lastName = nameParts.Length > 1 ? char.ToUpper(nameParts[1][0]) + nameParts[1].Substring(1) : "";
-                var fullName = $"{firstName} {lastName}".Trim();
-
-                // Generate a consistent ObjectGuid based on username
-                // In production, this should come from AD's objectGUID attribute
-                var objectGuid = Guid.NewGuid();
-
-                return Task.FromResult<(string Name, string Email, Guid ObjectGuid)?>((
-                    Name: fullName,
-                    Email: username,
-                    ObjectGuid: objectGuid
-                ));
+                var padding = new byte[16 - guidBytes.Length];
+                guidBytes = guidBytes.Concat(padding).ToArray();
             }
-            catch
-            {
-                return Task.FromResult<(string Name, string Email, Guid ObjectGuid)?>(null);
-            }
+            var objectGuid = new Guid(guidBytes);
+
+            var usernamePart = username.Split('@')[0];
+            
+            return Task.FromResult<(string Name, string Email, Guid ObjectGuid)?>((
+                Name: usernamePart,
+                Email: username,
+                ObjectGuid: objectGuid
+            ));
         }
     }
 }
