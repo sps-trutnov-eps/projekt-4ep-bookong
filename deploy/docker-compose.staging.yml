@@ -32,7 +32,7 @@ services:
       - "traefik.http.routers.bookong-staging.rule=Host(`staging.bookong.spstrutnov.cz`)"
       - "traefik.http.routers.bookong-staging.entrypoints=https"
       - "traefik.http.routers.bookong-staging.tls=true"
-      - "traefik.http.routers.bookong-staging.tls.certresolver=cloudflare"
+      - "traefik.http.routers.bookong-staging.tls.certresolver=letsencrypt"
       - "traefik.http.services.bookong-staging.loadbalancer.server.port=8080"
       - "traefik.docker.network=traefik-public"
     restart: unless-stopped
