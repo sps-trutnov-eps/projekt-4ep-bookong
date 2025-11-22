@@ -19,7 +19,7 @@ jobs:
           script_stop: true
           script: |
             set -e
-            : "${APP_DIR:=${HOME}/apps/bookong}"
+            : "${APP_DIR:=${HOME}/bookong-production-deployment}"
             REPO_URL="git@github.com:${{ github.repository }}.git"
             if [ ! -d "$APP_DIR" ]; then
               mkdir -p "$APP_DIR"
