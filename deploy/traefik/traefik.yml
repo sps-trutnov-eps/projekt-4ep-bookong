@@ -1,7 +1,3 @@
-api:
-  dashboard: true
-  debug: false
-
 entryPoints:
   http:
     address: ":80"

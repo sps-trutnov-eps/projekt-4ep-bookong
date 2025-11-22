@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: traefik:v2.10
+    image: traefik:v3.6.2
     container_name: traefik
     restart: unless-stopped
     security_opt:
@@ -16,15 +16,6 @@ services:
       - ./traefik.yml:/traefik.yml:ro
     labels:
       - "traefik.enable=true"
-      # Dashboard
-      - "traefik.http.routers.traefik.rule=Host(`traefik.bookong.spstrutnov.cz`)"
-      - "traefik.http.routers.traefik.entrypoints=https"
-      - "traefik.http.routers.traefik.tls=true"
-      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.traefik.service=api@internal"
-      # Basic auth pro dashboard (vygeneruj: htpasswd -nb admin yourpassword)
-      # - "traefik.http.routers.traefik.middlewares=traefik-auth"
-      # - "traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$apr1$$..."
 
 networks:
   traefik-public:
