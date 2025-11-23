@@ -1,29 +1,24 @@
 using System;
-using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
 using Bookong.Application.DTOs;
 using Bookong.Application.UseCases.Interfaces;
 using Bookong.Domain.Entities;
+using Bookong.Domain.Interfaces;
 
 namespace Bookong.Application.UseCases
 {
-    /// <summary>
-    /// Simple in-memory implementation of <see cref="ICreateBookUseCase"/>.
-    /// Useful for tests, demos or until you wire up persistence (EF/Core repository).
-    /// </summary>
-    public sealed class InMemoryCreateBookUseCase : ICreateBookUseCase
+    public class CreateBookUseCase : ICreateBookUseCase
     {
-        private static int _nextId = 0;
-        private readonly ConcurrentBag<Book> _store;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public InMemoryCreateBookUseCase(ConcurrentBag<Book>? store = null)
+        public CreateBookUseCase(IUnitOfWork unitOfWork)
         {
-            _store = store ?? new ConcurrentBag<Book>();
+            _unitOfWork = unitOfWork;
         }
 
-        public Task<Book> ExecuteAsync(CreateBookDto dto)
+        public async Task<Book> ExecuteAsync(CreateBookDto dto)
         {
             if (dto is null) throw new ArgumentNullException(nameof(dto));
 
@@ -41,62 +36,149 @@ namespace Bookong.Application.UseCases
             if (!dto.Pages.HasValue || dto.Pages.Value == 0)
                 throw new ValidationException("Pages must be provided and greater than zero.", null, nameof(dto.Pages));
 
+            // Prepare variables for newly created related entities
+            Author? newAuthor = null;
+            Genre? newGenre = null;
+            Kind? newKind = null;
+            Period? newPeriod = null;
+            Warehouse? newWarehouse = null;
+
+            // Create new author if negative temp id referenced
+            if (dto.AuthorId.HasValue && dto.AuthorId.Value < 0 && dto.NewAuthors != null)
+            {
+                var temp = dto.NewAuthors.FirstOrDefault(a => a.TempId == dto.AuthorId.Value);
+                if (temp != null)
+                {
+                    newAuthor = new Author
+                    {
+                        PublicId = Guid.NewGuid(),
+                        FirstName = temp.FirstName ?? string.Empty,
+                        MiddleName = temp.MiddleName ?? string.Empty,
+                        LastName = temp.LastName ?? string.Empty
+                    };
+
+                    _unitOfWork.Authors.Add(newAuthor);
+                }
+            }
+
+            if (dto.GenreId.HasValue && dto.GenreId.Value < 0 && dto.NewGenres != null)
+            {
+                var temp = dto.NewGenres.FirstOrDefault(g => g.TempId == dto.GenreId.Value);
+                if (temp != null)
+                {
+                    newGenre = new Genre { PublicId = Guid.NewGuid(), Name = temp.Name ?? string.Empty };
+                    _unitOfWork.Genres.Add(newGenre);
+                }
+            }
+
+            if (dto.KindId.HasValue && dto.KindId.Value < 0 && dto.NewKinds != null)
+            {
+                var temp = dto.NewKinds.FirstOrDefault(k => k.TempId == dto.KindId.Value);
+                if (temp != null)
+                {
+                    newKind = new Kind { PublicId = Guid.NewGuid(), Name = temp.Name ?? string.Empty };
+                    _unitOfWork.Kinds.Add(newKind);
+                }
+            }
+
+            if (dto.PeriodId.HasValue && dto.PeriodId.Value < 0 && dto.NewPeriods != null)
+            {
+                var temp = dto.NewPeriods.FirstOrDefault(p => p.TempId == dto.PeriodId.Value);
+                if (temp != null)
+                {
+                    newPeriod = new Period { PublicId = Guid.NewGuid(), Name = temp.Name ?? string.Empty };
+                    _unitOfWork.Periods.Add(newPeriod);
+                }
+            }
+
+            if (dto.WarehouseId.HasValue && dto.WarehouseId.Value < 0 && dto.NewWarehouses != null)
+            {
+                var temp = dto.NewWarehouses.FirstOrDefault(w => w.TempId == dto.WarehouseId.Value);
+                if (temp != null)
+                {
+                    var address = new Address
+                    {
+                        PublicId = Guid.NewGuid(),
+                        Street = temp.Street ?? string.Empty,
+                        Number = temp.Number ?? string.Empty,
+                        City = temp.City ?? string.Empty,
+                        ZipCode = temp.ZipCode ?? string.Empty
+                    };
+
+                    // Warehouse requires Address navigation property
+                    newWarehouse = new Warehouse
+                    {
+                        PublicId = Guid.NewGuid(),
+                        Name = temp.Name ?? string.Empty,
+                        Address = address,
+                        AddressId = 0
+                    };
+
+                    _unitOfWork.Warehouses.Add(newWarehouse);
+                }
+            }
+
+            // Create Book entity. For newly created related entities we set navigation property; for existing ones set the FK.
             var book = new Book
             {
-                Id = Interlocked.Increment(ref _nextId),
-                PublicId = Guid.NewGuid(),
-                Name = dto.Title!.Trim(),
-                ISBN = string.IsNullOrWhiteSpace(dto.ISBN) ? null : dto.ISBN!.Trim(),
-                AuthorId = dto.AuthorId!.Value,
-                // Minimal nav props so object initializer satisfies 'required' members.
-                Author = new Author
-                {
-                    Id = dto.AuthorId.Value,
-                    PublicId = Guid.NewGuid(),
-                    FirstName = string.Empty,
-                    MiddleName = string.Empty,
-                    LastName = string.Empty
-                },
-                GenreId = dto.GenreId!.Value,
-                Genre = new Genre { Id = dto.GenreId.Value, PublicId = Guid.NewGuid(), Name = string.Empty },
-                KindId = dto.KindId!.Value,
-                Kind = new Kind { Id = dto.KindId.Value, PublicId = Guid.NewGuid(), Name = string.Empty },
-                PeriodId = dto.PeriodId!.Value,
-                Period = new Period { Id = dto.PeriodId.Value, PublicId = Guid.NewGuid(), Name = string.Empty },
-                Pages = dto.Pages!.Value,
+                Name = dto.Title.Trim(),
+                ISBN = string.IsNullOrWhiteSpace(dto.ISBN) ? null : dto.ISBN.Trim(),
+                Pages = dto.Pages.Value,
                 DateRelease = dto.DateRelease,
-                WarehouseId = dto.WarehouseId,
-                Warehouse = dto.WarehouseId.HasValue
-    ? new Warehouse
-    {
-        Id = dto.WarehouseId.Value,
-        PublicId = Guid.NewGuid(),
-        Name = string.Empty,
-        AddressId = 0,
-        Address = new Address
-        {
-            Id = 0,
-            PublicId = Guid.NewGuid(),
-            Street = string.Empty,
-            Number = string.Empty,
-            City = string.Empty,
-            ZipCode = string.Empty
-        }
-    }
-    : null,
                 Borrowable = true
             };
 
-            _store.Add(book);
+            if (newAuthor != null)
+            {
+                book.Author = newAuthor;
+            }
+            else if (dto.AuthorId.HasValue && dto.AuthorId.Value > 0)
+            {
+                book.AuthorId = dto.AuthorId.Value;
+            }
 
-            return Task.FromResult(book);
+            if (newGenre != null)
+            {
+                book.Genre = newGenre;
+            }
+            else if (dto.GenreId.HasValue && dto.GenreId.Value > 0)
+            {
+                book.GenreId = dto.GenreId.Value;
+            }
+
+            if (newKind != null)
+            {
+                book.Kind = newKind;
+            }
+            else if (dto.KindId.HasValue && dto.KindId.Value > 0)
+            {
+                book.KindId = dto.KindId.Value;
+            }
+
+            if (newPeriod != null)
+            {
+                book.Period = newPeriod;
+            }
+            else if (dto.PeriodId.HasValue && dto.PeriodId.Value > 0)
+            {
+                book.PeriodId = dto.PeriodId.Value;
+            }
+
+            if (newWarehouse != null)
+            {
+                book.Warehouse = newWarehouse;
+            }
+            else if (dto.WarehouseId.HasValue && dto.WarehouseId.Value > 0)
+            {
+                book.WarehouseId = dto.WarehouseId.Value;
+            }
+
+            _unitOfWork.Books.Add(book);
+
+            // Commit all changes atomically
+            await _unitOfWork.CommitAsync();
+
+            return book;
         }
-    }
-}
-
-namespace Bookong.Application
-{
-    public class ICreateBookUseCase
-    {
     }
 }
