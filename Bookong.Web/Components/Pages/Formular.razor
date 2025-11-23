@@ -1,6 +1,9 @@
 @page "/formular"
 @using System.ComponentModel.DataAnnotations
 @using Bookong.Application.DTOs
+@using Bookong.Application.UseCases.Interfaces
+
+@inject ICreateBookUseCase CreateBookUseCase
 
 <PageTitle>Formulář - Přidat knihu</PageTitle>
 
@@ -373,19 +376,53 @@
 
     private async Task HandleValidSubmit()
     {
-        /*
-        Intended wiring when DB is available (high-level):
-       1) Create any new related entities (authors/genres/...) in Application layer usecases or inside CreateBookUseCase.
-        - Option A: Persist new related entities first, update Model.AuthorId/GenreId/... with their real IDs, then call CreateBookUseCase.
-        - Option B (recommended): Pass the new-related-entities data as part of the CreateBook DTO and let CreateBookUseCase handle persistence atomically
-        using IUnitOfWork. This avoids partial commits.
-       2) Call CreateBookUseCase.ExecuteAsync(Model) and handle the returned GenericResponse (show success/error to user).
-       3) After success clear temp lists and reset form.
-        */
+        // Map temp items into DTO lists expected by the use case.
+        Model.NewAuthors = NewAuthorsTemp.Select((a, i) => new NewAuthorDto
+        {
+            TempId = -(i + 1),
+            FirstName = a.FirstName,
+            MiddleName = a.MiddleName,
+            LastName = a.LastName
+        }).ToList();
 
-        // For now only simulate submission UI flow.
-        submitted = true;
-        await Task.CompletedTask;
+        Model.NewGenres = NewGenresTemp.Select((g, i) => new NewNameDto { TempId = -(i + 1), Name = g.Name }).ToList();
+        Model.NewKinds = NewKindsTemp.Select((k, i) => new NewNameDto { TempId = -(i + 1), Name = k.Name }).ToList();
+        Model.NewPeriods = NewPeriodsTemp.Select((p, i) => new NewNameDto { TempId = -(i + 1), Name = p.Name }).ToList();
+        Model.NewWarehouses = NewWarehousesTemp.Select((w, i) => new NewWarehouseDto
+        {
+            TempId = -(i + 1),
+            Name = w.Name,
+            Street = w.Street,
+            Number = w.Number,
+            City = w.City,
+            ZipCode = w.ZipCode
+        }).ToList();
+
+        try
+        {
+            var created = await CreateBookUseCase.ExecuteAsync(Model);
+            submitted = true;
+
+            // Clear temporary data after successful creation
+            NewAuthorsTemp.Clear();
+            NewGenresTemp.Clear();
+            NewKindsTemp.Clear();
+            NewPeriodsTemp.Clear();
+            NewWarehousesTemp.Clear();
+
+            // Optionally reset the form model
+            Model = new CreateBookDto();
+        }
+        catch (ValidationException vex)
+        {
+            // Show validation error - map to UI by adding a simple alert for now
+            NewAuthorErrors = new List<string> { vex.Message };
+        }
+        catch (Exception ex)
+        {
+            // Log or show a generic error - for now show as NewAuthorErrors to surface to UI
+            NewAuthorErrors = new List<string> { "Chyba při ukládání: " + ex.Message };
+        }
     }
 
     private void ToggleAddAuthor(bool value)
