@@ -1,4 +1,4 @@
-﻿using Bookong.Domain.Common.Models;
+using Bookong.Domain.Common.Models;
 using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
@@ -27,6 +27,7 @@ namespace Bookong.Infrastructure.Repositories
                 .ThenInclude(b => b.Author)
                 .Include(bl => bl.Book)
                 .ThenInclude(b => b.Genre)
+                .Include(bl => bl.User)
                 .ToListAsync();
         }
 

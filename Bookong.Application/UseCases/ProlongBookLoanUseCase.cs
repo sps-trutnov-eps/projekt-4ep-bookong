@@ -1,0 +1,43 @@
+using Bookong.Application.DTOs;
+using Bookong.Application.UseCases.Interfaces;
+using Bookong.Domain.Interfaces;
+
+namespace Bookong.Application.UseCases
+{
+    public class ProlongBookLoanUseCase : IProlongBookLoanUseCase
+    {
+        private readonly IUnitOfWork _uow;
+
+        public ProlongBookLoanUseCase(IUnitOfWork uow)
+        {
+            _uow = uow;
+        }
+
+        public async Task<GenericResponse> ExecuteAsync(ProlongBookLoanDto dto)
+        {
+            try
+            {
+                var book = await _uow.Books.GetByPublicIdAsync(dto.BookPublicId);
+                if (book == null)
+                    return GenericResponse.FailureResponse("Kniha nebyla nalezena.");
+
+                var allLoans = await _uow.BookLoans.GetAllAsync();
+                var activeLoan = allLoans.FirstOrDefault(bl => 
+                    bl.BookId == book.Id && bl.ReturnDate == null);
+
+                if (activeLoan == null)
+                    return GenericResponse.FailureResponse("Tato kniha není aktuálně vypůjčena.");
+
+                activeLoan.LoanDate = activeLoan.LoanDate.AddDays(-dto.DaysToProlong);
+                _uow.BookLoans.Update(activeLoan);
+                await _uow.CommitAsync();
+
+                return GenericResponse.SuccessResponse($"Výpůjčka knihy '{book.Name}' byla prodloužena o {dto.DaysToProlong} dní.");
+            }
+            catch (Exception ex)
+            {
+                return GenericResponse.FailureResponse($"Chyba při prodlužování výpůjčky: {ex.Message}");
+            }
+        }
+    }
+}
