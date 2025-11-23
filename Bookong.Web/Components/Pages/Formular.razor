@@ -5,151 +5,568 @@
 <PageTitle>Formulář - Přidat knihu</PageTitle>
 
 <div class="container mt-4">
- <h1>Přidat knihu</h1>
+    <h1>Přidat knihu</h1>
 
- @if (submitted)
- {
- <div class="alert alert-success">Kniha byla odeslána: <strong>@Model.Title</strong></div>
- }
+    @if (submitted)
+    {
+        <div class="alert alert-success">Kniha byla odeslána: <strong>@Model.Title</strong></div>
+    }
 
- <EditForm Model="Model" OnValidSubmit="HandleValidSubmit">
- <DataAnnotationsValidator />
- <ValidationSummary class="alert alert-danger" />
+    <EditForm Model="Model" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="alert alert-danger" />
 
- <div class="mb-3">
- <label class="form-label">Název</label>
- <InputText class="form-control" @bind-Value="Model.Title" />
- <ValidationMessage For="() => Model.Title" class="text-danger" />
- </div>
+        <div class="mb-3">
+            <label class="form-label">Název</label>
+            <InputText class="form-control" @bind-Value="Model.Title" />
+            <ValidationMessage For="() => Model.Title" class="text-danger" />
+        </div>
 
- <div class="mb-3">
- <label class="form-label">Autor</label>
- <InputSelect class="form-select" @bind-Value="Model.AuthorId">
- <option value="">-- Vyberte autora --</option>
- @foreach (var a in Authors)
- {
- <option value="@a.Id">@a.Name</option>
- }
- </InputSelect>
- <ValidationMessage For="() => Model.AuthorId" class="text-danger" />
- </div>
+        <div class="mb-3">
+            <label class="form-label">Autor</label>
+            @if (isLoading)
+            {
+                <div class="form-text">Načítám autory…</div>
+            }
+            else if (!addingAuthor)
+            {
+                <div class="d-flex gap-2">
+                    <InputSelect class="form-select" @bind-Value="Model.AuthorId">
+                        <option value="">-- Vyberte autora --</option>
+                        @foreach (var a in Authors)
+                        {
+                            <option value="@a.Id">@a.Name</option>
+                        }
+                    </InputSelect>
+                    <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddAuthor(true)">Přidat nového autora</button>
+                </div>
+            }
+            else
+            {
+                <div>
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <InputText class="form-control" @bind-Value="NewAuthor.FirstName" placeholder="Křestní jméno" />
+                            @if (NewAuthorErrors?.Any() == true)
+                            {
+                                <div class="text-danger small">
+                                    @foreach (var e in NewAuthorErrors)
+                                    {
+                                        <div>@e</div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <InputText class="form-control" @bind-Value="NewAuthor.MiddleName" placeholder="Druhé jméno (volitelně)" />
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <InputText class="form-control" @bind-Value="NewAuthor.LastName" placeholder="Příjmení" />
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button class="btn btn-primary btn-sm me-2" type="button" @onclick="ValidateAndAddAuthor">Přidat autora</button>
+                        <button type="button" class="btn btn-secondary btn-sm" @onclick="() => ToggleAddAuthor(false)">Zpět</button>
+                    </div>
+                </div>
+            }
+            <ValidationMessage For="() => Model.AuthorId" class="text-danger" />
+        </div>
 
- <div class="mb-3">
- <label class="form-label">ISBN</label>
- <InputText class="form-control" @bind-Value="Model.ISBN" />
- <ValidationMessage For="() => Model.ISBN" class="text-danger" />
- </div>
+        <div class="mb-3">
+            <label class="form-label">ISBN</label>
+            <InputText class="form-control" @bind-Value="Model.ISBN" />
+            <ValidationMessage For="() => Model.ISBN" class="text-danger" />
+        </div>
 
- <div class="row">
- <div class="col-md-4 mb-3">
- <label class="form-label">Žánr</label>
- <InputSelect class="form-select" @bind-Value="Model.GenreId">
- <option value="">-- Vyberte žánr --</option>
- @foreach (var g in Genres)
- {
- <option value="@g.Id">@g.Name</option>
- }
- </InputSelect>
- <ValidationMessage For="() => Model.GenreId" class="text-danger" />
- </div>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Žánr</label>
+                @if (isLoading)
+                {
+                    <div class="form-text">Načítám žánry…</div>
+                }
+                else if (!addingGenre)
+                {
+                    <div class="d-flex gap-2">
+                        <InputSelect class="form-select" @bind-Value="Model.GenreId">
+                            <option value="">-- Vyberte žánr --</option>
+                            @foreach (var g in Genres)
+                            {
+                                <option value="@g.Id">@g.Name</option>
+                            }
+                        </InputSelect>
+                        <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddGenre(true)">Přidat nový žánr</button>
+                    </div>
+                }
+                else
+                {
+                    <div>
+                        <InputText class="form-control" @bind-Value="NewGenre.Name" placeholder="Název žánru" />
+                        @if (NewGenreErrors?.Any() == true)
+                        {
+                            <div class="text-danger small">
+                                @foreach (var e in NewGenreErrors)
+                                {
+                                    <div>@e</div>
+                                }
+                            </div>
+                        }
+                        <div class="mt-2">
+                            <button class="btn btn-primary btn-sm me-2" type="button" @onclick="ValidateAndAddGenre">Přidat žánr</button>
+                            <button type="button" class="btn btn-secondary btn-sm" @onclick="() => ToggleAddGenre(false)">Zpět</button>
+                        </div>
+                    </div>
+                }
+                <ValidationMessage For="() => Model.GenreId" class="text-danger" />
+            </div>
 
- <div class="col-md-4 mb-3">
- <label class="form-label">Literární druh</label>
- <InputSelect class="form-select" @bind-Value="Model.KindId">
- <option value="">-- Vyberte druh --</option>
- @foreach (var k in Kinds)
- {
- <option value="@k.Id">@k.Name</option>
- }
- </InputSelect>
- <ValidationMessage For="() => Model.KindId" class="text-danger" />
- </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Literární druh</label>
+                @if (isLoading)
+                {
+                    <div class="form-text">Načítám druhy…</div>
+                }
+                else if (!addingKind)
+                {
+                    <div class="d-flex gap-2">
+                        <InputSelect class="form-select" @bind-Value="Model.KindId">
+                            <option value="">-- Vyberte druh --</option>
+                            @foreach (var k in Kinds)
+                            {
+                                <option value="@k.Id">@k.Name</option>
+                            }
+                        </InputSelect>
+                        <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddKind(true)">Přidat nový druh</button>
+                    </div>
+                }
+                else
+                {
+                    <div>
+                        <InputText class="form-control" @bind-Value="NewKind.Name" placeholder="Název druhu" />
+                        @if (NewKindErrors?.Any() == true)
+                        {
+                            <div class="text-danger small">
+                                @foreach (var e in NewKindErrors)
+                                {
+                                    <div>@e</div>
+                                }
+                            </div>
+                        }
+                        <div class="mt-2">
+                            <button class="btn btn-primary btn-sm me-2" type="button" @onclick="ValidateAndAddKind">Přidat druh</button>
+                            <button type="button" class="btn btn-secondary btn-sm" @onclick="() => ToggleAddKind(false)">Zpět</button>
+                        </div>
+                    </div>
+                }
+                <ValidationMessage For="() => Model.KindId" class="text-danger" />
+            </div>
 
- <div class="col-md-4 mb-3">
- <label class="form-label">Historické období</label>
- <InputSelect class="form-select" @bind-Value="Model.PeriodId">
- <option value="">-- Vyberte období --</option>
- @foreach (var p in Periods)
- {
- <option value="@p.Id">@p.Name</option>
- }
- </InputSelect>
- <ValidationMessage For="() => Model.PeriodId" class="text-danger" />
- </div>
- </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Historické období</label>
+                @if (isLoading)
+                {
+                    <div class="form-text">Načítám období…</div>
+                }
+                else if (!addingPeriod)
+                {
+                    <div class="d-flex gap-2">
+                        <InputSelect class="form-select" @bind-Value="Model.PeriodId">
+                            <option value="">-- Vyberte období --</option>
+                            @foreach (var p in Periods)
+                            {
+                                <option value="@p.Id">@p.Name</option>
+                            }
+                        </InputSelect>
+                        <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddPeriod(true)">Přidat nové období</button>
+                    </div>
+                }
+                else
+                {
+                    <div>
+                        <InputText class="form-control" @bind-Value="NewPeriod.Name" placeholder="Název období" />
+                        @if (NewPeriodErrors?.Any() == true)
+                        {
+                            <div class="text-danger small">
+                                @foreach (var e in NewPeriodErrors)
+                                {
+                                    <div>@e</div>
+                                }
+                            </div>
+                        }
+                        <div class="mt-2">
+                            <button class="btn btn-primary btn-sm me-2" type="button" @onclick="ValidateAndAddPeriod">Přidat období</button>
+                            <button type="button" class="btn btn-secondary btn-sm" @onclick="() => ToggleAddPeriod(false)">Zpět</button>
+                        </div>
+                    </div>
+                }
+                <ValidationMessage For="() => Model.PeriodId" class="text-danger" />
+            </div>
+        </div>
 
- <div class="mb-3">
- <label class="form-label">Počet stran</label>
- <InputNumber class="form-control" @bind-Value="Model.Pages" />
- <ValidationMessage For="() => Model.Pages" class="text-danger" />
- </div>
+        <div class="mb-3">
+            <label class="form-label">Počet stran</label>
+            <InputNumber class="form-control" @bind-Value="Model.Pages" />
+            <ValidationMessage For="() => Model.Pages" class="text-danger" />
+        </div>
 
- <div class="mb-3">
- <label class="form-label">Datum vydání</label>
- <InputDate class="form-control" @bind-Value="Model.DateRelease" />
- <ValidationMessage For="() => Model.DateRelease" class="text-danger" />
- </div>
+        <div class="mb-3">
+            <label class="form-label">Datum vydání</label>
+            <InputDate class="form-control" @bind-Value="Model.DateRelease" />
+            <ValidationMessage For="() => Model.DateRelease" class="text-danger" />
+        </div>
 
- <div class="mb-3">
- <label class="form-label">Sklad</label>
- <InputSelect class="form-select" @bind-Value="Model.WarehouseId">
- <option value="">-- Vyberte sklad --</option>
- @foreach (var w in Warehouses)
- {
- <option value="@w.Id">@w.Name</option>
- }
- </InputSelect>
- <ValidationMessage For="() => Model.WarehouseId" class="text-danger" />
- </div>
+        <div class="mb-3">
+            <label class="form-label">Sklad</label>
+            @if (isLoading)
+            {
+                <div class="form-text">Načítám sklady…</div>
+            }
+            else if (!addingWarehouse)
+            {
+                <div class="d-flex gap-2">
+                    <InputSelect class="form-select" @bind-Value="Model.WarehouseId">
+                        <option value="">-- Vyberte sklad --</option>
+                        @foreach (var w in Warehouses)
+                        {
+                            <option value="@w.Id">@w.Name</option>
+                        }
+                    </InputSelect>
+                    <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddWarehouse(true)">Přidat nový sklad</button>
+                </div>
+            }
+            else
+            {
+                <div>
+                    <InputText class="form-control mb-2" @bind-Value="NewWarehouse.Name" placeholder="Název skladu" />
+                    <div class="row">
+                        <div class="col-md-6 mb-2"><InputText class="form-control" @bind-Value="NewWarehouse.Street" placeholder="Ulice" /></div>
+                        <div class="col-md-2 mb-2"><InputText class="form-control" @bind-Value="NewWarehouse.Number" placeholder="Č." /></div>
+                        <div class="col-md-4 mb-2"><InputText class="form-control" @bind-Value="NewWarehouse.City" placeholder="Město" /></div>
+                        <div class="col-md-4 mb-2"><InputText class="form-control" @bind-Value="NewWarehouse.ZipCode" placeholder="PSČ" /></div>
+                    </div>
+                    @if (NewWarehouseErrors?.Any() == true)
+                    {
+                        <div class="text-danger small">
+                            @foreach (var e in NewWarehouseErrors)
+                            {
+                                <div>@e</div>
+                            }
+                        </div>
+                    }
+                    <div class="mt-2">
+                        <button class="btn btn-primary btn-sm me-2" type="button" @onclick="ValidateAndAddWarehouse">Přidat sklad</button>
+                        <button type="button" class="btn btn-secondary btn-sm" @onclick="() => ToggleAddWarehouse(false)">Zpět</button>
+                    </div>
+                </div>
+            }
+            <ValidationMessage For="() => Model.WarehouseId" class="text-danger" />
+        </div>
 
- <button type="submit" class="btn btn-primary">Odeslat</button>
- </EditForm>
+        <button type="submit" class="btn btn-primary">Odeslat</button>
+    </EditForm>
 
- <div class="mt-4 text-muted small">
- <!-- TODO: Replace placeholder lists with queries/UseCases registered in DI -->
- </div>
+    <div class="mt-4 text-muted small">
+        <!--
+         TODO: Wiring notes for database integration:
+        1) Inject queries/usecases via DI at the top of the component, e.g.
+         @inject IGetAuthorsQuery GetAuthorsQuery
+         @inject ICreateBookUseCase CreateBookUseCase
+        2) Replace LoadPlaceholdersAsync with actual queries in OnInitializedAsync:
+         Authors = await GetAuthorsQuery.ExecuteAsync();
+         Genres = await GetGenresQuery.ExecuteAsync();
+         ...
+        3) In HandleValidSubmit call CreateBookUseCase.ExecuteAsync(Model) and handle GenericResponse.
+        4) Persist any newly created related entities (NewAuthorsTemp, NewGenresTemp...) using a UseCase
+         or repository flow inside Application layer and call UnitOfWork.CommitAsync there.
+        5) Remove temporary negative IDs mapping when real persistence is implemented.
+         -->
+    </div>
 </div>
 
 @code {
- private CreateBookDto Model { get; set; } = new CreateBookDto();
- private bool submitted = false;
+    private CreateBookDto Model { get; set; } = new CreateBookDto();
+    private bool submitted = false;
+    private bool isLoading = true;
 
- // Placeholder data - replace with injected queries/usecases that fetch real data
- private List<SelectItem> Authors = new()
+    // These lists should be loaded from DB via registered UseCases/Queries.
+    private List<SelectItem> Authors = new();
+    private List<SelectItem> Genres = new();
+    private List<SelectItem> Kinds = new();
+    private List<SelectItem> Periods = new();
+    private List<SelectItem> Warehouses = new();
+
+    // UI toggles for switching to "add new" mode
+    private bool addingAuthor = false;
+    private bool addingGenre = false;
+    private bool addingKind = false;
+    private bool addingPeriod = false;
+    private bool addingWarehouse = false;
+
+    // Temporary models for new items (validated locally). These will be persisted AFTER book creation.
+    private NewAuthorModel NewAuthor { get; set; } = new();
+    private NewNameModel NewGenre { get; set; } = new();
+    private NewNameModel NewKind { get; set; } = new();
+    private NewNameModel NewPeriod { get; set; } = new();
+    private NewWarehouseModel NewWarehouse { get; set; } = new();
+
+    // Collected new items to be persisted after book creation
+    private List<AuthorTemp> NewAuthorsTemp = new();
+    private List<GenreTemp> NewGenresTemp = new();
+    private List<KindTemp> NewKindsTemp = new();
+    private List<PeriodTemp> NewPeriodsTemp = new();
+    private List<WarehouseTemp> NewWarehousesTemp = new();
+
+    // Local validation error lists for subforms
+    private List<string>? NewAuthorErrors;
+    private List<string>? NewGenreErrors;
+    private List<string>? NewKindErrors;
+    private List<string>? NewPeriodErrors;
+    private List<string>? NewWarehouseErrors;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulate async loading so component is ready for real queries later.
+        await LoadPlaceholdersAsync();
+    }
+
+    private async Task LoadPlaceholdersAsync()
+    {
+        // TODO: Replace this with real queries injected via DI, e.g.:
+        // Authors = await GetAuthorsQuery.ExecuteAsync();
+        // For now simulate small delay and fill placeholders so UI behaves like real app.
+        await Task.Delay(100);
+
+        Authors = new List<SelectItem>
  {
  new SelectItem(1, "Jan Novák"),
  new SelectItem(2, "Petr Svoboda")
  };
 
- private List<SelectItem> Genres = new()
+        Genres = new List<SelectItem>
  {
  new SelectItem(1, "Populárně naučná"),
  new SelectItem(2, "Sci-fi")
  };
 
- private List<SelectItem> Kinds = new()
+        Kinds = new List<SelectItem>
  {
  new SelectItem(1, "Povídka"),
  new SelectItem(2, "Román")
  };
 
- private List<SelectItem> Periods = new()
+        Periods = new List<SelectItem>
  {
  new SelectItem(1, "Středověk"),
  new SelectItem(2, "Novověk")
  };
 
- private List<SelectItem> Warehouses = new()
+        Warehouses = new List<SelectItem>
  {
  new SelectItem(1, "Hlavní sklad"),
  new SelectItem(2, "Vedlejší sklad")
  };
 
- private void HandleValidSubmit()
- {
- // TODO: Zavolat CreateBook UseCase a zpracovat GenericResponse
- submitted = true;
- }
+        isLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
 
- private record SelectItem(int Id, string Name);
+    private async Task HandleValidSubmit()
+    {
+        /*
+        Intended wiring when DB is available (high-level):
+       1) Create any new related entities (authors/genres/...) in Application layer usecases or inside CreateBookUseCase.
+        - Option A: Persist new related entities first, update Model.AuthorId/GenreId/... with their real IDs, then call CreateBookUseCase.
+        - Option B (recommended): Pass the new-related-entities data as part of the CreateBook DTO and let CreateBookUseCase handle persistence atomically
+        using IUnitOfWork. This avoids partial commits.
+       2) Call CreateBookUseCase.ExecuteAsync(Model) and handle the returned GenericResponse (show success/error to user).
+       3) After success clear temp lists and reset form.
+        */
+
+        // For now only simulate submission UI flow.
+        submitted = true;
+        await Task.CompletedTask;
+    }
+
+    private void ToggleAddAuthor(bool value)
+    {
+        addingAuthor = value;
+        if (!value) NewAuthor = new NewAuthorModel();
+        NewAuthorErrors = null;
+    }
+
+    private void ToggleAddGenre(bool value)
+    {
+        addingGenre = value;
+        if (!value) NewGenre = new NewNameModel();
+        NewGenreErrors = null;
+    }
+
+    private void ToggleAddKind(bool value)
+    {
+        addingKind = value;
+        if (!value) NewKind = new NewNameModel();
+        NewKindErrors = null;
+    }
+
+    private void ToggleAddPeriod(bool value)
+    {
+        addingPeriod = value;
+        if (!value) NewPeriod = new NewNameModel();
+        NewPeriodErrors = null;
+    }
+
+    private void ToggleAddWarehouse(bool value)
+    {
+        addingWarehouse = value;
+        if (!value) NewWarehouse = new NewWarehouseModel();
+        NewWarehouseErrors = null;
+    }
+
+    private Task OnAddAuthor()
+    {
+        // Basic validation already provided via data annotations in NewAuthorModel
+        var temp = new AuthorTemp
+        {
+            FirstName = NewAuthor.FirstName?.Trim() ?? string.Empty,
+            MiddleName = NewAuthor.MiddleName?.Trim(),
+            LastName = NewAuthor.LastName?.Trim() ?? string.Empty
+        };
+
+        NewAuthorsTemp.Add(temp);
+
+        // Add to UI select so user can pick newly added item before persisting to DB.
+        var fakeId = -(NewAuthorsTemp.Count); // negative temporary id
+        Authors.Add(new SelectItem(fakeId, $"{temp.FirstName} {temp.LastName}"));
+        Model.AuthorId = fakeId;
+
+        ToggleAddAuthor(false);
+        return Task.CompletedTask;
+    }
+
+    private Task OnAddGenre()
+    {
+        var temp = new GenreTemp { Name = NewGenre.Name?.Trim() ?? string.Empty };
+        NewGenresTemp.Add(temp);
+        var fakeId = -(NewGenresTemp.Count);
+        Genres.Add(new SelectItem(fakeId, temp.Name));
+        Model.GenreId = fakeId;
+        ToggleAddGenre(false);
+        return Task.CompletedTask;
+    }
+
+    private Task OnAddKind()
+    {
+        var temp = new KindTemp { Name = NewKind.Name?.Trim() ?? string.Empty };
+        NewKindsTemp.Add(temp);
+        var fakeId = -(NewKindsTemp.Count);
+        Kinds.Add(new SelectItem(fakeId, temp.Name));
+        Model.KindId = fakeId;
+        ToggleAddKind(false);
+        return Task.CompletedTask;
+    }
+
+    private Task OnAddPeriod()
+    {
+        var temp = new PeriodTemp { Name = NewPeriod.Name?.Trim() ?? string.Empty };
+        NewPeriodsTemp.Add(temp);
+        var fakeId = -(NewPeriodsTemp.Count);
+        Periods.Add(new SelectItem(fakeId, temp.Name));
+        Model.PeriodId = fakeId;
+        ToggleAddPeriod(false);
+        return Task.CompletedTask;
+    }
+
+    private Task OnAddWarehouse()
+    {
+        var temp = new WarehouseTemp
+        {
+            Name = NewWarehouse.Name?.Trim() ?? string.Empty,
+            Street = NewWarehouse.Street?.Trim(),
+            Number = NewWarehouse.Number?.Trim(),
+            City = NewWarehouse.City?.Trim(),
+            ZipCode = NewWarehouse.ZipCode?.Trim()
+        };
+
+        NewWarehousesTemp.Add(temp);
+        var fakeId = -(NewWarehousesTemp.Count);
+        Warehouses.Add(new SelectItem(fakeId, temp.Name));
+        Model.WarehouseId = fakeId;
+        ToggleAddWarehouse(false);
+        return Task.CompletedTask;
+    }
+
+    // Validation helpers for subforms
+    private void ValidateAndAddAuthor()
+    {
+        NewAuthorErrors = ValidateModel(NewAuthor);
+        if (NewAuthorErrors.Count == 0) _ = OnAddAuthor();
+    }
+
+    private void ValidateAndAddGenre()
+    {
+        NewGenreErrors = ValidateModel(NewGenre);
+        if (NewGenreErrors.Count == 0) _ = OnAddGenre();
+    }
+
+    private void ValidateAndAddKind()
+    {
+        NewKindErrors = ValidateModel(NewKind);
+        if (NewKindErrors.Count == 0) _ = OnAddKind();
+    }
+
+    private void ValidateAndAddPeriod()
+    {
+        NewPeriodErrors = ValidateModel(NewPeriod);
+        if (NewPeriodErrors.Count == 0) _ = OnAddPeriod();
+    }
+
+    private void ValidateAndAddWarehouse()
+    {
+        NewWarehouseErrors = ValidateModel(NewWarehouse);
+        if (NewWarehouseErrors.Count == 0) _ = OnAddWarehouse();
+    }
+
+    private List<string> ValidateModel(object model)
+    {
+        var results = new List<ValidationResult>();
+        var context = new ValidationContext(model, serviceProvider: null, items: null);
+        Validator.TryValidateObject(model, context, results, validateAllProperties: true);
+        return results.Select(r => r.ErrorMessage ?? string.Empty).Where(m => !string.IsNullOrEmpty(m)).ToList();
+    }
+
+    // Small helper types
+    private record SelectItem(int Id, string Name);
+
+    private class NewAuthorModel
+    {
+        [Required(ErrorMessage = "Zadejte křestní jméno autora.")]
+        public string? FirstName { get; set; }
+        public string? MiddleName { get; set; }
+        [Required(ErrorMessage = "Zadejte příjmení autora.")]
+        public string? LastName { get; set; }
+    }
+
+    private class NewNameModel
+    {
+        [Required(ErrorMessage = "Zadejte název.")]
+        public string? Name { get; set; }
+    }
+
+    private class NewWarehouseModel
+    {
+        [Required(ErrorMessage = "Zadejte název skladu.")]
+        public string? Name { get; set; }
+        public string? Street { get; set; }
+        public string? Number { get; set; }
+        public string? City { get; set; }
+        public string? ZipCode { get; set; }
+    }
+
+    // Temporary DTOs to hold new entities until they are persisted
+    private class AuthorTemp { public string FirstName = string.Empty; public string? MiddleName; public string LastName = string.Empty; }
+    private class GenreTemp { public string Name = string.Empty; }
+    private class KindTemp { public string Name = string.Empty; }
+    private class PeriodTemp { public string Name = string.Empty; }
+    private class WarehouseTemp { public string Name = string.Empty; public string? Street; public string? Number; public string? City; public string? ZipCode; }
 }
