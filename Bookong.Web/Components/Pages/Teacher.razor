@@ -1,8 +1,11 @@
 ﻿@page "/teacher"
 @using Bookong.Application.DTOs
 @using Bookong.Domain.Entities
+@using Bookong.Infrastructure.Data
+@using Microsoft.EntityFrameworkCore
 @inject Bookong.Domain.Interfaces.IUnitOfWork UnitOfWork
 @inject Bookong.Application.Services.Interfaces.ISessionService SessionService
+@inject BookongDbContext DbContext
 @inject IJSRuntime JS
 
 <div class="container my-4">
@@ -75,21 +78,16 @@
                     <tbody>
                         @foreach (var b in displayedBooks)
                         {
+                            var isAvailable = IsBookAvailable(b);
                             <tr>
-                                <td>
-                                    @b.Title
-                                    @if (blueMarks.Contains(b.PublicId))
-                                    {
-                                        <span class="badge bg-primary ms-2">●</span>
-                                    }
-                                </td>
+                                <td>@b.Title</td>
                                 <td>@b.AuthorFullName</td>
                                 <td>@b.Genre</td>
                                 <td>@b.Kind</td>
                                 <td class="text-center">
                                     <div class="d-flex gap-2 justify-content-center flex-nowrap">
                                         <button class="btn btn-outline-success btn-sm" @onclick="() => ToggleAvailableAsync(b)">
-                                            @(blueMarks.Contains(b.PublicId) ? "Odebrat z dostupných" : "Přidat do dostupných")
+                                            @(isAvailable ? "Odebrat z dostupných" : "Přidat do dostupných")
                                         </button>
                                         <button class="btn btn-outline-primary btn-sm">Upravit</button>
                                         <button class="btn btn-outline-danger btn-sm">Odebrat</button>
@@ -108,8 +106,8 @@
     private List<BookListItemDto>? teacherBooks;
     private List<BookListItemDto> displayedBooks = new();
 
-    // track available books by PublicId (stored in MaturitaBookSelections using teacher user id)
-    private HashSet<Guid> blueMarks = new();
+    // track available books by their key properties (not PublicId!)
+    private HashSet<string> availableBookKeys = new();
 
     private string searchTerm = string.Empty;
     private string selectedGenre = string.Empty;
@@ -126,7 +124,7 @@
         {
             var books = await UnitOfWork.Books.GetAllAsync();
 
-            // load available books from MaturitaBookSelections for current user (teacher)
+            // load available books from MaturitaBooks table using DbContext directly
             await LoadAvailableAsync();
 
             teacherBooks = books.Select(b => new BookListItemDto
@@ -155,30 +153,42 @@
         }
     }
 
-    private async Task<int> ResolveCurrentUserIdAsync()
-    {
-        var publicIdStr = await SessionService.GetAsync("CurrentUserPublicId");
-        if (!string.IsNullOrEmpty(publicIdStr) && Guid.TryParse(publicIdStr, out var pubId))
-        {
-            var user = await UnitOfWork.Users.GetByPublicIdAsync(pubId);
-            if (user != null) return user.Id;
-        }
-
-        var first = (await UnitOfWork.Users.GetAllAsync()).FirstOrDefault();
-        return first?.Id ?? 1;
-    }
-
     private async Task LoadAvailableAsync()
     {
-        blueMarks.Clear();
+        availableBookKeys.Clear();
 
-        var teacherId = await ResolveCurrentUserIdAsync();
-        var items = await UnitOfWork.MaturitaBookSelections.GetByUserWithDetailsAsync(teacherId);
-        foreach (var it in items)
+        // Load all books from MaturitaBooks table using DbContext directly
+        var maturitaBooks = await DbContext.MaturitaBooks
+            .AsNoTracking()
+            .Include(mb => mb.Author)
+            .Include(mb => mb.Genre)
+            .Include(mb => mb.Kind)
+            .ToListAsync();
+            
+        foreach (var mb in maturitaBooks)
         {
-            if (it.Book != null)
-                blueMarks.Add(it.Book.PublicId);
+            var key = GetBookKey(mb.Name, mb.Author?.FirstName, mb.Author?.LastName, mb.Genre?.Name, mb.Kind?.Name);
+            availableBookKeys.Add(key);
         }
+    }
+
+    private string GetBookKey(string? title, string? authorFirst, string? authorLast, string? genre, string? kind)
+    {
+        return $"{title}|{authorFirst}|{authorLast}|{genre}|{kind}".ToLowerInvariant();
+    }
+
+    private string GetBookKey(BookListItemDto book)
+    {
+        var authorParts = book.AuthorFullName?.Split(' ') ?? Array.Empty<string>();
+        var firstName = authorParts.Length > 0 ? authorParts[0] : "";
+        var lastName = authorParts.Length > 1 ? authorParts[^1] : "";
+        
+        return GetBookKey(book.Title, firstName, lastName, book.Genre, book.Kind);
+    }
+
+    private bool IsBookAvailable(BookListItemDto book)
+    {
+        return availableBookKeys.Contains(GetBookKey(book));
     }
 
     private void ApplyFilters()
@@ -217,15 +227,29 @@
 
     private async Task ToggleAvailableAsync(BookListItemDto dto)
     {
-        // find book entity
+        // find book entity from Books table
         var book = await UnitOfWork.Books.GetByPublicIdAsync(dto.PublicId);
         if (book == null) return;
 
-        var teacherId = await ResolveCurrentUserIdAsync();
+        // Validate that all required navigation properties are present
+        if (book.Author == null || book.Genre == null || book.Kind == null || book.Period == null)
+        {
+            await JS.InvokeVoidAsync("alert", "Tuto knihu nelze přidat - chybí požadované údaje (autor, žánr, typ nebo období).");
+            return;
+        }
 
-        // check existing availability for teacher user
-        var existing = (await UnitOfWork.MaturitaBookSelections.GetByUserWithDetailsAsync(teacherId))
-            .FirstOrDefault(s => s.BookId == book.Id);
+        // check if book exists in MaturitaBooks table - match by properties, not PublicId
+        var existing = await DbContext.MaturitaBooks
+            .Include(mb => mb.Author)
+            .Include(mb => mb.Genre)
+            .Include(mb => mb.Kind)
+            .Include(mb => mb.Period)
+            .Where(mb => mb.Name == book.Name 
+                      && mb.Author.Id == book.Author.Id
+                      && mb.Genre.Id == book.Genre.Id
+                      && mb.Kind.Id == book.Kind.Id
+                      && mb.Period.Id == book.Period.Id)
+            .FirstOrDefaultAsync();
 
         if (existing != null)
         {
@@ -233,20 +257,42 @@
             var ok = await JS.InvokeAsync<bool>("confirm", "Opravdu chcete odebrat knihu z dostupných?");
             if (!ok) return;
 
-            UnitOfWork.MaturitaBookSelections.Delete(existing);
-            await UnitOfWork.CommitAsync();
-            blueMarks.Remove(dto.PublicId);
+            // Remove using DbContext directly (with tracking)
+            DbContext.MaturitaBooks.Remove(existing);
+            await DbContext.SaveChangesAsync();
+            
+            // Update tracking
+            await LoadAvailableAsync();
         }
         else
         {
-            var selection = new MaturitaBookSelection
+            // Get fresh instances of related entities to attach
+            var author = await DbContext.Authors.FindAsync(book.Author.Id);
+            var genre = await DbContext.Genres.FindAsync(book.Genre.Id);
+            var kind = await DbContext.Kinds.FindAsync(book.Kind.Id);
+            var period = await DbContext.Periods.FindAsync(book.Period.Id);
+
+            if (author == null || genre == null || kind == null || period == null)
             {
-                BookId = book.Id,
-                UserId = teacherId
+                await JS.InvokeVoidAsync("alert", "Chyba: Související entity nebyly nalezeny.");
+                return;
+            }
+
+            // Add book to MaturitaBooks table with properly tracked entities
+            var maturitaBook = new MaturitaBook
+            {
+                Name = book.Name,
+                Author = author,
+                Genre = genre,
+                Kind = kind,
+                Period = period
             };
-            UnitOfWork.MaturitaBookSelections.Add(selection);
-            await UnitOfWork.CommitAsync();
-            blueMarks.Add(dto.PublicId);
+            
+            DbContext.MaturitaBooks.Add(maturitaBook);
+            await DbContext.SaveChangesAsync();
+            
+            // Update tracking
+            await LoadAvailableAsync();
         }
 
         StateHasChanged();
