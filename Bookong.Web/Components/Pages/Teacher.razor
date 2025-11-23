@@ -3,6 +3,7 @@
 @using Bookong.Domain.Entities
 @inject Bookong.Domain.Interfaces.IUnitOfWork UnitOfWork
 @inject Bookong.Application.Services.Interfaces.ISessionService SessionService
+@inject IJSRuntime JS
 
 <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -228,6 +229,10 @@
 
         if (existing != null)
         {
+            // confirm removal
+            var ok = await JS.InvokeAsync<bool>("confirm", "Opravdu chcete odebrat knihu z dostupných?");
+            if (!ok) return;
+
             UnitOfWork.MaturitaBookSelections.Delete(existing);
             await UnitOfWork.CommitAsync();
             blueMarks.Remove(dto.PublicId);
