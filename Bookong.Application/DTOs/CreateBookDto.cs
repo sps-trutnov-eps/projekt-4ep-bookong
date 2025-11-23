@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Bookong.Application.DTOs
 {
@@ -27,5 +27,38 @@ namespace Bookong.Application.DTOs
         public DateTime? DateRelease { get; set; }
 
         public int? WarehouseId { get; set; }
+
+        // Collections for new related entities created inline in the form.
+        // Each new item carries a TempId (negative) which matches the temporary select value used in the UI.
+        public List<NewAuthorDto>? NewAuthors { get; set; }
+        public List<NewNameDto>? NewGenres { get; set; }
+        public List<NewNameDto>? NewKinds { get; set; }
+        public List<NewNameDto>? NewPeriods { get; set; }
+        public List<NewWarehouseDto>? NewWarehouses { get; set; }
+    }
+
+    public class NewAuthorDto
+    {
+        // Temporary negative id used on the client to reference this new item before persistence.
+        public int TempId { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; }
+        public string LastName { get; set; } = string.Empty;
+    }
+
+    public class NewNameDto
+    {
+        public int TempId { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+
+    public class NewWarehouseDto
+    {
+        public int TempId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Street { get; set; }
+        public string? Number { get; set; }
+        public string? City { get; set; }
+        public string? ZipCode { get; set; }
     }
 }
