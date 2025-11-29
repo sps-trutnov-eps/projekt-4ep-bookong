@@ -723,7 +723,7 @@ namespace Bookong.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("Bookong.Domain.Entities.User", "User")
-                        .WithMany()
+                        .WithMany("TeachingMaterials")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

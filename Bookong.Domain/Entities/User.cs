@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Bookong.Domain.Entities
 {
@@ -19,6 +21,6 @@ namespace Bookong.Domain.Entities
 
         public required string OrganizationalUnit { get; set; }
 
-        public ICollection<TeachingMaterial> TeachingMaterials { get; set; } = [];
+        public ICollection<TeachingMaterial> TeachingMaterials { get; set; } = new List<TeachingMaterial>();
     }
 }
