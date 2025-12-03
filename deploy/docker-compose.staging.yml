@@ -1,0 +1,49 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: bookong-staging-db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Express
+      - SA_PASSWORD=${SA_PASSWORD}
+    volumes:
+      - bookong-staging-sqldata:/var/opt/mssql
+    networks:
+      - bookong-staging-internal
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ../
+      dockerfile: deploy/Dockerfile
+    image: bookong-staging-app
+    container_name: bookong-staging-app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Staging
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - ConnectionStrings__DefaultConnection=Server=db,1433;Database=BookongDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;Encrypt=False
+    depends_on:
+      - db
+    networks:
+      - bookong-staging-internal
+      - traefik-public
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bookong-staging.rule=Host(`staging.bookong.spstrutnov.cz`)"
+      - "traefik.http.routers.bookong-staging.entrypoints=https"
+      - "traefik.http.routers.bookong-staging.tls=true"
+      - "traefik.http.routers.bookong-staging.tls.certresolver=letsencrypt"
+      - "traefik.http.services.bookong-staging.loadbalancer.server.port=8080"
+      - "traefik.docker.network=traefik-public"
+    restart: unless-stopped
+
+volumes:
+  bookong-staging-sqldata:
+    name: bookong-staging-sqldata
+
+networks:
+  bookong-staging-internal:
+    name: bookong-staging-internal
+  traefik-public:
+    name: traefik-public
+    external: true
