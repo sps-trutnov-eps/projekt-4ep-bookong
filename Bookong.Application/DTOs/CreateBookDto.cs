@@ -21,8 +21,9 @@ namespace Bookong.Application.DTOs
         [Required(ErrorMessage = "Vyberte historické období.")]
         public int? PeriodId { get; set; }
 
+        // Use int? here so Blazor's InputNumber binds to a supported type. Will be cast to ushort when creating domain entity.
         [Range(1, 10000, ErrorMessage = "Počet stran musí být mezi 1 a 10 000.")]
-        public ushort? Pages { get; set; }
+        public int? Pages { get; set; }
 
         public DateTime? DateRelease { get; set; }
 
