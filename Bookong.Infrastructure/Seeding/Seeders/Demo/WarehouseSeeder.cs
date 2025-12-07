@@ -15,13 +15,13 @@ public class WarehouseSeeder : ISeeder
 
     public async Task SeedAsync(BookongDbContext db, CancellationToken cancellationToken = default)
     {
-        var address = db.Addresses.FirstOrDefault(a => a.Street == "HlavnÌ" && a.City == "Trutnov");
+        var address = db.Addresses.FirstOrDefault(a => a.Street == "Hlavn√≠" && a.City == "Trutnov");
         if (address is null)
         {
             address = new Address
             {
                 PublicId = Guid.NewGuid(),
-                Street = "HlavnÌ",
+                Street = "Hlavn√≠",
                 City = "Trutnov",
                 Number = "1",
                 ZipCode = "541 01"

@@ -15,8 +15,8 @@ public class PublisherSeeder : ISeeder
 
     private static readonly string[] Publishers =
     {
-        "Èeskoslovenskı spisovatel",
-        "Mladá fronta",
+        "ÄŒeskoslovenskÃ½ spisovatel",
+        "MladÃ¡ fronta",
         "Odeon"
     };
 
