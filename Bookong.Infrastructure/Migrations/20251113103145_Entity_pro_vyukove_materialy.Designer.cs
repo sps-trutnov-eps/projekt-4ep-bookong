@@ -4,6 +4,7 @@ using Bookong.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bookong.Infrastructure.Migrations
 {
     [DbContext(typeof(BookongDbContext))]
-    partial class BookongDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251113103145_Entity_pro_vyukove_materialy")]
+    partial class Entity_pro_vyukove_materialy
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -463,9 +466,6 @@ namespace Bookong.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BranchId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
@@ -475,9 +475,6 @@ namespace Bookong.Infrastructure.Migrations
                     b.Property<Guid>("PublicId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("SubjectId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -486,16 +483,7 @@ namespace Bookong.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("BranchId");
-
-                    b.HasIndex("SubjectId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("TeachingMaterials");
                 });
@@ -708,33 +696,6 @@ namespace Bookong.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Bookong.Domain.Entities.TeachingMaterial", b =>
-                {
-                    b.HasOne("Bookong.Domain.Entities.Branch", "Branch")
-                        .WithMany()
-                        .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Bookong.Domain.Entities.Subject", "Subject")
-                        .WithMany()
-                        .HasForeignKey("SubjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Bookong.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Branch");
-
-                    b.Navigation("Subject");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Bookong.Domain.Entities.Warehouse", b =>
                 {
                     b.HasOne("Bookong.Domain.Entities.Address", "Address")
@@ -744,11 +705,6 @@ namespace Bookong.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Address");
-                });
-
-            modelBuilder.Entity("Bookong.Domain.Entities.User", b =>
-                {
-                    b.Navigation("TeachingMaterials");
                 });
 #pragma warning restore 612, 618
         }

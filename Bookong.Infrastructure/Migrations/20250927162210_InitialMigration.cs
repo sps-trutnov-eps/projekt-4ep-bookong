@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Bookong.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Oprava : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -43,20 +43,6 @@ namespace Bookong.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Authors", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Branches",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PublicId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Branches", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -122,20 +108,6 @@ namespace Bookong.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Subjects",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PublicId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Subjects", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -145,8 +117,7 @@ namespace Bookong.Infrastructure.Migrations
                     SamAccountName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ObjectGuid = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OrganizationalUnit = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -217,76 +188,6 @@ namespace Bookong.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "MaturitaBookAssignmentRequests",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PublicId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    BookName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    BookAuthor = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RequestingUserId = table.Column<int>(type: "int", nullable: false),
-                    RequestedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ProcessedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    ProcessingUserId = table.Column<int>(type: "int", nullable: true),
-                    Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsApproved = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_MaturitaBookAssignmentRequests", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_MaturitaBookAssignmentRequests_Users_ProcessingUserId",
-                        column: x => x.ProcessingUserId,
-                        principalTable: "Users",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_MaturitaBookAssignmentRequests_Users_RequestingUserId",
-                        column: x => x.RequestingUserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TeachingMaterials",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PublicId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    SubjectId = table.Column<int>(type: "int", nullable: false),
-                    BranchId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TeachingMaterials", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TeachingMaterials_Branches_BranchId",
-                        column: x => x.BranchId,
-                        principalTable: "Branches",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_TeachingMaterials_Subjects_SubjectId",
-                        column: x => x.SubjectId,
-                        principalTable: "Subjects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_TeachingMaterials_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Books",
                 columns: table => new
                 {
@@ -295,11 +196,11 @@ namespace Bookong.Infrastructure.Migrations
                     PublicId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ISBN = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    AuthorId = table.Column<int>(type: "int", nullable: true),
-                    GenreId = table.Column<int>(type: "int", nullable: true),
-                    KindId = table.Column<int>(type: "int", nullable: true),
-                    PeriodId = table.Column<int>(type: "int", nullable: true),
-                    Pages = table.Column<int>(type: "int", nullable: true),
+                    AuthorId = table.Column<int>(type: "int", nullable: false),
+                    GenreId = table.Column<int>(type: "int", nullable: false),
+                    KindId = table.Column<int>(type: "int", nullable: false),
+                    PeriodId = table.Column<int>(type: "int", nullable: false),
+                    Pages = table.Column<int>(type: "int", nullable: false),
                     PublisherId = table.Column<int>(type: "int", nullable: true),
                     DateRelease = table.Column<DateTime>(type: "datetime2", nullable: true),
                     WarehouseId = table.Column<int>(type: "int", nullable: true),
@@ -312,22 +213,26 @@ namespace Bookong.Infrastructure.Migrations
                         name: "FK_Books_Authors_AuthorId",
                         column: x => x.AuthorId,
                         principalTable: "Authors",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Books_Genres_GenreId",
                         column: x => x.GenreId,
                         principalTable: "Genres",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Books_Kinds_KindId",
                         column: x => x.KindId,
                         principalTable: "Kinds",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Books_Periods_PeriodId",
                         column: x => x.PeriodId,
                         principalTable: "Periods",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Books_Publishers_PublisherId",
                         column: x => x.PublisherId,
@@ -363,34 +268,6 @@ namespace Bookong.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_BookLoans_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "BookReservations",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PublicId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ReservationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    BookId = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_BookReservations", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_BookReservations_Books_BookId",
-                        column: x => x.BookId,
-                        principalTable: "Books",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_BookReservations_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -434,16 +311,6 @@ namespace Bookong.Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BookReservations_BookId",
-                table: "BookReservations",
-                column: "BookId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_BookReservations_UserId",
-                table: "BookReservations",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Books_AuthorId",
                 table: "Books",
                 column: "AuthorId");
@@ -472,16 +339,6 @@ namespace Bookong.Infrastructure.Migrations
                 name: "IX_Books_WarehouseId",
                 table: "Books",
                 column: "WarehouseId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_MaturitaBookAssignmentRequests_ProcessingUserId",
-                table: "MaturitaBookAssignmentRequests",
-                column: "ProcessingUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_MaturitaBookAssignmentRequests_RequestingUserId",
-                table: "MaturitaBookAssignmentRequests",
-                column: "RequestingUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MaturitaBooks_AuthorId",
@@ -514,21 +371,6 @@ namespace Bookong.Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TeachingMaterials_BranchId",
-                table: "TeachingMaterials",
-                column: "BranchId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TeachingMaterials_SubjectId",
-                table: "TeachingMaterials",
-                column: "SubjectId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TeachingMaterials_UserId",
-                table: "TeachingMaterials",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Warehouses_AddressId",
                 table: "Warehouses",
                 column: "AddressId");
@@ -541,28 +383,13 @@ namespace Bookong.Infrastructure.Migrations
                 name: "BookLoans");
 
             migrationBuilder.DropTable(
-                name: "BookReservations");
-
-            migrationBuilder.DropTable(
-                name: "MaturitaBookAssignmentRequests");
-
-            migrationBuilder.DropTable(
                 name: "MaturitaBooks");
 
             migrationBuilder.DropTable(
                 name: "MaturitaBookSelections");
 
             migrationBuilder.DropTable(
-                name: "TeachingMaterials");
-
-            migrationBuilder.DropTable(
                 name: "Books");
-
-            migrationBuilder.DropTable(
-                name: "Branches");
-
-            migrationBuilder.DropTable(
-                name: "Subjects");
 
             migrationBuilder.DropTable(
                 name: "Users");

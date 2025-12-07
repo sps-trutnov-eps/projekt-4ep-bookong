@@ -4,6 +4,7 @@ using Bookong.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bookong.Infrastructure.Migrations
 {
     [DbContext(typeof(BookongDbContext))]
-    partial class BookongDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250927165346_Entita_pro_zadost_o_pridani_knihy_do_maturitni_cetby")]
+    partial class Entita_pro_zadost_o_pridani_knihy_do_maturitni_cetby
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,7 +96,7 @@ namespace Bookong.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AuthorId")
+                    b.Property<int>("AuthorId")
                         .HasColumnType("int");
 
                     b.Property<bool>("Borrowable")
@@ -102,23 +105,23 @@ namespace Bookong.Infrastructure.Migrations
                     b.Property<DateTime?>("DateRelease")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("GenreId")
+                    b.Property<int>("GenreId")
                         .HasColumnType("int");
 
                     b.Property<string>("ISBN")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("KindId")
+                    b.Property<int>("KindId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("Pages")
+                    b.Property<int>("Pages")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PeriodId")
+                    b.Property<int>("PeriodId")
                         .HasColumnType("int");
 
                     b.Property<Guid>("PublicId")
@@ -177,55 +180,6 @@ namespace Bookong.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("BookLoans");
-                });
-
-            modelBuilder.Entity("Bookong.Domain.Entities.BookReservation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BookId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("PublicId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("ReservationDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BookId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("BookReservations");
-                });
-
-            modelBuilder.Entity("Bookong.Domain.Entities.Branch", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("PublicId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Branches");
                 });
 
             modelBuilder.Entity("Bookong.Domain.Entities.Genre", b =>
@@ -435,71 +389,6 @@ namespace Bookong.Infrastructure.Migrations
                     b.ToTable("Publishers");
                 });
 
-            modelBuilder.Entity("Bookong.Domain.Entities.Subject", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("PublicId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Subjects");
-                });
-
-            modelBuilder.Entity("Bookong.Domain.Entities.TeachingMaterial", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BranchId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("PublicId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("SubjectId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BranchId");
-
-                    b.HasIndex("SubjectId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("TeachingMaterials");
-                });
-
             modelBuilder.Entity("Bookong.Domain.Entities.User", b =>
                 {
                     b.Property<int>("Id")
@@ -518,10 +407,6 @@ namespace Bookong.Infrastructure.Migrations
 
                     b.Property<Guid>("ObjectGuid")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("OrganizationalUnit")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("PublicId")
                         .HasColumnType("uniqueidentifier");
@@ -564,19 +449,27 @@ namespace Bookong.Infrastructure.Migrations
                 {
                     b.HasOne("Bookong.Domain.Entities.Author", "Author")
                         .WithMany()
-                        .HasForeignKey("AuthorId");
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Bookong.Domain.Entities.Genre", "Genre")
                         .WithMany()
-                        .HasForeignKey("GenreId");
+                        .HasForeignKey("GenreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Bookong.Domain.Entities.Kind", "Kind")
                         .WithMany()
-                        .HasForeignKey("KindId");
+                        .HasForeignKey("KindId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Bookong.Domain.Entities.Period", "Period")
                         .WithMany()
-                        .HasForeignKey("PeriodId");
+                        .HasForeignKey("PeriodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Bookong.Domain.Entities.Publisher", "Publisher")
                         .WithMany()
@@ -600,25 +493,6 @@ namespace Bookong.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("Bookong.Domain.Entities.BookLoan", b =>
-                {
-                    b.HasOne("Bookong.Domain.Entities.Book", "Book")
-                        .WithMany()
-                        .HasForeignKey("BookId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Bookong.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Book");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Bookong.Domain.Entities.BookReservation", b =>
                 {
                     b.HasOne("Bookong.Domain.Entities.Book", "Book")
                         .WithMany()
@@ -708,33 +582,6 @@ namespace Bookong.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Bookong.Domain.Entities.TeachingMaterial", b =>
-                {
-                    b.HasOne("Bookong.Domain.Entities.Branch", "Branch")
-                        .WithMany()
-                        .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Bookong.Domain.Entities.Subject", "Subject")
-                        .WithMany()
-                        .HasForeignKey("SubjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Bookong.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Branch");
-
-                    b.Navigation("Subject");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Bookong.Domain.Entities.Warehouse", b =>
                 {
                     b.HasOne("Bookong.Domain.Entities.Address", "Address")
@@ -744,11 +591,6 @@ namespace Bookong.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Address");
-                });
-
-            modelBuilder.Entity("Bookong.Domain.Entities.User", b =>
-                {
-                    b.Navigation("TeachingMaterials");
                 });
 #pragma warning restore 612, 618
         }
