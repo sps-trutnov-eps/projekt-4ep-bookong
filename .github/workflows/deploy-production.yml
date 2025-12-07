@@ -19,14 +19,15 @@ jobs:
           script_stop: true
           script: |
             set -e
-            : "${APP_DIR:=${HOME}/bookong-production-deployment}"
-            REPO_URL="git@github.com:${{ github.repository }}.git"
+            APP_DIR="${HOME}/bookong-production-deployment"
+            
             if [ ! -d "$APP_DIR" ]; then
-              mkdir -p "$APP_DIR"
-              git clone --depth=1 --branch main "$REPO_URL" "$APP_DIR"
+              echo "Error: Deployment directory $APP_DIR does not exist."
+              echo "Please create it manually and add .env.production file first."
+              exit 1
             fi
+            
             cd "$APP_DIR"
-            git fetch origin main
+            git fetch origin main:main
             git checkout main
-            git reset --hard origin/main
             bash deploy/deploy.sh production

@@ -19,14 +19,15 @@ jobs:
           script_stop: true
           script: |
             set -e
-            : "${APP_DIR:=${HOME}/bookong-staging-deployment}"
-            REPO_URL="git@github.com:${{ github.repository }}.git"
+            APP_DIR="${HOME}/bookong-staging-deployment"
+            
             if [ ! -d "$APP_DIR" ]; then
-              mkdir -p "$APP_DIR"
-              git clone --depth=1 --branch staging "$REPO_URL" "$APP_DIR"
+              echo "Error: Deployment directory $APP_DIR does not exist."
+              echo "Please create it manually and add .env.staging file first."
+              exit 1
             fi
+            
             cd "$APP_DIR"
-            git fetch origin staging
+            git fetch origin staging:staging
             git checkout staging
-            git reset --hard origin/staging
             bash deploy/deploy.sh staging
