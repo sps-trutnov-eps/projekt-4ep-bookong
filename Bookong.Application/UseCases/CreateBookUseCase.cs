@@ -35,6 +35,8 @@ namespace Bookong.Application.UseCases
                 throw new ValidationException("PeriodId is required.", null, nameof(dto.PeriodId));
             if (!dto.Pages.HasValue || dto.Pages.Value == 0)
                 throw new ValidationException("Pages must be provided and greater than zero.", null, nameof(dto.Pages));
+            if (dto.Pages.Value < 1 || dto.Pages.Value > 10000)
+                throw new ValidationException("Pages must be between 1 and 10000.", null, nameof(dto.Pages));
 
             // Prepare variables for newly created related entities
             Author? newAuthor = null;
@@ -123,7 +125,7 @@ namespace Bookong.Application.UseCases
             {
                 Name = dto.Title.Trim(),
                 ISBN = string.IsNullOrWhiteSpace(dto.ISBN) ? null : dto.ISBN.Trim(),
-                Pages = dto.Pages.Value,
+                Pages = (ushort)dto.Pages.Value,
                 DateRelease = dto.DateRelease,
                 Borrowable = true
             };

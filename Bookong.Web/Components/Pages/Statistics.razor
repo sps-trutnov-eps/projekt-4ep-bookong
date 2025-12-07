@@ -1,4 +1,4 @@
-﻿@using Bookong.Web.Components.Layout
+@using Bookong.Web.Components.Layout
 @using Bookong.Application.UseCases.Queries.Interfaces
 @using Bookong.Application.DTOs
 @page "/statistics"
@@ -81,7 +81,7 @@
             <!-- Sekce Top 5 knih za poslední měsíc -->
             <div class="row justify-content-center g-4 mb-4">
                 <div class="col-lg-6 col-md-10">
-                    <div class="card shadow-lg border-0 p-4">
+                    <div class="card shadow-lg border-0 p-4" style="transition: transform 0.3s ease;">
                         <h5 class="fw-bold text-primary mb-4 text-center">
                             Top 5 knih za poslední měsíc
                         </h5>
@@ -122,7 +122,7 @@
                 </div>
 
                 <div class="col-lg-6 col-md-10">
-                    <div class="card shadow-lg border-0 p-4">
+                    <div class="card shadow-lg border-0 p-4" style="transition: transform 0.3s ease;">
                         <h5 class="fw-bold text-primary mb-4 text-center">
                             Další statistiky
                         </h5>
@@ -158,18 +158,6 @@
             </div>
         }
     </div>
-</div>
-
-<!-- Wave Container -->
-<div class="position-relative w-100 overflow-hidden" style="line-height: 0;">
-    <!-- Primary Wave -->
-    <svg class="w-100 d-block" style="height: 5rem;" viewBox="0 0 1200 120" preserveAspectRatio="none">
-        <path d="M0,0 C300,80 900,0 1200,80 L1200,120 L0,120 Z" fill="#0a4db8"></path>
-    </svg>
-    <!-- Secondary Wave -->
-    <svg class="w-100 d-block" style="height: 5rem; margin-top: -0.25rem; background-color: #0a4db8;" viewBox="0 0 1200 120" preserveAspectRatio="none">
-        <path d="M0,0 C400,60 800,0 1200,60 L1200,120 L0,120 Z" fill="#083d96"></path>
-    </svg>
 </div>
 
 @code {

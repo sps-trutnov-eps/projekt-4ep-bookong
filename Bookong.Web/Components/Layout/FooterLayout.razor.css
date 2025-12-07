@@ -1,3 +1,26 @@
+/* Footer-specific styles (kept local) */
 footer {
-    background: #0a4db8 !important; /* Darker blue to match header - overrides Bootstrap bg-primary */
+    /* Use a darker variant of the hero gradient so the footer is visually distinct from the wave */
+    background: linear-gradient(135deg, var(--footer-gradient-a, #0a4db8) 0%, var(--footer-gradient-b, #4c1d95) 100%);
+    color: var(--white-strong);
+    position: relative;
+    z-index: 2;
+    min-height: 60px;
+}
+
+footer .container-fluid {
+    z-index: 3; /* keep content above decorative elements */
+}
+
+/* subtle top border/contrast line to separate footer from content */
+footer::before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(0,0,0,0.06));
+    z-index: 2;
 }

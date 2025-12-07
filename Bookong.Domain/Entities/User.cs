@@ -18,5 +18,7 @@ namespace Bookong.Domain.Entities
         public required string Email { get; set; }
 
         public required string OrganizationalUnit { get; set; }
+
+        public ICollection<TeachingMaterial> TeachingMaterials { get; set; } = [];
     }
 }

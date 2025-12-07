@@ -61,6 +61,7 @@ namespace Bookong.Application.DTOs
         public string? Number { get; set; }
         public string? City { get; set; }
         public string? ZipCode { get; set; }
+<<<<<<< HEAD
     }
 
     // New DTOs for form option lists
@@ -73,5 +74,7 @@ namespace Bookong.Application.DTOs
         public List<SelectItemDto> Kinds { get; set; } = new();
         public List<SelectItemDto> Periods { get; set; } = new();
         public List<SelectItemDto> Warehouses { get; set; } = new();
+=======
+>>>>>>> 1b473dbf446afc953067fda2ecc9763ecb7dd719
     }
 }
