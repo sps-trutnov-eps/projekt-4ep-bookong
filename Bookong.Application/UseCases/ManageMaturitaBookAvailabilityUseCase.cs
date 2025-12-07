@@ -18,14 +18,14 @@ namespace Bookong.Application.UseCases
             _dbContext = dbContext;
         }
 
-        public async Task<OperationResult> AddToAvailableAsync(Guid bookPublicId)
+        public async Task<GenericResponse> AddToAvailableAsync(Guid bookPublicId)
         {
             var book = await _unitOfWork.Books.GetByPublicIdAsync(bookPublicId);
             if (book == null)
-                return new OperationResult { Success = false, Message = "Kniha nebyla nalezena." };
+                return GenericResponse.FailureResponse("Kniha nebyla nalezena.");
 
             if (book.Author == null || book.Genre == null || book.Kind == null || book.Period == null)
-                return new OperationResult { Success = false, Message = "Kniha nemá všechny požadované údaje." };
+                return GenericResponse.FailureResponse("Kniha nemá všechny požadované údaje.");
 
             // Check if already exists
             var existing = await _dbContext.MaturitaBooks
@@ -41,7 +41,7 @@ namespace Bookong.Application.UseCases
                 .FirstOrDefaultAsync();
 
             if (existing != null)
-                return new OperationResult { Success = false, Message = "Kniha již je v dostupných." };
+                return GenericResponse.FailureResponse("Kniha již je v dostupných.");
 
             // Get fresh tracked entities
             var author = await _dbContext.Authors.FindAsync(book.Author.Id);
@@ -50,7 +50,7 @@ namespace Bookong.Application.UseCases
             var period = await _dbContext.Periods.FindAsync(book.Period.Id);
 
             if (author == null || genre == null || kind == null || period == null)
-                return new OperationResult { Success = false, Message = "Související entity nebyly nalezeny." };
+                return GenericResponse.FailureResponse("Související entity nebyly nalezeny.");
 
             var maturitaBook = new MaturitaBook
             {
@@ -64,14 +64,14 @@ namespace Bookong.Application.UseCases
             _dbContext.MaturitaBooks.Add(maturitaBook);
             await _dbContext.SaveChangesAsync();
 
-            return new OperationResult { Success = true, Message = "Kniha byla přidána do dostupných." };
+            return GenericResponse.SuccessResponse("Kniha byla přidána do dostupných.");
         }
 
-        public async Task<OperationResult> RemoveFromAvailableAsync(Guid bookPublicId)
+        public async Task<GenericResponse> RemoveFromAvailableAsync(Guid bookPublicId)
         {
             var book = await _unitOfWork.Books.GetByPublicIdAsync(bookPublicId);
             if (book == null)
-                return new OperationResult { Success = false, Message = "Kniha nebyla nalezena." };
+                return GenericResponse.FailureResponse("Kniha nebyla nalezena.");
 
             var existing = await _dbContext.MaturitaBooks
                 .Include(mb => mb.Author)
@@ -86,12 +86,12 @@ namespace Bookong.Application.UseCases
                 .FirstOrDefaultAsync();
 
             if (existing == null)
-                return new OperationResult { Success = false, Message = "Kniha není v dostupných." };
+                return GenericResponse.FailureResponse("Kniha není v dostupných.");
 
             _dbContext.MaturitaBooks.Remove(existing);
             await _dbContext.SaveChangesAsync();
 
-            return new OperationResult { Success = true, Message = "Kniha byla odebrána z dostupných." };
+            return GenericResponse.SuccessResponse("Kniha byla odebrána z dostupných.");
         }
     }
 }

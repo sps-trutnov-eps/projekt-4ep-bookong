@@ -4,7 +4,7 @@ namespace Bookong.Application.UseCases.Interfaces
 {
     public interface IManageMaturitaBookAvailabilityUseCase
     {
-        Task<OperationResult> AddToAvailableAsync(Guid bookPublicId);
-        Task<OperationResult> RemoveFromAvailableAsync(Guid bookPublicId);
+        Task<GenericResponse> AddToAvailableAsync(Guid bookPublicId);
+        Task<GenericResponse> RemoveFromAvailableAsync(Guid bookPublicId);
     }
 }
