@@ -2,6 +2,7 @@
 using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bookong.Infrastructure.Repositories
 {
@@ -11,37 +12,37 @@ namespace Bookong.Infrastructure.Repositories
 
         public void Add(User user)
         {
-            throw new NotImplementedException();
+            _context.Users.Add(user);
         }
 
         public void Delete(User user)
         {
-            throw new NotImplementedException();
+            _context.Users.Remove(user);
         }
 
-        public Task<IEnumerable<User>> GetAllAsync()
+        public async Task<IEnumerable<User>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _context.Users.ToListAsync();
         }
 
-        public Task<User?> GetByEmailAsync(string email)
+        public async Task<User?> GetByEmailAsync(string email)
         {
-            throw new NotImplementedException();
+            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
 
-        public Task<User?> GetByIdAsync(int id)
+        public async Task<User?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _context.Users.FindAsync(id);
         }
 
-        public Task<User?> GetByPublicIdAsync(Guid publicId)
+        public async Task<User?> GetByPublicIdAsync(Guid publicId)
         {
-            throw new NotImplementedException();
+            return await _context.Users.FirstOrDefaultAsync(u => u.PublicId == publicId);
         }
 
-        public Task<User?> GetBySamAccountNameAsync(string username)
+        public async Task<User?> GetBySamAccountNameAsync(string username)
         {
-            throw new NotImplementedException();
+            return await _context.Users.FirstOrDefaultAsync(u => u.SamAccountName == username);
         }
 
         public Task<PagedResult<User>> GetPagedAsync(int pageNumber = 1, int pageSize = 25)
@@ -51,7 +52,7 @@ namespace Bookong.Infrastructure.Repositories
 
         public void Update(User user)
         {
-            throw new NotImplementedException();
+            _context.Users.Update(user);
         }
     }
 }

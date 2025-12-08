@@ -21,6 +21,10 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Application UseCases, Queries
 builder.Services.AddScoped<IGetAvailableBooksQuery, GetAvailableBooksQuery>();
+builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
+builder.Services.AddScoped<ICompleteUserRegistrationUseCase, CompleteUserRegistrationUseCase>();
+builder.Services.AddScoped<IActiveDirectoryService, MockActiveDirectoryService>();
+
 
 // Session services
 builder.Services.AddDistributedMemoryCache();
@@ -38,9 +42,6 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 
-builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
-builder.Services.AddScoped<IActiveDirectoryService, ActiveDirectoryService>();
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -55,11 +56,6 @@ app.UseHttpsRedirection();
 
 app.UseSession();
 
-// Development only middleware to set a test user in session
-if (app.Environment.IsDevelopment())
-{
-    app.UseMiddleware<TestUserMiddleware>();
-}
 
 app.UseAntiforgery();
 

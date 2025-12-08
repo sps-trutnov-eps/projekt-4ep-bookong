@@ -4,56 +4,100 @@
 @using System.ComponentModel.DataAnnotations
 @using Bookong.Application.DTOs
 @inject Bookong.Application.UseCases.Interfaces.ILoginUserUseCase LoginUserUseCase
+@inject Bookong.Application.UseCases.Interfaces.ICompleteUserRegistrationUseCase CompleteUserRegistrationUseCase
 @inject Bookong.Application.Services.Interfaces.ISessionService SessionService
 @inject NavigationManager Navigation
 
 <div class="login-wrapper d-flex flex-column align-items-center justify-content-center text-center">
 
    <div class="card shadow-sm p-4 login-card">
-   <h3 class="mb-4">Přihlášení do systému</h3>
+   <h3 class="mb-4">@(isFirstTimeUser ? "Dokončení registrace" : "Přihlášení do systému")</h3>
 
-      <EditForm Model="loginModel" OnValidSubmit="LoginUserAsync">
-       <DataAnnotationsValidator />
+      @if (!isFirstTimeUser)
+      {
+          <EditForm Model="loginModel" OnValidSubmit="LoginUserAsync">
+              <DataAnnotationsValidator />
   
-  @if (!string.IsNullOrEmpty(debugMessage))
-     {
-      <div class="alert @(isError ? "alert-danger" : "alert-info")" role="alert">
-            @debugMessage
-        </div>
-     }
+              @if (!string.IsNullOrEmpty(debugMessage))
+              {
+                  <div class="alert @(isError ? "alert-danger" : "alert-info")" role="alert">
+                      @debugMessage
+                  </div>
+              }
 
-    <div class="mb-3 text-start">
-      <label class="form-label">Uživatelské jméno</label>
-    <InputText @bind-Value="loginModel.Username" class="form-control" />
-     <ValidationMessage For="@(() => loginModel.Username)" />
-            </div>
+              <div class="mb-3 text-start">
+                  <label class="form-label">Uživatelské jméno</label>
+                  <InputText @bind-Value="loginModel.Username" class="form-control" />
+                  <ValidationMessage For="@(() => loginModel.Username)" />
+              </div>
 
-  <div class="mb-3 text-start">
-          <label class="form-label">Heslo</label>
-    <InputText @bind-Value="loginModel.Password" class="form-control" type="password" />
-            <ValidationMessage For="@(() => loginModel.Password)" />
-      </div>
+              <div class="mb-3 text-start">
+                  <label class="form-label">Heslo</label>
+                  <InputText @bind-Value="loginModel.Password" class="form-control" type="password" />
+                  <ValidationMessage For="@(() => loginModel.Password)" />
+              </div>
 
-            <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
-                @if (isLoading)
-                {
-                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    <span>Přihlašování...</span>
-                }
-                else
-                {
-                    <span>Přihlásit se</span>
-                }
-            </button>
-        </EditForm>
+              <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
+                  @if (isLoading)
+                  {
+                      <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <span>Přihlašování...</span>
+                  }
+                  else
+                  {
+                      <span>Přihlásit se</span>
+                  }
+              </button>
+          </EditForm>
+      }
+      else
+      {
+          <EditForm Model="registrationModel" OnValidSubmit="CompleteRegistrationAsync">
+              <DataAnnotationsValidator />
+  
+              @if (!string.IsNullOrEmpty(debugMessage))
+              {
+                  <div class="alert @(isError ? "alert-danger" : "alert-info")" role="alert">
+                      @debugMessage
+                  </div>
+              }
+
+              <div class="alert alert-info" role="alert">
+                  <p>Vítejte v systému! Pro dokončení registrace prosím vyplňte své jméno.</p>
+                  <p><strong>Uživatelské jméno:</strong> @currentUsername</p>
+                  <p><strong>Email:</strong> @currentUsername@@spstrutnov.cz</p>
+              </div>
+
+              <div class="mb-3 text-start">
+                  <label class="form-label">Celé jméno</label>
+                  <InputText @bind-Value="registrationModel.Name" class="form-control" placeholder="Zadejte vaše celé jméno" />
+                  <ValidationMessage For="@(() => registrationModel.Name)" />
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
+                  @if (isLoading)
+                  {
+                      <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <span>Dokončuji registraci...</span>
+                  }
+                  else
+                  {
+                      <span>Dokončit registraci</span>
+                  }
+              </button>
+          </EditForm>
+      }
     </div>
 </div>
 
 @code {
     private LoginModel loginModel { get; set; } = new();
+    private RegistrationModel registrationModel { get; set; } = new();
     private string? debugMessage;
     private bool isError = false;
     private bool isLoading = false;
+    private bool isFirstTimeUser = false;
+    private string? currentUsername;
 
     private async Task LoginUserAsync()
     {
@@ -71,7 +115,13 @@
 
             var response = await LoginUserUseCase.ExecuteAsync(request);
 
-            if (response.UserId != Guid.Empty)
+            if (response.IsFirstTimeUser)
+            {
+                isFirstTimeUser = true;
+                currentUsername = response.Username;
+                debugMessage = null;
+            }
+            else if (response.UserId != Guid.Empty)
             {
                 await SessionService.SetAsync("CurrentUserPublicId", response.UserId.ToString());
                 Navigation.NavigateTo("/portalpage", forceLoad: true);
@@ -93,6 +143,47 @@
         }
     }
 
+    private async Task CompleteRegistrationAsync()
+    {
+        isLoading = true;
+        isError = false;
+        debugMessage = null;
+
+        try
+        {
+            var request = new CompleteUserRegistrationRequest
+            {
+                Username = currentUsername!,
+                Name = registrationModel.Name
+            };
+
+            var response = await CompleteUserRegistrationUseCase.ExecuteAsync(request);
+
+            if (response.Success && response.UserId != Guid.Empty)
+            {
+                await SessionService.SetAsync("CurrentUserPublicId", response.UserId.ToString());
+                debugMessage = "Registrace dokončena! Přesměrování...";
+                isError = false;
+                await Task.Delay(1000);
+                Navigation.NavigateTo("/portalpage", forceLoad: true);
+            }
+            else
+            {
+                debugMessage = response.Message;
+                isError = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            debugMessage = $"Chyba při dokončování registrace: {ex.Message}";
+            isError = true;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
     public class LoginModel
     {
         [Required(ErrorMessage = "Uživatelské jméno je povinné.")]
@@ -100,5 +191,12 @@
 
         [Required(ErrorMessage = "Heslo je povinné.")]
         public string Password { get; set; } = string.Empty;
+    }
+
+    public class RegistrationModel
+    {
+        [Required(ErrorMessage = "Celé jméno je povinné.")]
+        [MinLength(3, ErrorMessage = "Jméno musí mít alespoň 3 znaky.")]
+        public string Name { get; set; } = string.Empty;
     }
 }
