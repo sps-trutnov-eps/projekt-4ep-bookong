@@ -2,9 +2,12 @@
 @using System.ComponentModel.DataAnnotations
 @using Bookong.Application.DTOs
 @using Bookong.Application.UseCases.Interfaces
+@using Bookong.Application.UseCases.Queries.Interfaces
+@using Bookong.Application.UseCases
 @using System
 
-@inject IServiceProvider ServiceProvider
+@inject IGetFormOptionsQuery FormOptionsQuery
+@inject ICreateBookUseCase CreateBookUseCase
 
 <PageTitle>Formulář - Přidat knihu</PageTitle>
 
@@ -330,49 +333,31 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Simulate async loading so component is ready for real queries later.
-        await LoadPlaceholdersAsync();
+        await LoadFromDbAsync();
     }
 
-    private async Task LoadPlaceholdersAsync()
+    private async Task LoadFromDbAsync()
     {
-        // TODO: Replace this with real queries injected via DI, e.g.:
-        // Authors = await GetAuthorsQuery.ExecuteAsync();
-        // For now simulate small delay and fill placeholders so UI behaves like real app.
-        await Task.Delay(100);
-
-        Authors = new List<SelectItem>
- {
- new SelectItem(1, "Jan Novák"),
- new SelectItem(2, "Petr Svoboda")
- };
-
-        Genres = new List<SelectItem>
- {
- new SelectItem(1, "Populárně naučná"),
- new SelectItem(2, "Sci-fi")
- };
-
-        Kinds = new List<SelectItem>
- {
- new SelectItem(1, "Povídka"),
- new SelectItem(2, "Román")
- };
-
-        Periods = new List<SelectItem>
- {
- new SelectItem(1, "Středověk"),
- new SelectItem(2, "Novověk")
- };
-
-        Warehouses = new List<SelectItem>
- {
- new SelectItem(1, "Hlavní sklad"),
- new SelectItem(2, "Vedlejší sklad")
- };
-
-        isLoading = false;
-        await InvokeAsync(StateHasChanged);
+        try
+        {
+            isLoading = true;
+            var opts = await FormOptionsQuery.ExecuteAsync();
+            Authors = opts.Authors.Select(a => new SelectItem(a.Id, a.Name)).ToList();
+            Genres = opts.Genres.Select(g => new SelectItem(g.Id, g.Name)).ToList();
+            Kinds = opts.Kinds.Select(k => new SelectItem(k.Id, k.Name)).ToList();
+            Periods = opts.Periods.Select(p => new SelectItem(p.Id, p.Name)).ToList();
+            Warehouses = opts.Warehouses.Select(w => new SelectItem(w.Id, w.Name)).ToList();
+        }
+        catch (Exception ex)
+        {
+            // Show minimal error in author errors area so user can see something
+            NewAuthorErrors = new List<string> { "Chyba při načítání dat: " + ex.Message };
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task HandleValidSubmit()
@@ -401,14 +386,7 @@
 
         try
         {
-            var createBookUseCase = ServiceProvider.GetService(typeof(ICreateBookUseCase)) as ICreateBookUseCase;
-            if (createBookUseCase == null)
-            {
-                NewAuthorErrors = new List<string> { "ICreateBookUseCase není registrován v DI. Zaregistrujte ho v Program.cs (např. services.AddScoped<ICreateBookUseCase, CreateBookUseCase>())." };
-                return;
-            }
-
-            var created = await createBookUseCase.ExecuteAsync(Model);
+            var created = await CreateBookUseCase.ExecuteAsync(Model);
             submitted = true;
 
             // Clear temporary data after successful creation
@@ -420,6 +398,9 @@
 
             // Optionally reset the form model
             Model = new CreateBookDto();
+
+            // Reload options so newly created related items appear with real IDs
+            await LoadFromDbAsync();
         }
         catch (ValidationException vex)
         {
