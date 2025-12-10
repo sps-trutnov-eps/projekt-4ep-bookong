@@ -8,6 +8,7 @@
 
 @inject IGetFormOptionsQuery FormOptionsQuery
 @inject ICreateBookUseCase CreateBookUseCase
+@inject ICheckDuplicateQuery CheckDuplicateQuery
 
 <PageTitle>Formulář - Přidat knihu</PageTitle>
 
@@ -38,13 +39,13 @@
             else if (!addingAuthor)
             {
                 <div class="d-flex gap-2">
-                    <InputSelect class="form-select" @bind-Value="Model.AuthorId">
+                    <select class="form-select" @bind="Model.AuthorId">
                         <option value="">-- Vyberte autora --</option>
                         @foreach (var a in Authors)
                         {
-                            <option value="@a.Id">@a.Name</option>
+                            @:<option value="@a.Id">@a.Name</option>
                         }
-                    </InputSelect>
+                    </select>
                     <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddAuthor(true)">Přidat nového autora</button>
                 </div>
             }
@@ -96,13 +97,13 @@
                 else if (!addingGenre)
                 {
                     <div class="d-flex gap-2">
-                        <InputSelect class="form-select" @bind-Value="Model.GenreId">
+                        <select class="form-select" @bind="Model.GenreId">
                             <option value="">-- Vyberte žánr --</option>
                             @foreach (var g in Genres)
                             {
-                                <option value="@g.Id">@g.Name</option>
+                                @:<option value="@g.Id">@g.Name</option>
                             }
-                        </InputSelect>
+                        </select>
                         <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddGenre(true)">Přidat nový žánr</button>
                     </div>
                 }
@@ -137,13 +138,13 @@
                 else if (!addingKind)
                 {
                     <div class="d-flex gap-2">
-                        <InputSelect class="form-select" @bind-Value="Model.KindId">
+                        <select class="form-select" @bind="Model.KindId">
                             <option value="">-- Vyberte druh --</option>
                             @foreach (var k in Kinds)
                             {
-                                <option value="@k.Id">@k.Name</option>
+                                @:<option value="@k.Id">@k.Name</option>
                             }
-                        </InputSelect>
+                        </select>
                         <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddKind(true)">Přidat nový druh</button>
                     </div>
                 }
@@ -178,13 +179,13 @@
                 else if (!addingPeriod)
                 {
                     <div class="d-flex gap-2">
-                        <InputSelect class="form-select" @bind-Value="Model.PeriodId">
+                        <select class="form-select" @bind="Model.PeriodId">
                             <option value="">-- Vyberte období --</option>
                             @foreach (var p in Periods)
                             {
-                                <option value="@p.Id">@p.Name</option>
+                                @:<option value="@p.Id">@p.Name</option>
                             }
-                        </InputSelect>
+                        </select>
                         <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddPeriod(true)">Přidat nové období</button>
                     </div>
                 }
@@ -232,13 +233,13 @@
             else if (!addingWarehouse)
             {
                 <div class="d-flex gap-2">
-                    <InputSelect class="form-select" @bind-Value="Model.WarehouseId">
+                    <select class="form-select" @bind="Model.WarehouseId">
                         <option value="">-- Vyberte sklad --</option>
                         @foreach (var w in Warehouses)
                         {
-                            <option value="@w.Id">@w.Name</option>
+                            @:<option value="@w.Id">@w.Name</option>
                         }
-                    </InputSelect>
+                    </select>
                     <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddWarehouse(true)">Přidat nový sklad</button>
                 </div>
             }
@@ -449,7 +450,7 @@
         NewWarehouseErrors = null;
     }
 
-    private Task OnAddAuthor()
+    private async Task OnAddAuthor()
     {
         // Basic validation already provided via data annotations in NewAuthorModel
         var temp = new AuthorTemp
@@ -459,67 +460,210 @@
             LastName = NewAuthor.LastName?.Trim() ?? string.Empty
         };
 
-        NewAuthorsTemp.Add(temp);
-
-        // Add to UI select so user can pick newly added item before persisting to DB.
-        var fakeId = -(NewAuthorsTemp.Count); // negative temporary id
-        Authors.Add(new SelectItem(fakeId, $"{temp.FirstName} {temp.LastName}"));
-        Model.AuthorId = fakeId;
-
-        ToggleAddAuthor(false);
-        return Task.CompletedTask;
-    }
-
-    private Task OnAddGenre()
-    {
-        var temp = new GenreTemp { Name = NewGenre.Name?.Trim() ?? string.Empty };
-        NewGenresTemp.Add(temp);
-        var fakeId = -(NewGenresTemp.Count);
-        Genres.Add(new SelectItem(fakeId, temp.Name));
-        Model.GenreId = fakeId;
-        ToggleAddGenre(false);
-        return Task.CompletedTask;
-    }
-
-    private Task OnAddKind()
-    {
-        var temp = new KindTemp { Name = NewKind.Name?.Trim() ?? string.Empty };
-        NewKindsTemp.Add(temp);
-        var fakeId = -(NewKindsTemp.Count);
-        Kinds.Add(new SelectItem(fakeId, temp.Name));
-        Model.KindId = fakeId;
-        ToggleAddKind(false);
-        return Task.CompletedTask;
-    }
-
-    private Task OnAddPeriod()
-    {
-        var temp = new PeriodTemp { Name = NewPeriod.Name?.Trim() ?? string.Empty };
-        NewPeriodsTemp.Add(temp);
-        var fakeId = -(NewPeriodsTemp.Count);
-        Periods.Add(new SelectItem(fakeId, temp.Name));
-        Model.PeriodId = fakeId;
-        ToggleAddPeriod(false);
-        return Task.CompletedTask;
-    }
-
-    private Task OnAddWarehouse()
-    {
-        var temp = new WarehouseTemp
+        try
         {
-            Name = NewWarehouse.Name?.Trim() ?? string.Empty,
-            Street = NewWarehouse.Street?.Trim(),
-            Number = NewWarehouse.Number?.Trim(),
-            City = NewWarehouse.City?.Trim(),
-            ZipCode = NewWarehouse.ZipCode?.Trim()
-        };
+            // Check duplicates in DB
+            var exists = await CheckDuplicateQuery.AuthorExistsAsync(temp.FirstName, temp.MiddleName, temp.LastName);
+            if (exists)
+            {
+                // Try to find existing author in loaded list and select it
+                var searchName = $"{temp.FirstName} {temp.LastName}".Trim();
+                var existing = Authors.FirstOrDefault(a => string.Equals(a.Name?.Trim(), searchName, StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                {
+                    NewAuthorErrors = new List<string> { $"Autor '{existing.Name}' už je v databázi. Byl vybrán." };
+                    Model.AuthorId = existing.Id;
+                    ToggleAddAuthor(false);
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
 
-        NewWarehousesTemp.Add(temp);
-        var fakeId = -(NewWarehousesTemp.Count);
-        Warehouses.Add(new SelectItem(fakeId, temp.Name));
-        Model.WarehouseId = fakeId;
-        ToggleAddWarehouse(false);
-        return Task.CompletedTask;
+                NewAuthorErrors = new List<string> { "Autor se stejným jménem již existuje v databázi." };
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            NewAuthorsTemp.Add(temp);
+
+            // Add to UI select so user can pick newly added item before persisting to DB.
+            var fakeId = -(NewAuthorsTemp.Count); // negative temporary id
+            Authors.Add(new SelectItem(fakeId, $"{temp.FirstName} {temp.LastName}"));
+            Model.AuthorId = fakeId;
+
+            // clear errors and close
+            NewAuthorErrors = null;
+            ToggleAddAuthor(false);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            NewAuthorErrors = new List<string> { "Chyba při ověřování autora: " + ex.Message };
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OnAddGenre()
+    {
+        try
+        {
+            var name = NewGenre.Name?.Trim() ?? string.Empty;
+            var exists = await CheckDuplicateQuery.NameExistsAsync("genre", name);
+            if (exists)
+            {
+                var existing = Genres.FirstOrDefault(g => string.Equals(g.Name?.Trim(), name, StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                {
+                    NewGenreErrors = new List<string> { $"Žánr '{existing.Name}' už je v databázi. Byl vybrán." };
+                    Model.GenreId = existing.Id;
+                    ToggleAddGenre(false);
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
+                NewGenreErrors = new List<string> { "Žánr se stejným názvem již existuje v databázi." };
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            var temp = new GenreTemp { Name = name };
+            NewGenresTemp.Add(temp);
+            var fakeId = -(NewGenresTemp.Count);
+            Genres.Add(new SelectItem(fakeId, temp.Name));
+            Model.GenreId = fakeId;
+            NewGenreErrors = null;
+            ToggleAddGenre(false);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            NewGenreErrors = new List<string> { "Chyba při ověřování žánru: " + ex.Message };
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OnAddKind()
+    {
+        try
+        {
+            var name = NewKind.Name?.Trim() ?? string.Empty;
+            var exists = await CheckDuplicateQuery.NameExistsAsync("kind", name);
+            if (exists)
+            {
+                var existing = Kinds.FirstOrDefault(k => string.Equals(k.Name?.Trim(), name, StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                {
+                    NewKindErrors = new List<string> { $"Druh '{existing.Name}' už je v databázi. Byl vybrán." };
+                    Model.KindId = existing.Id;
+                    ToggleAddKind(false);
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
+                NewKindErrors = new List<string> { "Druh se stejným názvem již existuje v databázi." };
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            var temp = new KindTemp { Name = name };
+            NewKindsTemp.Add(temp);
+            var fakeId = -(NewKindsTemp.Count);
+            Kinds.Add(new SelectItem(fakeId, temp.Name));
+            Model.KindId = fakeId;
+            NewKindErrors = null;
+            ToggleAddKind(false);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            NewKindErrors = new List<string> { "Chyba při ověřování druhu: " + ex.Message };
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OnAddPeriod()
+    {
+        try
+        {
+            var name = NewPeriod.Name?.Trim() ?? string.Empty;
+            var exists = await CheckDuplicateQuery.NameExistsAsync("period", name);
+            if (exists)
+            {
+                var existing = Periods.FirstOrDefault(p => string.Equals(p.Name?.Trim(), name, StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                {
+                    NewPeriodErrors = new List<string> { $"Období '{existing.Name}' už je v databázi. Byl vybrán." };
+                    Model.PeriodId = existing.Id;
+                    ToggleAddPeriod(false);
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
+                NewPeriodErrors = new List<string> { "Období se stejným názvem již existuje v databázi." };
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            var temp = new PeriodTemp { Name = name };
+            NewPeriodsTemp.Add(temp);
+            var fakeId = -(NewPeriodsTemp.Count);
+            Periods.Add(new SelectItem(fakeId, temp.Name));
+            Model.PeriodId = fakeId;
+            NewPeriodErrors = null;
+            ToggleAddPeriod(false);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            NewPeriodErrors = new List<string> { "Chyba při ověřování období: " + ex.Message };
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OnAddWarehouse()
+    {
+        try
+        {
+            var name = NewWarehouse.Name?.Trim() ?? string.Empty;
+            var exists = await CheckDuplicateQuery.NameExistsAsync("warehouse", name);
+            if (exists)
+            {
+                var existing = Warehouses.FirstOrDefault(w => string.Equals(w.Name?.Trim(), name, StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                {
+                    NewWarehouseErrors = new List<string> { $"Sklad '{existing.Name}' už je v databázi. Byl vybrán." };
+                    Model.WarehouseId = existing.Id;
+                    ToggleAddWarehouse(false);
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
+                NewWarehouseErrors = new List<string> { "Sklad se stejným názvem již existuje v databázi." };
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            var temp = new WarehouseTemp
+            {
+                Name = name,
+                Street = NewWarehouse.Street?.Trim(),
+                Number = NewWarehouse.Number?.Trim(),
+                City = NewWarehouse.City?.Trim(),
+                ZipCode = NewWarehouse.ZipCode?.Trim()
+            };
+
+            NewWarehousesTemp.Add(temp);
+            var fakeId = -(NewWarehousesTemp.Count);
+            Warehouses.Add(new SelectItem(fakeId, temp.Name));
+            Model.WarehouseId = fakeId;
+            NewWarehouseErrors = null;
+            ToggleAddWarehouse(false);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            NewWarehouseErrors = new List<string> { "Chyba při ověřování skladu: " + ex.Message };
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     // Validation helpers for subforms

@@ -31,6 +31,9 @@ builder.Services.AddScoped<IExportBooksQuery, ExportBooksQuery>();
 builder.Services.AddScoped<IGetFormOptionsQuery, GetFormOptionsQuery>();
 builder.Services.AddScoped<ICreateBookUseCase, CreateBookUseCase>();
 
+// Register duplicate check query
+builder.Services.AddScoped<ICheckDuplicateQuery, CheckDuplicateQuery>();
+
 // Session services
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
