@@ -1,6 +1,6 @@
 ﻿@rendermode InteractiveServer
-@inject Bookong.Application.Services.Interfaces.ISessionService SessionService
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <header class="fixed-top bg-primary position-sticky">
     <nav class="navbar navbar-dark container-fluid px-2 px-md-3">
@@ -17,18 +17,18 @@
             <!-- Desktop Navigation (hidden on mobile) -->
             <ul class="navbar-nav d-none d-lg-flex flex-row gap-3 mb-0">
                 <li class="nav-item">
-                    @if (isLoggedIn)
-                    {
-                        <button class="btn btn-outline-light fw-medium px-3 py-1 rounded" @onclick="HandleLogout">
-                            Odhlásit
-                        </button>
-                    }
-                    else
-                    {
-                        <NavLink href="/login" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">
-                            Přihlásit
-                        </NavLink>
-                    }
+                    <AuthorizeView>
+                        <Authorized>
+                            <button class="btn btn-outline-light fw-medium px-3 py-1 rounded" @onclick="HandleLogout">
+                                Odhlásit
+                            </button>
+                        </Authorized>
+                        <NotAuthorized>
+                            <NavLink href="/login" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">
+                                Přihlásit
+                            </NavLink>
+                        </NotAuthorized>
+                    </AuthorizeView>
                 </li>
 
                 <li class="nav-item">
@@ -92,14 +92,14 @@
                     <li><NavLink href="/loans" class="overlay-nav-link text-white">Výpůjčky</NavLink></li>
                     <li><NavLink href="/materials" class="overlay-nav-link text-white">Materiály</NavLink></li>
                     <li>
-                        @if (isLoggedIn)
-                        {
-                            <button class="overlay-nav-link text-white btn btn-link p-0" @onclick="HandleLogout">Odhlásit</button>
-                        }
-                        else
-                        {
-                            <NavLink href="/login" class="overlay-nav-link text-white">Přihlásit</NavLink>
-                        }
+                        <AuthorizeView>
+                            <Authorized>
+                                <button class="overlay-nav-link text-white btn btn-link p-0" @onclick="HandleLogout">Odhlásit</button>
+                            </Authorized>
+                            <NotAuthorized>
+                                <NavLink href="/login" class="overlay-nav-link text-white">Přihlásit</NavLink>
+                            </NotAuthorized>
+                        </AuthorizeView>
                     </li>
                 </ul>
             </nav>
@@ -113,35 +113,9 @@
 </header>
 
 @code {
-    private bool isLoggedIn;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await CheckLoginStatus();
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        await CheckLoginStatus();
-    }
-
-    private async Task CheckLoginStatus()
-    {
-        var user = await SessionService.GetAsync("CurrentUserPublicId");
-        var newLoginStatus = !string.IsNullOrEmpty(user);
-        
-        if (isLoggedIn != newLoginStatus)
-        {
-            isLoggedIn = newLoginStatus;
-            StateHasChanged();
-        }
-    }
-
     private async Task HandleLogout()
     {
-        await SessionService.ClearAsync();
-        isLoggedIn = false;
-        StateHasChanged();
+        await JS.InvokeVoidAsync("authApi.logout");
         Navigation.NavigateTo("/login", forceLoad: true);
     }
 }

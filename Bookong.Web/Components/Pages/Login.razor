@@ -1,12 +1,11 @@
-﻿@page "/login"
+@page "/login"
 @rendermode InteractiveServer
 
 @using System.ComponentModel.DataAnnotations
 @using Bookong.Application.DTOs
-@inject Bookong.Application.UseCases.Interfaces.ILoginUserUseCase LoginUserUseCase
-@inject Bookong.Application.UseCases.Interfaces.ICompleteUserRegistrationUseCase CompleteUserRegistrationUseCase
-@inject Bookong.Application.Services.Interfaces.ISessionService SessionService
+@using Bookong.Web.Services
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <div class="login-wrapper d-flex flex-column align-items-center justify-content-center text-center">
 
@@ -113,22 +112,26 @@
                 Password = loginModel.Password
             };
 
-            var response = await LoginUserUseCase.ExecuteAsync(request);
+            var result = await JS.InvokeAsync<LoginResult>("authApi.login", request);
 
-            if (response.IsFirstTimeUser)
+            if (result is null)
+            {
+                debugMessage = "Přihlášení se nezdařilo";
+                isError = true;
+            }
+            else if (result.IsFirstTimeUser)
             {
                 isFirstTimeUser = true;
-                currentUsername = response.Username;
-                debugMessage = null;
+                currentUsername = result.Username;
+                debugMessage = result.Message;
             }
-            else if (response.UserId != Guid.Empty)
+            else if (result.Success)
             {
-                await SessionService.SetAsync("CurrentUserPublicId", response.UserId.ToString());
                 Navigation.NavigateTo("/portalpage", forceLoad: true);
             }
             else
             {
-                debugMessage = response.Message;
+                debugMessage = result.Message ?? "Přihlášení se nezdařilo";
                 isError = true;
             }
         }
@@ -157,19 +160,18 @@
                 Name = registrationModel.Name
             };
 
-            var response = await CompleteUserRegistrationUseCase.ExecuteAsync(request);
+            var response = await JS.InvokeAsync<CompleteUserRegistrationResponse>("authApi.register", request);
 
-            if (response.Success && response.UserId != Guid.Empty)
+            if (response is not null && response.Success && response.UserId != Guid.Empty)
             {
-                await SessionService.SetAsync("CurrentUserPublicId", response.UserId.ToString());
                 debugMessage = "Registrace dokončena! Přesměrování...";
                 isError = false;
-                await Task.Delay(1000);
+                await Task.Delay(500);
                 Navigation.NavigateTo("/portalpage", forceLoad: true);
             }
             else
             {
-                debugMessage = response.Message;
+                debugMessage = response?.Message ?? "Registrace se nezdařila";
                 isError = true;
             }
         }

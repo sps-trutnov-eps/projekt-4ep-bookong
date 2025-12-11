@@ -1,24 +1,26 @@
-﻿@inject Bookong.Application.Services.Interfaces.ISessionService SessionService
-@inject NavigationManager Navigation
+﻿@inject NavigationManager Navigation
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender)
+        if (AuthenticationStateTask is null)
             return;
 
-        var user = await SessionService.GetAsync("CurrentUserPublicId");
-        var uri = Navigation.Uri.ToLowerInvariant();
-        var onLoginPage = uri.Contains("/login");
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+        var onLoginPage = Navigation.Uri.Contains("/login", StringComparison.OrdinalIgnoreCase);
 
-        // Nepřihlášený → redirect na login
-        if (string.IsNullOrEmpty(user) && !onLoginPage)
+        if (!(user.Identity?.IsAuthenticated ?? false))
         {
-            Navigation.NavigateTo("/login", true);
+            if (!onLoginPage)
+            {
+                Navigation.NavigateTo("/login", true);
+            }
         }
-
-        // Přihlášený → nech ho být (nebo redirect z loginu zpět na /)
-        if (!string.IsNullOrEmpty(user) && onLoginPage)
+        else if (onLoginPage)
         {
             Navigation.NavigateTo("/", true);
         }

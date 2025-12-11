@@ -10,6 +10,9 @@ using Bookong.Web.Services;
 using Bookong.Application.UseCases.Interfaces;
 using Bookong.Application.UseCases;
 using Bookong.Application.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components.Authorization;
+using Bookong.Application.DTOs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,17 +28,23 @@ builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
 builder.Services.AddScoped<ICompleteUserRegistrationUseCase, CompleteUserRegistrationUseCase>();
 builder.Services.AddScoped<IActiveDirectoryService, MockActiveDirectoryService>();
 
-
-// Session services
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
-{
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
-
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ISessionService, SessionService>();
+
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/login";
+        options.AccessDeniedPath = "/login";
+        options.SlidingExpiration = true;
+    });
+
+builder.Services.AddAuthorization();
+
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<CookieAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<CookieAuthenticationStateProvider>());
+builder.Services.AddHttpClient();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -53,14 +62,54 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseSession();
-
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapPost("/auth/login", async (CookieAuthenticationStateProvider provider, LoginUserRequest request) =>
+{
+    var result = await provider.SignInAsync(request);
+
+    if (result.Success || result.IsFirstTimeUser)
+    {
+        return Results.Ok(result);
+    }
+
+    return Results.BadRequest(result);
+});
+
+app.MapPost("/auth/register", async (CookieAuthenticationStateProvider provider, ICompleteUserRegistrationUseCase registrationUseCase, CompleteUserRegistrationRequest request) =>
+{
+    var response = await registrationUseCase.ExecuteAsync(request);
+
+    if (!response.Success || response.UserId == Guid.Empty)
+    {
+        return Results.BadRequest(response);
+    }
+
+    var user = new UserSessionInfo
+    {
+        UserId = response.UserId,
+        Username = response.Username ?? request.Username,
+        Name = response.Name ?? request.Name,
+        Email = response.Email ?? $"{request.Username}@spstrutnov.cz",
+        OrganizationalUnit = response.OrganizationalUnit ?? "Default"
+    };
+
+    await provider.SignInKnownUserAsync(user);
+
+    return Results.Ok(response);
+});
+
+app.MapPost("/auth/logout", async (CookieAuthenticationStateProvider provider) =>
+{
+    await provider.LogoutAsync();
+    return Results.Ok();
+});
 
 app.Run();

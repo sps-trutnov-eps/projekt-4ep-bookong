@@ -36,7 +36,8 @@ namespace Bookong.Application.UseCases
                 {
                     UserId = Guid.Empty,
                     Message = "Invalid credentials",
-                    IsFirstTimeUser = false
+                    IsFirstTimeUser = false,
+                    Username = username
                 };
             }
 
@@ -61,7 +62,10 @@ namespace Bookong.Application.UseCases
                 UserId = user.PublicId,
                 Message = "Login successful",
                 IsFirstTimeUser = false,
-                Username = username
+                Username = username,
+                Name = user.Name,
+                Email = user.Email,
+                OrganizationalUnit = user.OrganizationalUnit
             };
         }
     }

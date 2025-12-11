@@ -38,7 +38,11 @@ namespace Bookong.Application.UseCases
                 {
                     UserId = existingUser.PublicId,
                     Message = "User already exists",
-                    Success = true
+                    Success = true,
+                    Username = existingUser.SamAccountName,
+                    Name = existingUser.Name,
+                    Email = existingUser.Email,
+                    OrganizationalUnit = existingUser.OrganizationalUnit
                 };
             }
 
@@ -59,7 +63,11 @@ namespace Bookong.Application.UseCases
             {
                 UserId = user.PublicId,
                 Message = "User registered successfully",
-                Success = true
+                Success = true,
+                Username = user.SamAccountName,
+                Name = user.Name,
+                Email = user.Email,
+                OrganizationalUnit = user.OrganizationalUnit
             };
         }
     }
