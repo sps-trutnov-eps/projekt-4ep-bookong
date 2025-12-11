@@ -36,6 +36,6 @@
     window.authApi = {
         login: (request) => postJson('/auth/login', request),
         register: (request) => postJson('/auth/register', request),
-        logout: () => postJson('/auth/logout', {})
+        logout: () => postJson('/auth/logout')
     };
 })();

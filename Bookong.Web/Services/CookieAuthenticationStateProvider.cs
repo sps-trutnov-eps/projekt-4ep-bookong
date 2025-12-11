@@ -36,53 +36,25 @@ namespace Bookong.Web.Services
 
         public async Task<LoginResult> SignInAsync(LoginUserRequest request)
         {
+            ArgumentNullException.ThrowIfNull(request);
+
             var response = await _loginUserUseCase.ExecuteAsync(request);
 
-            if (response.IsFirstTimeUser)
+            if (response.IsFirstTimeUser || response.UserId == Guid.Empty)
             {
-                return new LoginResult
-                {
-                    Success = false,
-                    IsFirstTimeUser = true,
-                    Message = response.Message,
-                    Username = response.Username ?? request.Email
-                };
+                return CreateLoginResult(response, request);
             }
 
-            if (response.UserId == Guid.Empty)
-            {
-                return new LoginResult
-                {
-                    Success = false,
-                    IsFirstTimeUser = false,
-                    Message = response.Message,
-                    Username = response.Username ?? request.Email
-                };
-            }
-
-            var user = new UserSessionInfo
-            {
-                UserId = response.UserId,
-                Username = response.Username ?? request.Email,
-                Name = response.Name ?? response.Username ?? request.Email,
-                Email = response.Email ?? $"{response.Username}@spstrutnov.cz",
-                OrganizationalUnit = response.OrganizationalUnit ?? "Default"
-            };
-
+            var user = CreateUserSession(response, request);
             await SignInKnownUserAsync(user);
 
-            return new LoginResult
-            {
-                Success = true,
-                IsFirstTimeUser = false,
-                Message = response.Message,
-                Username = user.Username,
-                User = user
-            };
+            return CreateLoginResult(response, request, user);
         }
 
         public async Task SignInKnownUserAsync(UserSessionInfo user)
         {
+            ArgumentNullException.ThrowIfNull(user);
+
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null)
             {
@@ -134,6 +106,35 @@ namespace Bookong.Web.Services
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             return new ClaimsPrincipal(identity);
+        }
+
+        private static LoginResult CreateLoginResult(LoginUserResponse response, LoginUserRequest request, UserSessionInfo? user = null)
+        {
+            return new LoginResult
+            {
+                Success = user is not null,
+                IsFirstTimeUser = response.IsFirstTimeUser,
+                Message = response.Message,
+                Username = response.Username ?? request.Email,
+                User = user
+            };
+        }
+
+        private static UserSessionInfo CreateUserSession(LoginUserResponse response, LoginUserRequest request)
+        {
+            var username = response.Username ?? request.Email;
+            var fallbackEmail = response.Username is not null
+                ? $"{response.Username}@spstrutnov.cz"
+                : request.Email;
+
+            return new UserSessionInfo
+            {
+                UserId = response.UserId,
+                Username = username,
+                Name = response.Name ?? username,
+                Email = response.Email ?? fallbackEmail,
+                OrganizationalUnit = response.OrganizationalUnit ?? "Default"
+            };
         }
     }
 

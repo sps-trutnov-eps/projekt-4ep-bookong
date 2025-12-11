@@ -1,6 +1,7 @@
 ﻿@rendermode InteractiveServer
+@using Bookong.Web.Services
 @inject NavigationManager Navigation
-@inject IJSRuntime JS
+@inject AuthJsInterop AuthApi
 
 <header class="fixed-top bg-primary position-sticky">
     <nav class="navbar navbar-dark container-fluid px-2 px-md-3">
@@ -115,7 +116,7 @@
 @code {
     private async Task HandleLogout()
     {
-        await JS.InvokeVoidAsync("authApi.logout");
+        await AuthApi.LogoutAsync();
         Navigation.NavigateTo("/login", forceLoad: true);
     }
 }

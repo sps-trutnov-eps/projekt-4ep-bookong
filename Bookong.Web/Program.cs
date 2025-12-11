@@ -35,7 +35,7 @@ builder.Services
     .AddCookie(options =>
     {
         options.LoginPath = "/login";
-        options.AccessDeniedPath = "/login";
+        options.AccessDeniedPath = "/portalpage";
         options.SlidingExpiration = true;
     });
 
@@ -44,6 +44,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<CookieAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<CookieAuthenticationStateProvider>());
+builder.Services.AddScoped<AuthJsInterop>();
 builder.Services.AddHttpClient();
 
 // Add services to the container.

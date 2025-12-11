@@ -5,7 +5,7 @@
 @using Bookong.Application.DTOs
 @using Bookong.Web.Services
 @inject NavigationManager Navigation
-@inject IJSRuntime JS
+@inject AuthJsInterop AuthApi
 
 <div class="login-wrapper d-flex flex-column align-items-center justify-content-center text-center">
 
@@ -90,21 +90,16 @@
 </div>
 
 @code {
-    private LoginModel loginModel { get; set; } = new();
-    private RegistrationModel registrationModel { get; set; } = new();
+    private LoginModel loginModel { get; } = new();
+    private RegistrationModel registrationModel { get; } = new();
     private string? debugMessage;
-    private bool isError = false;
-    private bool isLoading = false;
-    private bool isFirstTimeUser = false;
+    private bool isError;
+    private bool isLoading;
+    private bool isFirstTimeUser;
     private string? currentUsername;
 
-    private async Task LoginUserAsync()
-    {
-        isLoading = true;
-        isError = false;
-        debugMessage = null;
-
-        try
+    private Task LoginUserAsync() =>
+        ExecuteWithUiStateAsync(async () =>
         {
             var request = new LoginUserRequest
             {
@@ -112,33 +107,71 @@
                 Password = loginModel.Password
             };
 
-            var result = await JS.InvokeAsync<LoginResult>("authApi.login", request);
+            var result = await AuthApi.LoginAsync(request);
 
             if (result is null)
             {
-                debugMessage = "Přihlášení se nezdařilo";
-                isError = true;
+                SetStatus("Přihlášení se nezdařilo", true);
+                return;
             }
-            else if (result.IsFirstTimeUser)
+
+            if (result.IsFirstTimeUser)
             {
                 isFirstTimeUser = true;
-                currentUsername = result.Username;
-                debugMessage = result.Message;
+                currentUsername = result.Username ?? request.Email;
+                SetStatus(result.Message ?? "První přihlášení - doplňte své údaje.", false);
+                return;
             }
-            else if (result.Success)
+
+            if (result.Success)
             {
                 Navigation.NavigateTo("/portalpage", forceLoad: true);
+                return;
             }
-            else
+
+            SetStatus(result.Message ?? "Přihlášení se nezdařilo", true);
+        }, "Chyba při přihlašování");
+
+    private Task CompleteRegistrationAsync() =>
+        ExecuteWithUiStateAsync(async () =>
+        {
+            if (string.IsNullOrWhiteSpace(currentUsername))
             {
-                debugMessage = result.Message ?? "Přihlášení se nezdařilo";
-                isError = true;
+                SetStatus("Nelze dokončit registraci bez uživatelského jména.", true);
+                return;
             }
+
+            var request = new CompleteUserRegistrationRequest
+            {
+                Username = currentUsername,
+                Name = registrationModel.Name
+            };
+
+            var response = await AuthApi.CompleteRegistrationAsync(request);
+
+            if (response is not null && response.Success && response.UserId != Guid.Empty)
+            {
+                SetStatus("Registrace dokončena! Přesměrování...", false);
+                await Task.Delay(500);
+                Navigation.NavigateTo("/portalpage", forceLoad: true);
+                return;
+            }
+
+            SetStatus(response?.Message ?? "Registrace se nezdařila", true);
+        }, "Chyba při dokončování registrace");
+
+    private async Task ExecuteWithUiStateAsync(Func<Task> action, string errorPrefix)
+    {
+        isLoading = true;
+        ResetStatus();
+
+        try
+        {
+            await action();
         }
         catch (Exception ex)
         {
-            debugMessage = $"Chyba při přihlašování: {ex.Message}";
-            isError = true;
+            SetStatus($"{errorPrefix}: {ex.Message}", true);
         }
         finally
         {
@@ -146,44 +179,16 @@
         }
     }
 
-    private async Task CompleteRegistrationAsync()
+    private void ResetStatus()
     {
-        isLoading = true;
-        isError = false;
         debugMessage = null;
+        isError = false;
+    }
 
-        try
-        {
-            var request = new CompleteUserRegistrationRequest
-            {
-                Username = currentUsername!,
-                Name = registrationModel.Name
-            };
-
-            var response = await JS.InvokeAsync<CompleteUserRegistrationResponse>("authApi.register", request);
-
-            if (response is not null && response.Success && response.UserId != Guid.Empty)
-            {
-                debugMessage = "Registrace dokončena! Přesměrování...";
-                isError = false;
-                await Task.Delay(500);
-                Navigation.NavigateTo("/portalpage", forceLoad: true);
-            }
-            else
-            {
-                debugMessage = response?.Message ?? "Registrace se nezdařila";
-                isError = true;
-            }
-        }
-        catch (Exception ex)
-        {
-            debugMessage = $"Chyba při dokončování registrace: {ex.Message}";
-            isError = true;
-        }
-        finally
-        {
-            isLoading = false;
-        }
+    private void SetStatus(string? message, bool error)
+    {
+        debugMessage = message;
+        isError = error;
     }
 
     public class LoginModel
