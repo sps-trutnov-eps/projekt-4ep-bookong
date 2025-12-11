@@ -328,7 +328,6 @@
                 editingFolder.Description = formModel.Description!;
                 editingFolder.CreatedBy = formModel.CreatedBy!;
                 editingFolder.LinkUrl = formModel.LinkUrl!;
-                editingFolder.CreatedAt = DateTime.Now;
 
                 await TeachingMaterialsApi.UpdateFolderAsync(editingFolder);
                 editingFolder = null;
