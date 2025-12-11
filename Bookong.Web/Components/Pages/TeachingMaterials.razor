@@ -400,6 +400,9 @@
         {
             await JS.InvokeVoidAsync("blazorHelpers.focusAndScroll", nameInputRef);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to invoke blazorHelpers.focusAndScroll: {ex}");
+        }
     }
 }
