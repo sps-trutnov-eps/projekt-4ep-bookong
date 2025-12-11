@@ -60,6 +60,14 @@
 <!-- =========================== BODY ================================ -->
 
 <div class="container">
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+        </div>
+    }
+
     <div class="row gy-4">
 
         <!-- ===================== LEFT SIDE – FORM ======================== -->
@@ -246,6 +254,7 @@
     private bool isSaving = false;
     private bool compactView = false;
     private string searchTerm = string.Empty;
+    private string? errorMessage;
 
     private ElementReference nameInputRef;
 
@@ -317,6 +326,7 @@
         if (isSaving) return;
 
         isSaving = true;
+        errorMessage = null;
 
         try
         {
@@ -354,7 +364,10 @@
             folders = await TeachingMaterialsApi.GetFoldersAsync();
             searchTerm = string.Empty;
             formModel = new();
-
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Chyba při ukládání: {ex.Message}";
         }
         finally
         {
