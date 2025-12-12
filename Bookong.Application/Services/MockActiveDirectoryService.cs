@@ -24,15 +24,5 @@ namespace Bookong.Application.Services
 
             return Task.FromResult(isValid);
         }
-
-        public Task<string?> GetUserOranizationalUnitAsync(string username)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<(string Name, string Email, Guid ObjectGuid)?> GetUserDetailsAsync(string username)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
