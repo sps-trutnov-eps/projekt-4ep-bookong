@@ -14,5 +14,12 @@ namespace Bookong.Domain.Interfaces
         void Add(Book book);
         void Update(Book book);
         void Delete(Book book);
+
+        Task<int> CountAsync();
+
+        Task<IEnumerable<Book>> GetByIdsAsync(int[] ids);
+
+        Task<int[]> GetAllIdsAsync();
+
     }
 }

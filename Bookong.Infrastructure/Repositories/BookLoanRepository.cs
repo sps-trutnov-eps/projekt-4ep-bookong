@@ -2,6 +2,7 @@
 using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bookong.Infrastructure.Repositories
 {
@@ -11,27 +12,32 @@ namespace Bookong.Infrastructure.Repositories
 
         public void Add(BookLoan bookLoan)
         {
-            throw new NotImplementedException();
+            _context.BookLoans.Add(bookLoan);
         }
 
         public void Delete(BookLoan bookLoan)
         {
-            throw new NotImplementedException();
+            _context.BookLoans.Remove(bookLoan);
         }
 
-        public Task<IEnumerable<BookLoan>> GetAllAsync()
+        public async Task<IEnumerable<BookLoan>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _context.BookLoans
+                .Include(bl => bl.Book)
+                .ThenInclude(b => b.Author)
+                .Include(bl => bl.Book)
+                .ThenInclude(b => b.Genre)
+                .ToListAsync();
         }
 
-        public Task<BookLoan?> GetByIdAsync(int id)
+        public async Task<BookLoan?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _context.BookLoans.FindAsync(id).AsTask();
         }
 
-        public Task<BookLoan?> GetByPublicIdAsync(Guid publicId)
+        public async Task<BookLoan?> GetByPublicIdAsync(Guid publicId)
         {
-            throw new NotImplementedException();
+            return await _context.BookLoans.FirstOrDefaultAsync(bl => bl.PublicId == publicId);
         }
 
         public Task<PagedResult<BookLoan>> GetByUserAsync(User user, int pageNumber = 1, int pageSize = 25)
@@ -46,7 +52,7 @@ namespace Bookong.Infrastructure.Repositories
 
         public void Update(BookLoan bookLoan)
         {
-            throw new NotImplementedException();
+            _context.BookLoans.Update(bookLoan);
         }
     }
 }

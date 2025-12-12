@@ -1,7 +1,10 @@
-﻿@rendermode InteractiveServer
+
+@rendermode InteractiveServer
 @using Bookong.Web.Services
 @inject NavigationManager Navigation
 @inject AuthJsInterop AuthApi
+@inject IJSRuntime JSRuntime
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
 <header class="fixed-top bg-primary position-sticky">
     <nav class="navbar navbar-dark container-fluid px-2 px-md-3">
@@ -12,7 +15,7 @@
                      class="d-inline-block align-text-top" 
                      style="height: 50px; width: auto; margin-top: -8px; margin-bottom: -8px;" />
                 <span class="fw-bold fs-5 mb-0 text-white d-none d-sm-inline">BooKong</span>
-                <span class="fw-bold fs-6 mb-0 text-white d-inline d-sm-none">BK</span>
+                <span class="fw-bold fs-6 mb-0 text-white d-inline d-sm-none">BooKong</span>
             </NavLink>
 
             <!-- Desktop Navigation (hidden on mobile) -->
@@ -42,7 +45,7 @@
                     <NavLink href="/books" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Knihy</NavLink>
                 </li>
                 <li class="nav-item">
-                    <NavLink href="/lists" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Seznamy</NavLink>
+                    <NavLink href="/maturita" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Maturita</NavLink>
                 </li>
                 <li class="nav-item">
                     <NavLink href="/statistics" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Statistiky</NavLink>
@@ -57,21 +60,21 @@
 
             <!-- Burger menu button (visible on mobile/tablet) -->
             <button class="navbar-toggler d-lg-none border-0 p-2" type="button" id="menuToggle"
-                    aria-label="Toggle navigation">
+                    aria-label="Toggle navigation" @onclick="OpenMenu">
                 <span class="navbar-toggler-icon"></span>
             </button>
         </div>
     </nav>
 
     <!-- Full-screen overlay menu -->
-    <div class="overlay-menu" id="overlayMenu">
+    <div class="overlay-menu @(isMenuOpen ? "active" : "")" id="overlayMenu">
         <!-- Header with BooKong title and close button -->
         <div class="overlay-header">
             <div class="overlay-title">
                 <img src="img/bookong-monke-book.png" alt="BooKong Logo" />
                 <span>BooKong</span>
             </div>
-            <button class="close-btn" id="closeMenu" aria-label="Close menu">
+            <button class="close-btn" id="closeMenu" aria-label="Close menu" @onclick="CloseMenu">
                 <span>&times;</span>
             </button>
         </div>
@@ -88,7 +91,7 @@
                     <li><NavLink href="/portalpage" class="overlay-nav-link text-white">Domů</NavLink></li>
                     <li><NavLink href="/users" class="overlay-nav-link text-white">Uživatelé</NavLink></li>
                     <li><NavLink href="/books" class="overlay-nav-link text-white">Knihy</NavLink></li>
-                    <li><NavLink href="/lists" class="overlay-nav-link text-white">Seznamy</NavLink></li>
+                    <li><NavLink href="/maturita" class="overlay-nav-link text-white">Seznamy</NavLink></li>
                     <li><NavLink href="/statistics" class="overlay-nav-link text-white">Statistiky</NavLink></li>
                     <li><NavLink href="/loans" class="overlay-nav-link text-white">Výpůjčky</NavLink></li>
                     <li><NavLink href="/materials" class="overlay-nav-link text-white">Materiály</NavLink></li>
@@ -118,5 +121,21 @@
     {
         await AuthApi.LogoutAsync();
         Navigation.NavigateTo("/login", forceLoad: true);
+    }
+
+    private bool isMenuOpen = false;
+
+    private async Task OpenMenu()
+    {
+        isMenuOpen = true;
+        await JSRuntime.InvokeVoidAsync("toggleBodyLock", true);
+        StateHasChanged();
+    }
+
+    private async Task CloseMenu()
+    {
+        isMenuOpen = false;
+        await JSRuntime.InvokeVoidAsync("toggleBodyLock", false);
+        StateHasChanged();
     }
 }

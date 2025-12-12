@@ -2,6 +2,7 @@
 using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bookong.Infrastructure.Repositories
 {
@@ -11,42 +12,70 @@ namespace Bookong.Infrastructure.Repositories
 
         public void Add(Publisher publisher)
         {
-            throw new NotImplementedException();
+            _context.Publishers.Add(publisher);
         }
 
         public void Delete(Publisher publisher)
         {
-            throw new NotImplementedException();
+            _context.Publishers.Remove(publisher);
         }
 
-        public Task<IEnumerable<Publisher>> GetAllAsync()
+        public async Task<IEnumerable<Publisher>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _context.Publishers
+                .AsNoTracking()
+                .OrderBy(p => p.Name)
+                .ToListAsync();
         }
 
-        public Task<Publisher?> GetByIdAsync(int id)
+        public async Task<Publisher?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _context.Publishers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public Task<PagedResult<Publisher>> GetByNameAsync(string name, int pageNumber = 1, int pageSize = 25)
+        public async Task<Publisher?> GetByPublicIdAsync(Guid publicId)
         {
-            throw new NotImplementedException();
+            return await _context.Publishers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.PublicId == publicId);
         }
 
-        public Task<Publisher?> GetByPublicIdAsync(Guid publicId)
+        public async Task<PagedResult<Publisher>> GetByNameAsync(string name, int pageNumber = 1, int pageSize = 25)
         {
-            throw new NotImplementedException();
+            var query = _context.Publishers
+                .AsNoTracking()
+                .Where(p => p.Name.Contains(name))
+                .OrderBy(p => p.Name);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<Publisher>(items, totalCount, pageNumber, pageSize);
         }
 
-        public Task<PagedResult<Publisher>> GetPagedAsync(int pageNumber = 1, int pageSize = 25)
+        public async Task<PagedResult<Publisher>> GetPagedAsync(int pageNumber = 1, int pageSize = 25)
         {
-            throw new NotImplementedException();
+            var query = _context.Publishers
+                .AsNoTracking()
+                .OrderBy(p => p.Name);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<Publisher>(items, totalCount, pageNumber, pageSize);
         }
 
         public void Update(Publisher publisher)
         {
-            throw new NotImplementedException();
+            _context.Publishers.Update(publisher);
         }
     }
 }

@@ -1,8 +1,7 @@
-﻿namespace Bookong.Application.DTOs
+namespace Bookong.Application.DTOs
 {
     public class AddBookToPersonalMaturitaListDto
     {
-        public int UserId { get; set; }
-        public int MaturitaBookId { get; set; }
+        public Guid BookPublicId { get; set; }
     }
 }

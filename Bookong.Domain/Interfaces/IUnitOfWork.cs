@@ -16,6 +16,8 @@
         public ITeachingMaterialRepository TeachingMaterials { get; }
         public IUserRepository Users { get; }
         public IWarehouseRepository Warehouses { get; }
+        public ISubjectRepository Subjects { get; }
+        public IBranchRepository Branches { get; }
 
         Task CommitAsync();
     }

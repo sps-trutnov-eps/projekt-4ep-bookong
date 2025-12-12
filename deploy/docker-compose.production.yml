@@ -1,0 +1,49 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: bookong-production-db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Express
+      - SA_PASSWORD=${SA_PASSWORD}
+    volumes:
+      - bookong-production-sqldata:/var/opt/mssql
+    networks:
+      - bookong-production-internal
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ../
+      dockerfile: deploy/Dockerfile
+    image: bookong-production-app
+    container_name: bookong-production-app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - ConnectionStrings__DefaultConnection=Server=db,1433;Database=BookongDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;Encrypt=False
+    depends_on:
+      - db
+    networks:
+      - bookong-production-internal
+      - traefik-public
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bookong-production.rule=Host(`bookong.spstrutnov.cz`)"
+      - "traefik.http.routers.bookong-production.entrypoints=https"
+      - "traefik.http.routers.bookong-production.tls=true"
+      - "traefik.http.routers.bookong-production.tls.certresolver=letsencrypt"
+      - "traefik.http.services.bookong-production.loadbalancer.server.port=8080"
+      - "traefik.docker.network=traefik-public"
+    restart: unless-stopped
+
+volumes:
+  bookong-production-sqldata:
+    name: bookong-production-sqldata
+
+networks:
+  bookong-production-internal:
+    name: bookong-production-internal
+  traefik-public:
+    name: traefik-public
+    external: true

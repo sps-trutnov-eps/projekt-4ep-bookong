@@ -8,9 +8,47 @@ using Microsoft.Extensions.Logging;
 
 var root = new RootCommand("Bookong CLI tool");
 
+var connOpt = new Option<string?>(name: "--connection", description: "Connection string to the SQL Server database. If not provided, defaults to LocalDB.");
+
+// migrate command
+var migrateCmd = new Command("migrate", "Run database migrations only (no seeding)")
+{
+    connOpt
+};
+
+migrateCmd.SetHandler(async (InvocationContext ctx) =>
+{
+    var connection = ctx.ParseResult.GetValueForOption(connOpt);
+
+    // Determine connection string
+    var connectionString = !string.IsNullOrWhiteSpace(connection)
+        ? connection
+        : Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+          ?? "Server=(localdb)\\mssqllocaldb;Database=BookongDb;Trusted_Connection=True;";
+
+    // Build services
+    var services = new ServiceCollection();
+    services.AddLogging(b =>
+    {
+        b.AddConsole();
+        b.SetMinimumLevel(LogLevel.Information);
+    });
+    services.AddDbContext<BookongDbContext>(opt => opt.UseSqlServer(connectionString));
+
+    await using var provider = services.BuildServiceProvider();
+    using var scope = provider.CreateScope();
+
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Migrate");
+    var db = scope.ServiceProvider.GetRequiredService<BookongDbContext>();
+
+    logger.LogInformation("Running database migrations...");
+    await db.Database.MigrateAsync(ctx.GetCancellationToken());
+    logger.LogInformation("Migrations complete.");
+});
+
+// seed command
 var demoOpt = new Option<bool>(name: "--demo", description: "Include demo data (authors, warehouses, books)", getDefaultValue: () => true);
 var resetOpt = new Option<bool>(name: "--reset", description: "Soft reset demo data before seeding", getDefaultValue: () => false);
-var connOpt = new Option<string?>(name: "--connection", description: "Connection string to the SQL Server database. If not provided, defaults to LocalDB.");
 
 var seedCmd = new Command("seed", "Run database seeders (lookups and optionally demo data)")
 {
@@ -69,6 +107,7 @@ seedCmd.SetHandler(async (InvocationContext ctx) =>
     logger.LogInformation("Seeding complete.");
 });
 
+root.AddCommand(migrateCmd);
 root.AddCommand(seedCmd);
 
 return await root.InvokeAsync(args);
