@@ -90,6 +90,9 @@
 </div>
 
 @code {
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
     private LoginModel loginModel { get; } = new();
     private RegistrationModel registrationModel { get; } = new();
     private string? debugMessage;
@@ -125,7 +128,7 @@
 
             if (result.Success)
             {
-                Navigation.NavigateTo("/portalpage", forceLoad: true);
+                Navigation.NavigateTo(GetSafeReturnUrl(), forceLoad: true);
                 return;
             }
 
@@ -153,12 +156,27 @@
             {
                 SetStatus("Registrace dokončena! Přesměrování...", false);
                 await Task.Delay(500);
-                Navigation.NavigateTo("/portalpage", forceLoad: true);
+                Navigation.NavigateTo(GetSafeReturnUrl(), forceLoad: true);
                 return;
             }
 
             SetStatus(response?.Message ?? "Registrace se nezdařila", true);
         }, "Chyba při dokončování registrace");
+
+    private string GetSafeReturnUrl()
+    {
+        if (string.IsNullOrWhiteSpace(ReturnUrl))
+        {
+            return "/portalpage";
+        }
+
+        if (Uri.TryCreate(ReturnUrl, UriKind.Absolute, out _))
+        {
+            return "/portalpage";
+        }
+
+        return ReturnUrl.StartsWith('/') ? ReturnUrl : $"/{ReturnUrl}";
+    }
 
     private async Task ExecuteWithUiStateAsync(Func<Task> action, string errorPrefix)
     {

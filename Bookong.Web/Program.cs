@@ -9,8 +9,7 @@ using Bookong.Application.UseCases.Interfaces;
 using Bookong.Application.UseCases;
 using Bookong.Application.Services.Interfaces;
 using Bookong.Web.Services;
-using Bookong.Application.UseCases.Interfaces;
-using Bookong.Application.UseCases;
+
 using Bookong.Application.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -27,9 +26,16 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Application UseCases, Queries
 builder.Services.AddScoped<IGetAvailableBooksQuery, GetAvailableBooksQuery>();
+builder.Services.AddScoped<IGetMaturitaBookSelectionQuery, GetMaturitaBookSelectionQuery>();
+builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
+builder.Services.AddScoped<IExportBooksQuery, ExportBooksQuery>();
 builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
 builder.Services.AddScoped<ICompleteUserRegistrationUseCase, CompleteUserRegistrationUseCase>();
 builder.Services.AddScoped<IActiveDirectoryService, MockActiveDirectoryService>();
+builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase>();
+builder.Services.AddScoped<IDeselectMaturitaBookUseCase, DeselectMaturitaBookUseCase>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
 
 builder.Services.AddHttpContextAccessor();
 
