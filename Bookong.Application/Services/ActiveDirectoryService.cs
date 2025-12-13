@@ -33,33 +33,5 @@ namespace Bookong.Application.Services
                 }
             }
         }
-
-        public Task<string?> GetUserOranizationalUnitAsync(string username)
-        {
-            // TODO: Implement LDAP query to get OU
-            // For now, return a default OU
-            return Task.FromResult<string?>("Users");
-        }
-
-        public Task<(string Name, string Email, Guid ObjectGuid)?> GetUserDetailsAsync(string username)
-        {
-            // Simple implementation: return basic user info based on username
-            // Use a deterministic GUID based on username hash to ensure consistency
-            var guidBytes = System.Text.Encoding.UTF8.GetBytes(username).Take(16).ToArray();
-            if (guidBytes.Length < 16)
-            {
-                var padding = new byte[16 - guidBytes.Length];
-                guidBytes = guidBytes.Concat(padding).ToArray();
-            }
-            var objectGuid = new Guid(guidBytes);
-
-            var usernamePart = username.Split('@')[0];
-            
-            return Task.FromResult<(string Name, string Email, Guid ObjectGuid)?>((
-                Name: usernamePart,
-                Email: username,
-                ObjectGuid: objectGuid
-            ));
-        }
     }
 }
