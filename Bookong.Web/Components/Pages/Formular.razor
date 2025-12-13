@@ -39,13 +39,13 @@
             else if (!addingAuthor)
             {
                 <div class="d-flex gap-2">
-                    <select class="form-select" @bind="Model.AuthorId">
+                    <InputSelect class="form-select" @bind-Value="Model.AuthorId">
                         <option value="">-- Vyberte autora --</option>
                         @foreach (var a in Authors)
                         {
-                            @:<option value="@a.Id">@a.Name</option>
+                            <option value="@a.Id">@a.Name</option>
                         }
-                    </select>
+                    </InputSelect>
                     <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddAuthor(true)">Přidat nového autora</button>
                 </div>
             }
@@ -97,13 +97,13 @@
                 else if (!addingGenre)
                 {
                     <div class="d-flex gap-2">
-                        <select class="form-select" @bind="Model.GenreId">
+                        <InputSelect class="form-select" @bind-Value="Model.GenreId">
                             <option value="">-- Vyberte žánr --</option>
                             @foreach (var g in Genres)
                             {
-                                @:<option value="@g.Id">@g.Name</option>
+                                <option value="@g.Id">@g.Name</option>
                             }
-                        </select>
+                        </InputSelect>
                         <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddGenre(true)">Přidat nový žánr</button>
                     </div>
                 }
@@ -138,13 +138,13 @@
                 else if (!addingKind)
                 {
                     <div class="d-flex gap-2">
-                        <select class="form-select" @bind="Model.KindId">
+                        <InputSelect class="form-select" @bind-Value="Model.KindId">
                             <option value="">-- Vyberte druh --</option>
                             @foreach (var k in Kinds)
                             {
-                                @:<option value="@k.Id">@k.Name</option>
+                                <option value="@k.Id">@k.Name</option>
                             }
-                        </select>
+                        </InputSelect>
                         <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddKind(true)">Přidat nový druh</button>
                     </div>
                 }
@@ -179,13 +179,13 @@
                 else if (!addingPeriod)
                 {
                     <div class="d-flex gap-2">
-                        <select class="form-select" @bind="Model.PeriodId">
+                        <InputSelect class="form-select" @bind-Value="Model.PeriodId">
                             <option value="">-- Vyberte období --</option>
                             @foreach (var p in Periods)
                             {
-                                @:<option value="@p.Id">@p.Name</option>
+                                <option value="@p.Id">@p.Name</option>
                             }
-                        </select>
+                        </InputSelect>
                         <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddPeriod(true)">Přidat nové období</button>
                     </div>
                 }
@@ -233,13 +233,13 @@
             else if (!addingWarehouse)
             {
                 <div class="d-flex gap-2">
-                    <select class="form-select" @bind="Model.WarehouseId">
+                    <InputSelect class="form-select" @bind-Value="Model.WarehouseId">
                         <option value="">-- Vyberte sklad --</option>
                         @foreach (var w in Warehouses)
                         {
-                            @:<option value="@w.Id">@w.Name</option>
+                            <option value="@w.Id">@w.Name</option>
                         }
-                    </select>
+                    </InputSelect>
                     <button type="button" class="btn btn-outline-secondary" @onclick="() => ToggleAddWarehouse(true)">Přidat nový sklad</button>
                 </div>
             }
