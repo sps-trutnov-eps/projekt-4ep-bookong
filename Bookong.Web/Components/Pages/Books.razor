@@ -164,7 +164,7 @@
     private List<string> genres = new();
     private List<string> types = new();
 
-    // availability - tracks books by key properties
+    // availability - tracks books by composite key (Title, Author, Genre, Kind)
     private HashSet<string> availableBookKeys = new();
 
     protected override async Task OnInitializedAsync()
@@ -196,9 +196,11 @@
                 .OrderBy(t => t)
                 .ToList();
 
-            // Load available book keys
-            var availableKeys = await GetAvailableMaturitaBooksQuery.ExecuteAsync();
-            availableBookKeys = availableKeys.ToHashSet();
+            // Load available books and create composite keys
+            var availableBooks = await GetAvailableMaturitaBooksQuery.ExecuteAsync();
+            availableBookKeys = availableBooks
+                .Select(b => GetBookKey(b.Title, b.AuthorFullName, b.GenreName, b.KindName))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             ApplyFilters();
         }
@@ -213,18 +215,15 @@
         }
     }
 
-    private string GetBookKey(BookListItemDto book)
+    private string GetBookKey(string? title, string? author, string? genre, string? kind)
     {
-        var authorParts = book.AuthorFullName?.Split(' ') ?? Array.Empty<string>();
-        var firstName = authorParts.Length > 0 ? authorParts[0] : "";
-        var lastName = authorParts.Length > 1 ? authorParts[^1] : "";
-        
-        return $"{book.Title}|{firstName}|{lastName}|{book.Genre}|{book.Kind}".ToLowerInvariant();
+        return $"{title?.Trim()}|{author?.Trim()}|{genre?.Trim()}|{kind?.Trim()}".ToLowerInvariant();
     }
 
     private bool IsBookAvailable(BookListItemDto book)
     {
-        return availableBookKeys.Contains(GetBookKey(book));
+        var key = GetBookKey(book.Title, book.AuthorFullName, book.Genre, book.Kind);
+        return availableBookKeys.Contains(key);
     }
 
     private async Task OnAddToSelection(Guid bookId)

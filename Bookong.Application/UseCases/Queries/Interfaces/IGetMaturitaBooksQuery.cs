@@ -1,7 +1,9 @@
+using Bookong.Application.DTOs;
+
 namespace Bookong.Application.UseCases.Queries.Interfaces
 {
     public interface IGetMaturitaBooksQuery
     {
-        Task<IEnumerable<string>> ExecuteAsync();
+        Task<IEnumerable<BookDetailDto>> ExecuteAsync();
     }
 }

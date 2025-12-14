@@ -1,34 +1,44 @@
+using Bookong.Application.DTOs;
 using Bookong.Application.UseCases.Queries.Interfaces;
-using Bookong.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using Bookong.Domain.Interfaces;
 
 namespace Bookong.Application.UseCases.Queries
 {
     public class GetMaturitaBooksQuery : IGetMaturitaBooksQuery
     {
-        private readonly BookongDbContext _dbContext;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public GetMaturitaBooksQuery(BookongDbContext dbContext)
+        public GetMaturitaBooksQuery(IUnitOfWork unitOfWork)
         {
-            _dbContext = dbContext;
+            _unitOfWork = unitOfWork;
         }
 
-        public async Task<IEnumerable<string>> ExecuteAsync()
+        public async Task<IEnumerable<BookDetailDto>> ExecuteAsync()
         {
-            var maturitaBooks = await _dbContext.MaturitaBooks
-                .AsNoTracking()
-                .Include(mb => mb.Author)
-                .Include(mb => mb.Genre)
-                .Include(mb => mb.Kind)
-                .ToListAsync();
+            var maturitaBooks = await _unitOfWork.MaturitaBooks.GetAllWithDetailsAsync();
 
-            return maturitaBooks.Select(mb =>
-                GetBookKey(mb.Name, mb.Author?.FirstName, mb.Author?.LastName, mb.Genre?.Name, mb.Kind?.Name));
-        }
-
-        private static string GetBookKey(string? title, string? authorFirst, string? authorLast, string? genre, string? kind)
-        {
-            return $"{title}|{authorFirst}|{authorLast}|{genre}|{kind}".ToLowerInvariant();
+            return maturitaBooks.Select(mb => new BookDetailDto
+            {
+                PublicId = Guid.NewGuid(), // Temporary - not used for matching
+                Title = mb.Name,
+                AuthorId = mb.Author?.PublicId ?? Guid.Empty,
+                AuthorFullName = mb.Author != null 
+                    ? $"{mb.Author.FirstName} {mb.Author.LastName}".Trim() 
+                    : "",
+                ISBN = "",
+                Pages = 0,
+                GenreId = mb.Genre?.Id ?? 0,
+                GenreName = mb.Genre?.Name ?? "",
+                KindId = mb.Kind?.Id ?? 0,
+                KindName = mb.Kind?.Name ?? "",
+                PeriodId = mb.Period?.Id ?? 0,
+                PeriodName = mb.Period?.Name ?? "",
+                PublisherId = null,
+                PublisherName = null,
+                DateRelease = null,
+                WarehouseId = null,
+                WarehouseName = null
+            });
         }
     }
 }

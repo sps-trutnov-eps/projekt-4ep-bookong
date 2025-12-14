@@ -58,6 +58,14 @@
         </div>
     }
 
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @successMessage
+            <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+        </div>
+    }
+
     @if (isLoading)
     {
         <div class="d-flex justify-content-center">
@@ -132,6 +140,7 @@
     private bool isProcessing;
     private Guid processingBookId;
     private string? errorMessage;
+    private string? successMessage;
 
     // Temporary filter inputs
     private string tempSearchText = "";
@@ -148,6 +157,11 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
         try
         {
             isLoading = true;
@@ -155,9 +169,11 @@
             // Load all books
             books = (await GetAllBooksQuery.ExecuteAsync()).ToList();
 
-            // Load available book keys
-            var availableKeys = await GetAvailableMaturitaBooksQuery.ExecuteAsync();
-            availableBookKeys = availableKeys.ToHashSet();
+            // Load available books and create composite keys
+            var availableBooks = await GetAvailableMaturitaBooksQuery.ExecuteAsync();
+            availableBookKeys = availableBooks
+                .Select(b => GetBookKey(b.Title, b.AuthorFullName, b.GenreName, b.KindName))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             // Populate filter options
             genres = books
@@ -186,18 +202,15 @@
         }
     }
 
-    private string GetBookKey(BookListItemDto book)
+    private string GetBookKey(string? title, string? author, string? genre, string? kind)
     {
-        var authorParts = book.AuthorFullName?.Split(' ') ?? Array.Empty<string>();
-        var firstName = authorParts.Length > 0 ? authorParts[0] : "";
-        var lastName = authorParts.Length > 1 ? authorParts[^1] : "";
-
-        return $"{book.Title}|{firstName}|{lastName}|{book.Genre}|{book.Kind}".ToLowerInvariant();
+        return $"{title?.Trim()}|{author?.Trim()}|{genre?.Trim()}|{kind?.Trim()}".ToLowerInvariant();
     }
 
     private bool IsBookAvailable(BookListItemDto book)
     {
-        return availableBookKeys.Contains(GetBookKey(book));
+        var key = GetBookKey(book.Title, book.AuthorFullName, book.Genre, book.Kind);
+        return availableBookKeys.Contains(key);
     }
 
     private async Task ToggleAvailableAsync(Guid bookPublicId)
@@ -208,10 +221,15 @@
         {
             isProcessing = true;
             processingBookId = bookPublicId;
+            errorMessage = null;
+            successMessage = null;
             StateHasChanged();
 
+            var book = books?.FirstOrDefault(b => b.PublicId == bookPublicId);
+            if (book == null) return;
+
             GenericResponse result;
-            bool isCurrentlyAvailable = books?.FirstOrDefault(b => b.PublicId == bookPublicId) is { } book && IsBookAvailable(book);
+            bool isCurrentlyAvailable = IsBookAvailable(book);
 
             if (isCurrentlyAvailable)
             {
@@ -227,9 +245,13 @@
 
             if (result.Success)
             {
-                // Reload available keys
-                var availableKeys = await GetAvailableMaturitaBooksQuery.ExecuteAsync();
-                availableBookKeys = availableKeys.ToHashSet();
+                successMessage = result.Message;
+                
+                // Reload available books and create composite keys
+                var availableBooks = await GetAvailableMaturitaBooksQuery.ExecuteAsync();
+                availableBookKeys = availableBooks
+                    .Select(b => GetBookKey(b.Title, b.AuthorFullName, b.GenreName, b.KindName))
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
             }
             else
             {
