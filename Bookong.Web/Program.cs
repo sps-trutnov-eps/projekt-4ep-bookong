@@ -19,22 +19,17 @@ builder.Services.AddDbContext<BookongDbContext>(options =>
 // Unit of Work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-// Application use cases and queries
+// Application UseCases, Queries
 builder.Services.AddScoped<IGetAvailableBooksQuery, GetAvailableBooksQuery>();
 builder.Services.AddScoped<IGetAllBooksQuery, GetAllBooksQuery>();
 builder.Services.AddScoped<IGetMaturitaBookSelectionQuery, GetMaturitaBookSelectionQuery>();
 builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase>();
 builder.Services.AddScoped<IDeselectMaturitaBookUseCase, DeselectMaturitaBookUseCase>();
 builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
-
-// Register new query implementation required by adapter/wrapper
-builder.Services.AddScoped<IGetMaturitaBooksQuery, GetMaturitaBooksQuery>();
-
 // Queries
-// register implementation that matches IGetAvailableMaturitaBooksQuery (wrapper/adapter depends on IGetMaturitaBooksQuery)
 builder.Services.AddScoped<IGetAvailableMaturitaBooksQuery, GetAvailableMaturitaBooksQuery>();
 
-// Use cases
+// Use Cases
 builder.Services.AddScoped<IManageMaturitaBookAvailabilityUseCase, ManageMaturitaBookAvailabilityUseCase>();
 
 // Session services
@@ -48,7 +43,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ISessionService, SessionService>();
 
-// Add components to the DI container and enable interactive server components.
+// Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -57,8 +52,8 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    // Use a central error handler and HSTS in production.
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -66,7 +61,7 @@ app.UseHttpsRedirection();
 
 app.UseSession();
 
-// Development-only middleware that seeds a test user into the session
+// Development only middleware to set a test user in session
 if (app.Environment.IsDevelopment())
 {
     app.UseMiddleware<TestUserMiddleware>();
