@@ -3,8 +3,9 @@
 @using Bookong.Application.UseCases.Queries.Interfaces
 @using Bookong.Application.UseCases.Interfaces
 @inject IGetAllBooksQuery GetAllBooksQuery
-@inject IGetAvailableMaturitaBooksQuery GetAvailableMaturitaBooksQuery
-@inject IManageMaturitaBookAvailabilityUseCase ManageMaturitaAvailability
+@inject IGetMaturitaBooksQuery GetAvailableMaturitaBooksQuery
+@inject ICreateMaturitaBookUseCase CreateMaturitaUseCase
+@inject IDeleteMaturitaBookUseCase DeleteMaturitaUseCase
 @inject IJSRuntime JS
 
 <div class="container my-4">
@@ -209,7 +210,7 @@
             processingBookId = bookPublicId;
             StateHasChanged();
 
-            OperationResult result;
+            GenericResponse result;
             bool isCurrentlyAvailable = books?.FirstOrDefault(b => b.PublicId == bookPublicId) is { } book && IsBookAvailable(book);
 
             if (isCurrentlyAvailable)
@@ -217,11 +218,11 @@
                 var ok = await JS.InvokeAsync<bool>("confirm", "Opravdu chcete odebrat knihu z dostupných?");
                 if (!ok) return;
 
-                result = await ManageMaturitaAvailability.RemoveFromAvailableAsync(bookPublicId);
+                result = await DeleteMaturitaUseCase.RemoveFromAvailableAsync(bookPublicId);
             }
             else
             {
-                result = await ManageMaturitaAvailability.AddToAvailableAsync(bookPublicId);
+                result = await CreateMaturitaUseCase.AddToAvailableAsync(bookPublicId);
             }
 
             if (result.Success)

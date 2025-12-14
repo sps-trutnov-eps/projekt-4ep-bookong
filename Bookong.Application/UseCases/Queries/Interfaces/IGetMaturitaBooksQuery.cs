@@ -1,6 +1,6 @@
 namespace Bookong.Application.UseCases.Queries.Interfaces
 {
-    public interface IGetAvailableMaturitaBooksQuery
+    public interface IGetMaturitaBooksQuery
     {
         Task<IEnumerable<string>> ExecuteAsync();
     }

@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bookong.Application.UseCases.Queries
 {
-    public class GetAvailableMaturitaBooksQuery : IGetAvailableMaturitaBooksQuery
+    public class GetMaturitaBooksQuery : IGetMaturitaBooksQuery
     {
         private readonly BookongDbContext _dbContext;
 
-        public GetAvailableMaturitaBooksQuery(BookongDbContext dbContext)
+        public GetMaturitaBooksQuery(BookongDbContext dbContext)
         {
             _dbContext = dbContext;
         }

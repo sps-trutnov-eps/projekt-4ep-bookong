@@ -27,10 +27,12 @@ builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase
 builder.Services.AddScoped<IDeselectMaturitaBookUseCase, DeselectMaturitaBookUseCase>();
 builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
 // Queries
-builder.Services.AddScoped<IGetAvailableMaturitaBooksQuery, GetAvailableMaturitaBooksQuery>();
+builder.Services.AddScoped<IGetMaturitaBooksQuery, GetMaturitaBooksQuery>();
 
-// Use Cases
-builder.Services.AddScoped<IManageMaturitaBookAvailabilityUseCase, ManageMaturitaBookAvailabilityUseCase>();
+// Use Cases (doporuèeno: jedna instance implementace pro obì rozhraní)
+builder.Services.AddScoped<ManageMaturitaBookAvailabilityUseCase>();
+builder.Services.AddScoped<ICreateMaturitaBookUseCase>(sp => sp.GetRequiredService<ManageMaturitaBookAvailabilityUseCase>());
+builder.Services.AddScoped<IDeleteMaturitaBookUseCase>(sp => sp.GetRequiredService<ManageMaturitaBookAvailabilityUseCase>());
 
 // Session services
 builder.Services.AddDistributedMemoryCache();
