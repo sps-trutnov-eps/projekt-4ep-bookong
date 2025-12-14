@@ -275,20 +275,7 @@
     </EditForm>
 
     <div class="mt-4 text-muted small">
-        <!--
-         TODO: Wiring notes for database integration:
-        1) Inject queries/usecases via DI at the top of the component, e.g.
-         @inject IGetAuthorsQuery GetAuthorsQuery
-         @inject ICreateBookUseCase CreateBookUseCase
-        2) Replace LoadPlaceholdersAsync with actual queries in OnInitializedAsync:
-         Authors = await GetAuthorsQuery.ExecuteAsync();
-         Genres = await GetGenresQuery.ExecuteAsync();
-         ...
-        3) In HandleValidSubmit call CreateBookUseCase.ExecuteAsync(Model) and handle GenericResponse.
-        4) Persist any newly created related entities (NewAuthorsTemp, NewGenresTemp...) using a UseCase
-         or repository flow inside Application layer and call UnitOfWork.CommitAsync there.
-        5) Remove temporary negative IDs mapping when real persistence is implemented.
-         -->
+         <!-- Wiring implemented: form options query, duplicate checks and create-book use case are wired and used in this component. -->
     </div>
 </div>
 
@@ -667,34 +654,39 @@
     }
 
     // Validation helpers for subforms
-    private void ValidateAndAddAuthor()
+    private async Task ValidateAndAddAuthor()
     {
         NewAuthorErrors = ValidateModel(NewAuthor);
-        if (NewAuthorErrors.Count == 0) _ = OnAddAuthor();
+        if (NewAuthorErrors.Count ==0) await OnAddAuthor();
+        else await InvokeAsync(StateHasChanged);
     }
 
-    private void ValidateAndAddGenre()
+    private async Task ValidateAndAddGenre()
     {
         NewGenreErrors = ValidateModel(NewGenre);
-        if (NewGenreErrors.Count == 0) _ = OnAddGenre();
+        if (NewGenreErrors.Count ==0) await OnAddGenre();
+        else await InvokeAsync(StateHasChanged);
     }
 
-    private void ValidateAndAddKind()
+    private async Task ValidateAndAddKind()
     {
         NewKindErrors = ValidateModel(NewKind);
-        if (NewKindErrors.Count == 0) _ = OnAddKind();
+        if (NewKindErrors.Count ==0) await OnAddKind();
+        else await InvokeAsync(StateHasChanged);
     }
 
-    private void ValidateAndAddPeriod()
+    private async Task ValidateAndAddPeriod()
     {
         NewPeriodErrors = ValidateModel(NewPeriod);
-        if (NewPeriodErrors.Count == 0) _ = OnAddPeriod();
+        if (NewPeriodErrors.Count ==0) await OnAddPeriod();
+        else await InvokeAsync(StateHasChanged);
     }
 
-    private void ValidateAndAddWarehouse()
+    private async Task ValidateAndAddWarehouse()
     {
         NewWarehouseErrors = ValidateModel(NewWarehouse);
-        if (NewWarehouseErrors.Count == 0) _ = OnAddWarehouse();
+        if (NewWarehouseErrors.Count ==0) await OnAddWarehouse();
+        else await InvokeAsync(StateHasChanged);
     }
 
     private List<string> ValidateModel(object model)
