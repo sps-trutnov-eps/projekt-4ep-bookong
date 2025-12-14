@@ -22,31 +22,18 @@ namespace Bookong.Application.UseCases
         {
             if (dto is null) throw new ArgumentNullException(nameof(dto));
 
-            // Basic validation consistent with DTO attributes
             if (string.IsNullOrWhiteSpace(dto.Title))
                 throw new ValidationException("Title is required.", null, nameof(dto.Title));
-            if (!dto.AuthorId.HasValue)
-                throw new ValidationException("AuthorId is required.", null, nameof(dto.AuthorId));
-            if (!dto.GenreId.HasValue)
-                throw new ValidationException("GenreId is required.", null, nameof(dto.GenreId));
-            if (!dto.KindId.HasValue)
-                throw new ValidationException("KindId is required.", null, nameof(dto.KindId));
-            if (!dto.PeriodId.HasValue)
-                throw new ValidationException("PeriodId is required.", null, nameof(dto.PeriodId));
-            if (!dto.Pages.HasValue || dto.Pages.Value == 0)
-                throw new ValidationException("Pages must be provided and greater than zero.", null, nameof(dto.Pages));
-            if (dto.Pages.Value < 1 || dto.Pages.Value > 10000)
-                throw new ValidationException("Pages must be between 1 and 10000.", null, nameof(dto.Pages));
 
-            // Prepare variables for newly created related entities
             Author? newAuthor = null;
             Genre? newGenre = null;
             Kind? newKind = null;
             Period? newPeriod = null;
+            Publisher? newPublisher = null;
             Warehouse? newWarehouse = null;
 
-            // Create new author if negative temp id referenced
-            if (dto.AuthorId.HasValue && dto.AuthorId.Value < 0 && dto.NewAuthors != null)
+            // Create new entities if negative temp id referenced
+            if (!dto.SkipAuthor && dto.AuthorId.HasValue && dto.AuthorId.Value < 0 && dto.NewAuthors != null)
             {
                 var temp = dto.NewAuthors.FirstOrDefault(a => a.TempId == dto.AuthorId.Value);
                 if (temp != null)
@@ -63,7 +50,7 @@ namespace Bookong.Application.UseCases
                 }
             }
 
-            if (dto.GenreId.HasValue && dto.GenreId.Value < 0 && dto.NewGenres != null)
+            if (!dto.SkipGenre && dto.GenreId.HasValue && dto.GenreId.Value < 0 && dto.NewGenres != null)
             {
                 var temp = dto.NewGenres.FirstOrDefault(g => g.TempId == dto.GenreId.Value);
                 if (temp != null)
@@ -73,7 +60,7 @@ namespace Bookong.Application.UseCases
                 }
             }
 
-            if (dto.KindId.HasValue && dto.KindId.Value < 0 && dto.NewKinds != null)
+            if (!dto.SkipKind && dto.KindId.HasValue && dto.KindId.Value < 0 && dto.NewKinds != null)
             {
                 var temp = dto.NewKinds.FirstOrDefault(k => k.TempId == dto.KindId.Value);
                 if (temp != null)
@@ -83,7 +70,7 @@ namespace Bookong.Application.UseCases
                 }
             }
 
-            if (dto.PeriodId.HasValue && dto.PeriodId.Value < 0 && dto.NewPeriods != null)
+            if (!dto.SkipPeriod && dto.PeriodId.HasValue && dto.PeriodId.Value < 0 && dto.NewPeriods != null)
             {
                 var temp = dto.NewPeriods.FirstOrDefault(p => p.TempId == dto.PeriodId.Value);
                 if (temp != null)
@@ -93,7 +80,17 @@ namespace Bookong.Application.UseCases
                 }
             }
 
-            if (dto.WarehouseId.HasValue && dto.WarehouseId.Value < 0 && dto.NewWarehouses != null)
+            if (!dto.SkipPublisher && dto.PublisherId.HasValue && dto.PublisherId.Value < 0 && dto.NewPublishers != null)
+            {
+                var temp = dto.NewPublishers.FirstOrDefault(p => p.TempId == dto.PublisherId.Value);
+                if (temp != null)
+                {
+                    newPublisher = new Publisher { PublicId = Guid.NewGuid(), Name = temp.Name ?? string.Empty };
+                    _unitOfWork.Publishers.Add(newPublisher);
+                }
+            }
+
+            if (!dto.SkipWarehouse && dto.WarehouseId.HasValue && dto.WarehouseId.Value < 0 && dto.NewWarehouses != null)
             {
                 var temp = dto.NewWarehouses.FirstOrDefault(w => w.TempId == dto.WarehouseId.Value);
                 if (temp != null)
@@ -107,7 +104,6 @@ namespace Bookong.Application.UseCases
                         ZipCode = temp.ZipCode ?? string.Empty
                     };
 
-                    // Warehouse requires Address navigation property
                     newWarehouse = new Warehouse
                     {
                         PublicId = Guid.NewGuid(),
@@ -120,64 +116,52 @@ namespace Bookong.Application.UseCases
                 }
             }
 
-            // Create Book entity. For newly created related entities we set navigation property; for existing ones set the FK.
             var book = new Book
             {
                 Name = dto.Title.Trim(),
-                ISBN = string.IsNullOrWhiteSpace(dto.ISBN) ? null : dto.ISBN.Trim(),
-                Pages = (ushort)dto.Pages.Value,
-                DateRelease = dto.DateRelease,
-                Borrowable = true
+                ISBN = dto.SkipISBN ? null : dto.ISBN?.Trim(),
+                Pages = dto.SkipPages ? null : (dto.Pages.HasValue ? (ushort?)dto.Pages.Value : null),
+                DateRelease = dto.SkipDateRelease ? null : dto.DateRelease,
+                Borrowable = dto.Borrowable
             };
 
-            if (newAuthor != null)
+            if (!dto.SkipAuthor)
             {
-                book.Author = newAuthor;
-            }
-            else if (dto.AuthorId.HasValue && dto.AuthorId.Value > 0)
-            {
-                book.AuthorId = dto.AuthorId.Value;
+                if (newAuthor != null) book.Author = newAuthor;
+                else if (dto.AuthorId.HasValue && dto.AuthorId.Value > 0) book.AuthorId = dto.AuthorId.Value;
             }
 
-            if (newGenre != null)
+            if (!dto.SkipGenre)
             {
-                book.Genre = newGenre;
-            }
-            else if (dto.GenreId.HasValue && dto.GenreId.Value > 0)
-            {
-                book.GenreId = dto.GenreId.Value;
+                if (newGenre != null) book.Genre = newGenre;
+                else if (dto.GenreId.HasValue && dto.GenreId.Value > 0) book.GenreId = dto.GenreId.Value;
             }
 
-            if (newKind != null)
+            if (!dto.SkipKind)
             {
-                book.Kind = newKind;
-            }
-            else if (dto.KindId.HasValue && dto.KindId.Value > 0)
-            {
-                book.KindId = dto.KindId.Value;
+                if (newKind != null) book.Kind = newKind;
+                else if (dto.KindId.HasValue && dto.KindId.Value > 0) book.KindId = dto.KindId.Value;
             }
 
-            if (newPeriod != null)
+            if (!dto.SkipPeriod)
             {
-                book.Period = newPeriod;
-            }
-            else if (dto.PeriodId.HasValue && dto.PeriodId.Value > 0)
-            {
-                book.PeriodId = dto.PeriodId.Value;
+                if (newPeriod != null) book.Period = newPeriod;
+                else if (dto.PeriodId.HasValue && dto.PeriodId.Value > 0) book.PeriodId = dto.PeriodId.Value;
             }
 
-            if (newWarehouse != null)
+            if (!dto.SkipPublisher)
             {
-                book.Warehouse = newWarehouse;
+                if (newPublisher != null) book.Publisher = newPublisher;
+                else if (dto.PublisherId.HasValue && dto.PublisherId.Value > 0) book.PublisherId = dto.PublisherId.Value;
             }
-            else if (dto.WarehouseId.HasValue && dto.WarehouseId.Value > 0)
+
+            if (!dto.SkipWarehouse)
             {
-                book.WarehouseId = dto.WarehouseId.Value;
+                if (newWarehouse != null) book.Warehouse = newWarehouse;
+                else if (dto.WarehouseId.HasValue && dto.WarehouseId.Value > 0) book.WarehouseId = dto.WarehouseId.Value;
             }
 
             _unitOfWork.Books.Add(book);
-
-            // Commit all changes atomically
             await _unitOfWork.CommitAsync();
 
             return book;

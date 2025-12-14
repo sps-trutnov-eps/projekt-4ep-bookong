@@ -7,27 +7,36 @@ namespace Bookong.Application.DTOs
         [Required(ErrorMessage = "Zadejte název knihy.")]
         public string? Title { get; set; }
 
-        [Required(ErrorMessage = "Vyberte autora.")]
         public int? AuthorId { get; set; }
+        public bool SkipAuthor { get; set; }
 
         public string? ISBN { get; set; }
+        public bool SkipISBN { get; set; }
 
-        [Required(ErrorMessage = "Vyberte žánr.")]
         public int? GenreId { get; set; }
+        public bool SkipGenre { get; set; }
 
-        [Required(ErrorMessage = "Vyberte literární druh.")]
         public int? KindId { get; set; }
+        public bool SkipKind { get; set; }
 
-        [Required(ErrorMessage = "Vyberte historické období.")]
         public int? PeriodId { get; set; }
+        public bool SkipPeriod { get; set; }
 
         // Use int? here so Blazor's InputNumber binds to a supported type. Will be cast to ushort when creating domain entity.
         [Range(1, 10000, ErrorMessage = "Počet stran musí být mezi 1 a 10 000.")]
         public int? Pages { get; set; }
+        public bool SkipPages { get; set; }
+
+        public int? PublisherId { get; set; }
+        public bool SkipPublisher { get; set; }
 
         public DateTime? DateRelease { get; set; }
+        public bool SkipDateRelease { get; set; }
 
         public int? WarehouseId { get; set; }
+        public bool SkipWarehouse { get; set; }
+
+        public bool Borrowable { get; set; } = true;
 
         // Collections for new related entities created inline in the form.
         // Each new item carries a TempId (negative) which matches the temporary select value used in the UI.
@@ -35,6 +44,7 @@ namespace Bookong.Application.DTOs
         public List<NewNameDto>? NewGenres { get; set; }
         public List<NewNameDto>? NewKinds { get; set; }
         public List<NewNameDto>? NewPeriods { get; set; }
+        public List<NewPublisherDto>? NewPublishers { get; set; }
         public List<NewWarehouseDto>? NewWarehouses { get; set; }
     }
 
@@ -48,6 +58,12 @@ namespace Bookong.Application.DTOs
     }
 
     public class NewNameDto
+    {
+        public int TempId { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+
+    public class NewPublisherDto
     {
         public int TempId { get; set; }
         public string Name { get; set; } = string.Empty;
@@ -73,6 +89,7 @@ namespace Bookong.Application.DTOs
         public List<SelectItemDto> Genres { get; set; } = new();
         public List<SelectItemDto> Kinds { get; set; } = new();
         public List<SelectItemDto> Periods { get; set; } = new();
+        public List<SelectItemDto> Publishers { get; set; } = new();
         public List<SelectItemDto> Warehouses { get; set; } = new();
 
     }

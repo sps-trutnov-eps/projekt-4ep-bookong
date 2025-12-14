@@ -45,6 +45,12 @@ namespace Bookong.Application.UseCases.Queries
  return list.Any(e => string.Equals(e.Name?.Trim(), name, StringComparison.OrdinalIgnoreCase));
  }
 
+ if (lower == "publisher" || lower == "publishers")
+ {
+ var list = await _uow.Publishers.GetAllAsync();
+ return list.Any(e => string.Equals(e.Name?.Trim(), name, StringComparison.OrdinalIgnoreCase));
+ }
+
  if (lower == "warehouse" || lower == "warehouses")
  {
  var list = await _uow.Warehouses.GetAllAsync();

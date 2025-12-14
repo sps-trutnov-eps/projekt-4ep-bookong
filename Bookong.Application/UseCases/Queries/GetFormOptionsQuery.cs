@@ -18,6 +18,7 @@ namespace Bookong.Application.UseCases.Queries
  var genres = (await _uow.Genres.GetAllAsync()).Select(g => new SelectItemDto { Id = g.Id, Name = g.Name }).ToList();
  var kinds = (await _uow.Kinds.GetAllAsync()).Select(k => new SelectItemDto { Id = k.Id, Name = k.Name }).ToList();
  var periods = (await _uow.Periods.GetAllAsync()).Select(p => new SelectItemDto { Id = p.Id, Name = p.Name }).ToList();
+ var publishers = (await _uow.Publishers.GetAllAsync()).Select(pub => new SelectItemDto { Id = pub.Id, Name = pub.Name }).ToList();
  var warehouses = (await _uow.Warehouses.GetAllAsync()).Select(w => new SelectItemDto { Id = w.Id, Name = w.Name }).ToList();
 
  return new FormOptionsDto
@@ -26,6 +27,7 @@ namespace Bookong.Application.UseCases.Queries
  Genres = genres,
  Kinds = kinds,
  Periods = periods,
+ Publishers = publishers,
  Warehouses = warehouses
  };
  }
