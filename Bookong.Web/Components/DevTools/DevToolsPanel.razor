@@ -1,0 +1,220 @@
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Bookong.Domain.Interfaces
+@using Bookong.Web.Services
+@using Microsoft.JSInterop
+@inject IUnitOfWork UnitOfWork
+@inject CookieAuthenticationStateProvider CookieAuthProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<div class="devtools-container @(isOpen ? "open" : "")">
+    <div class="devtools-wrapper">
+        <button class="devtools-tab" @onclick="TogglePanel" title="Developer Tools">
+            <span class="devtools-icon">🛠️</span>
+            <span class="devtools-label">DEV</span>
+        </button>
+        
+        <div class="devtools-panel">
+            <div class="devtools-header">
+                <h3>🔧 Developer Tools</h3>
+                <button class="close-btn" @onclick="TogglePanel">✕</button>
+            </div>
+            
+            <div class="devtools-content">
+                <!-- Current User Info -->
+                <div class="devtools-section">
+                    <h4>Current User</h4>
+                    <AuthorizeView>
+                        <Authorized>
+                            <div class="user-info">
+                                <p><strong>Username:</strong> @context.User.FindFirst(ClaimTypes.Name)?.Value</p>
+                                <p><strong>Email:</strong> @context.User.FindFirst(ClaimTypes.Email)?.Value</p>
+                                <p><strong>Role (cookie):</strong> 
+                                    <span class="role-badge @(context.User.IsInRole("admin") ? "admin" : "user")">
+                                        @(context.User.IsInRole("admin") ? "Admin" : "Default")
+                                    </span>
+                                </p>
+                                <p><strong>Role (DB):</strong> 
+                                    <span class="role-badge @(string.Equals(dbOrganizationalUnit, "Admin", StringComparison.OrdinalIgnoreCase) ? "admin" : "user")">
+                                        @dbOrganizationalUnit
+                                    </span>
+                                    @if (!string.Equals(context.User.FindFirst("organizational_unit")?.Value, dbOrganizationalUnit, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="sync-warning">⚠️ Re-login needed</span>
+                                    }
+                                </p>
+                            </div>
+                        </Authorized>
+                        <NotAuthorized>
+                            <p class="not-authenticated">Not authenticated</p>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+
+                <!-- Role Toggle -->
+                <div class="devtools-section">
+                    <h4>Role Management</h4>
+                    <AuthorizeView>
+                        <Authorized>
+                            <div class="button-group">
+                                <button class="dev-btn admin-btn" @onclick="MakeAdmin" disabled="@isLoading">
+                                    @if (isLoading && currentAction == "admin")
+                                    {
+                                        <span>⏳ Processing...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>👑 Make Admin</span>
+                                    }
+                                </button>
+                                <button class="dev-btn user-btn" @onclick="MakeUser" disabled="@isLoading">
+                                    @if (isLoading && currentAction == "user")
+                                    {
+                                        <span>⏳ Processing...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>👤 Make User</span>
+                                    }
+                                </button>
+                            </div>
+                            @if (!string.IsNullOrEmpty(message))
+                            {
+                                <div class="message @messageType">@message</div>
+                            }
+                        </Authorized>
+                        <NotAuthorized>
+                            <p class="warning">Please log in to use dev tools</p>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+
+                <!-- Mock Accounts -->
+                <div class="devtools-section">
+                    <h4>Mock Accounts</h4>
+                    <div class="mock-accounts">
+                        <div class="account-item">
+                            <strong>sysm22</strong>
+                            <span class="password">pushpushcommit</span>
+                        </div>
+                        <div class="account-item">
+                            <strong>stejskalm22</strong>
+                            <span class="password">miluju-backhand</span>
+                        </div>
+                        <div class="account-item">
+                            <strong>spurm22</strong>
+                            <span class="password">billionare</span>
+                        </div>
+                        <div class="account-item">
+                            <strong>nyms</strong>
+                            <span class="password">PZtka</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Environment Info -->
+                <div class="devtools-section">
+                    <h4>Environment</h4>
+                    <p><strong>Base URL:</strong> @Navigation.BaseUri</p>
+                    <p><strong>Mode:</strong> <span class="env-badge">Development</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool isOpen = false;
+    private bool isLoading = false;
+    private string message = string.Empty;
+    private string messageType = string.Empty;
+    private string currentAction = string.Empty;
+    private string dbOrganizationalUnit = "Default";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDbRole();
+    }
+
+    private async Task LoadDbRole()
+    {
+        var authState = await CookieAuthProvider.GetAuthenticationStateAsync();
+        var username = authState.User.FindFirst(ClaimTypes.Name)?.Value;
+        
+        if (!string.IsNullOrEmpty(username))
+        {
+            var user = await UnitOfWork.Users.GetBySamAccountNameAsync(username);
+            dbOrganizationalUnit = user?.OrganizationalUnit ?? "Default";
+        }
+    }
+
+    private void TogglePanel()
+    {
+        isOpen = !isOpen;
+        if (!isOpen)
+        {
+            message = string.Empty;
+        }
+    }
+
+    private async Task MakeAdmin()
+    {
+        await ToggleRole("Admin", "admin");
+    }
+
+    private async Task MakeUser()
+    {
+        await ToggleRole("Default", "user");
+    }
+
+    private async Task ToggleRole(string organizationalUnit, string action)
+    {
+        isLoading = true;
+        currentAction = action;
+        message = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var authState = await CookieAuthProvider.GetAuthenticationStateAsync();
+            var username = authState.User.FindFirst(ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrEmpty(username))
+            {
+                message = "Not authenticated";
+                messageType = "error";
+                return;
+            }
+
+            var user = await UnitOfWork.Users.GetBySamAccountNameAsync(username);
+            if (user == null)
+            {
+                message = "User not found in database";
+                messageType = "error";
+                return;
+            }
+
+            user.OrganizationalUnit = organizationalUnit;
+            await UnitOfWork.CommitAsync();
+
+            dbOrganizationalUnit = organizationalUnit;
+
+            message = organizationalUnit == "Admin" 
+                ? "✓ Now Admin! Re-login to apply." 
+                : "✓ Now User! Re-login to apply.";
+            messageType = "success";
+        }
+        catch (Exception ex)
+        {
+            message = $"Error: {ex.Message}";
+            messageType = "error";
+        }
+        finally
+        {
+            isLoading = false;
+            currentAction = string.Empty;
+            StateHasChanged();
+        }
+    }
+}
