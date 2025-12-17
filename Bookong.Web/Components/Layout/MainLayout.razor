@@ -24,7 +24,7 @@
     <FooterLayout />
 </div>
 
-@if (Environment.IsDevelopment())
+@if (Environment.IsDevelopment() || Environment.IsStaging())
 {
     <DevToolsPanel />
 }
