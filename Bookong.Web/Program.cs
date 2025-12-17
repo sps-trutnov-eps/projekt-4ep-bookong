@@ -31,10 +31,17 @@ builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery
 builder.Services.AddScoped<IExportBooksQuery, ExportBooksQuery>();
 builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
 builder.Services.AddScoped<ICompleteUserRegistrationUseCase, CompleteUserRegistrationUseCase>();
-builder.Services.AddScoped<IActiveDirectoryService, MockActiveDirectoryService>();
 builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase>();
 builder.Services.AddScoped<IDeselectMaturitaBookUseCase, DeselectMaturitaBookUseCase>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddScoped<IActiveDirectoryService, MockActiveDirectoryService>();
+}
+else
+{
+    builder.Services.AddScoped<IActiveDirectoryService, ActiveDirectoryService>();
+}
 
 
 builder.Services.AddHttpContextAccessor();

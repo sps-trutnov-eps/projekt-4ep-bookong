@@ -1,4 +1,4 @@
-﻿using Bookong.Application.DTOs;
+using Bookong.Application.DTOs;
 using Bookong.Application.Services.Interfaces;
 using System.Net;
 using System.DirectoryServices.Protocols;
@@ -7,7 +7,7 @@ namespace Bookong.Application.Services
 {
     public class ActiveDirectoryService : IActiveDirectoryService
     {
-        private readonly string _ldapServer = "192.168.1.104";
+        private readonly string _ldapServer = "skola.local";
 
         public Task<bool> ValidateCredetialsAsync(string username, string password)
         {
