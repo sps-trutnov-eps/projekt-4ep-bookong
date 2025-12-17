@@ -7,6 +7,7 @@
 @inject CookieAuthenticationStateProvider CookieAuthProvider
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
+@inject IWebHostEnvironment Environment
 
 <div class="devtools-container @(isOpen ? "open" : "")">
     <div class="devtools-wrapper">
@@ -90,28 +91,32 @@
                     </AuthorizeView>
                 </div>
 
-                <!-- Mock Accounts -->
-                <div class="devtools-section">
-                    <h4>Mock Accounts</h4>
-                    <div class="mock-accounts">
-                        <div class="account-item">
-                            <strong>sysm22</strong>
-                            <span class="password">pushpushcommit</span>
-                        </div>
-                        <div class="account-item">
-                            <strong>stejskalm22</strong>
-                            <span class="password">miluju-backhand</span>
-                        </div>
-                        <div class="account-item">
-                            <strong>spurm22</strong>
-                            <span class="password">billionare</span>
-                        </div>
-                        <div class="account-item">
-                            <strong>nyms</strong>
-                            <span class="password">PZtka</span>
+                <!-- Mock Accounts (Development only) -->
+                @if (Environment.IsDevelopment())
+                {
+                    <div class="devtools-section">
+                        <h4>Mock Accounts</h4>
+                        <p class="dev-note"><strong>Note:</strong> These mock passwords are for development only and will not work in production or real deployments.</p>
+                        <div class="mock-accounts">
+                            <div class="account-item">
+                                <strong>sysm22</strong>
+                                <span class="password">pushpushcommit</span>
+                            </div>
+                            <div class="account-item">
+                                <strong>stejskalm22</strong>
+                                <span class="password">miluju-backhand</span>
+                            </div>
+                            <div class="account-item">
+                                <strong>spurm22</strong>
+                                <span class="password">billionare</span>
+                            </div>
+                            <div class="account-item">
+                                <strong>nyms</strong>
+                                <span class="password">PZtka</span>
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
 
                 <!-- Environment Info -->
                 <div class="devtools-section">
