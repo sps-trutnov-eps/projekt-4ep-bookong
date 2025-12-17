@@ -1,8 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Bookong.Application.DTOs
 {
-    public class CreateBookDto
+    public class CreateBookDto : IValidatableObject
     {
         [Required(ErrorMessage = "Zadejte název knihy.")]
         public string? Title { get; set; }
@@ -46,6 +48,55 @@ namespace Bookong.Application.DTOs
         public List<NewNameDto>? NewPeriods { get; set; }
         public List<NewPublisherDto>? NewPublishers { get; set; }
         public List<NewWarehouseDto>? NewWarehouses { get; set; }
+
+        // Conditional validation: when a "Skip" flag is false, the corresponding value must be provided.
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (!SkipAuthor && AuthorId == null)
+            {
+                yield return new ValidationResult("Vyberte autora nebo zaškrtněte 'Nevyplňovat'.", new[] { nameof(AuthorId) });
+            }
+
+            if (!SkipISBN && string.IsNullOrWhiteSpace(ISBN))
+            {
+                yield return new ValidationResult("Zadejte ISBN nebo zaškrtněte 'Nevyplňovat'.", new[] { nameof(ISBN) });
+            }
+
+            if (!SkipGenre && GenreId == null)
+            {
+                yield return new ValidationResult("Vyberte žánr nebo zaškrtněte 'Nevyplňovat'.", new[] { nameof(GenreId) });
+            }
+
+            if (!SkipKind && KindId == null)
+            {
+                yield return new ValidationResult("Vyberte literární druh nebo zaškrtněte 'Nevyplňovat'.", new[] { nameof(KindId) });
+            }
+
+            if (!SkipPeriod && PeriodId == null)
+            {
+                yield return new ValidationResult("Vyberte historické období nebo zaškrtněte 'Nevyplňovat'.", new[] { nameof(PeriodId) });
+            }
+
+            if (!SkipPages && Pages == null)
+            {
+                yield return new ValidationResult("Zadejte počet stran nebo zaškrtněte 'Nevyplňovat'.", new[] { nameof(Pages) });
+            }
+
+            if (!SkipPublisher && PublisherId == null)
+            {
+                yield return new ValidationResult("Vyberte vydavatele nebo zaškrtněte 'Nevyplňovat'.", new[] { nameof(PublisherId) });
+            }
+
+            if (!SkipDateRelease && DateRelease == null)
+            {
+                yield return new ValidationResult("Zadejte datum vydání nebo zaškrtněte 'Nevyplňovat'.", new[] { nameof(DateRelease) });
+            }
+
+            if (!SkipWarehouse && WarehouseId == null)
+            {
+                yield return new ValidationResult("Vyberte sklad nebo zaškrtněte 'Nevyplňovat'.", new[] { nameof(WarehouseId) });
+            }
+        }
     }
 
     public class NewAuthorDto
