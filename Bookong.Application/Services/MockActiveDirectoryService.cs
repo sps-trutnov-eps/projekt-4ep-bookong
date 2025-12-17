@@ -6,10 +6,10 @@ namespace Bookong.Application.Services
     {
         private readonly Dictionary<string, string> _mockUsers = new()
         {
-            { "admin", "admin123" },
-            { "user1", "password1" },
-            { "user2", "password2" },
-            { "testuser", "test123" }
+            { "sysm22", "pushpushcommit" },
+            { "stejskalm22", "miluju-backhand" },
+            { "spurm22", "billionare" },
+            { "nyms", "PZtka" }
         };
 
         public Task<bool> ValidateCredetialsAsync(string username, string password)

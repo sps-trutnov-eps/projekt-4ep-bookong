@@ -1,7 +1,10 @@
 @using Bookong.Web.Components.Layout
 @using Bookong.Application.UseCases.Queries.Interfaces
 @using Bookong.Application.DTOs
+@using Microsoft.AspNetCore.Authorization
 @page "/dashboard"
+@attribute [Authorize(Roles = "Admin")]
+
 @layout MainLayout
 @inject IJSRuntime JS
 @inject IGetLibraryStatisticsQuery LibraryStatsQuery
