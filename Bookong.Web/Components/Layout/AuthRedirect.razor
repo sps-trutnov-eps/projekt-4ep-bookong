@@ -1,0 +1,28 @@
+﻿@inject NavigationManager Navigation
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (AuthenticationStateTask is null)
+            return;
+
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+        var onLoginPage = Navigation.Uri.Contains("/login", StringComparison.OrdinalIgnoreCase);
+
+        if (!(user.Identity?.IsAuthenticated ?? false))
+        {
+            if (!onLoginPage)
+            {
+                Navigation.NavigateTo("/login", true);
+            }
+        }
+        else if (onLoginPage)
+        {
+            Navigation.NavigateTo("/", true);
+        }
+    }
+}

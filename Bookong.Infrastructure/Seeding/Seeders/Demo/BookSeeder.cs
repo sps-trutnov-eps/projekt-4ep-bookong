@@ -60,39 +60,39 @@ public class BookSeeder : ISeeder
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        // Èapek
-        await EnsureBook("R.U.R.", "Karel Èapek", "Èeskoslovenskı spisovatel", "Drama", "Drama", 96, "Èeská lit 20. a 21. st.", 1920);
-        await EnsureBook("Bílá nemoc", "Karel Èapek", "Èeskoslovenskı spisovatel", "Drama", "Drama", 112, "Èeská lit 20. a 21. st.", 1937);
-        await EnsureBook("Matka", "Karel Èapek", "Èeskoslovenskı spisovatel", "Drama", "Drama", 88, "Èeská lit 20. a 21. st.", 1938);
-        await EnsureBook("Krakatit", "Karel Èapek", "Odeon", "Epika", "Román", 256, "Èeská lit 20. a 21. st.", 1924);
-        await EnsureBook("Válka s mloky", "Karel Èapek", "Èeskoslovenskı spisovatel", "Epika", "Román", 352, "Èeská lit 20. a 21. st.", 1936);
+        // ÄŒapek
+        await EnsureBook("R.U.R.", "Karel ÄŒapek", "ÄŒeskoslovenskÃ½ spisovatel", "Drama", "Drama", 96, "ÄŒeskÃ¡ lit 20. a 21. st.", 1920);
+        await EnsureBook("BÃ­lÃ¡ nemoc", "Karel ÄŒapek", "ÄŒeskoslovenskÃ½ spisovatel", "Drama", "Drama", 112, "ÄŒeskÃ¡ lit 20. a 21. st.", 1937);
+        await EnsureBook("Matka", "Karel ÄŒapek", "ÄŒeskoslovenskÃ½ spisovatel", "Drama", "Drama", 88, "ÄŒeskÃ¡ lit 20. a 21. st.", 1938);
+        await EnsureBook("Krakatit", "Karel ÄŒapek", "Odeon", "Epika", "RomÃ¡n", 256, "ÄŒeskÃ¡ lit 20. a 21. st.", 1924);
+        await EnsureBook("VÃ¡lka s mloky", "Karel ÄŒapek", "ÄŒeskoslovenskÃ½ spisovatel", "Epika", "RomÃ¡n", 352, "ÄŒeskÃ¡ lit 20. a 21. st.", 1936);
 
-        // Jirásek
-        await EnsureBook("F.L.Vìk", "Alois Jirásek", "Mladá fronta", "Epika", "Románová kronika", 648, "Sv. a èeská lit 19. st.", 1888);
-        await EnsureBook("Filozofská historie", "Alois Jirásek", "Mladá fronta", "Epika", "Historickı román", 512, "Sv. a èeská lit 19. st.", 1878);
-        await EnsureBook("Temno", "Alois Jirásek", "Mladá fronta", "Epika", "Historickı román", 432, "Sv. a èeská lit 19. st.", 1915);
-        await EnsureBook("Psohlavci", "Alois Jirásek", "Mladá fronta", "Epika", "Historickı román", 384, "Sv. a èeská lit 19. st.", 1884);
-        await EnsureBook("Staré povìsti èeské", "Alois Jirásek", "Odeon", "Epika", "Soubor povìstí", 296, "Sv. a èeská lit 19. st.", 1894);
+        // JirÃ¡sek
+        await EnsureBook("F.L.VÄ›k", "Alois JirÃ¡sek", "MladÃ¡ fronta", "Epika", "RomÃ¡novÃ¡ kronika", 648, "Sv. a ÄeskÃ¡ lit 19. st.", 1888);
+        await EnsureBook("FilozofskÃ¡ historie", "Alois JirÃ¡sek", "MladÃ¡ fronta", "Epika", "HistorickÃ½ romÃ¡n", 512, "Sv. a ÄeskÃ¡ lit 19. st.", 1878);
+        await EnsureBook("Temno", "Alois JirÃ¡sek", "MladÃ¡ fronta", "Epika", "HistorickÃ½ romÃ¡n", 432, "Sv. a ÄeskÃ¡ lit 19. st.", 1915);
+        await EnsureBook("Psohlavci", "Alois JirÃ¡sek", "MladÃ¡ fronta", "Epika", "HistorickÃ½ romÃ¡n", 384, "Sv. a ÄeskÃ¡ lit 19. st.", 1884);
+        await EnsureBook("StarÃ© povÄ›sti ÄeskÃ©", "Alois JirÃ¡sek", "Odeon", "Epika", "Soubor povÄ›stÃ­", 296, "Sv. a ÄeskÃ¡ lit 19. st.", 1894);
 
         // Hrabal
-        await EnsureBook("Ostøe sledované vlaky", "Bohumil Hrabal", "Èeskoslovenskı spisovatel", "Epika", "Novela", 96, "Èeská lit 20. a 21. st.", 1965);
-        await EnsureBook("Postøiiny", "Bohumil Hrabal", "Èeskoslovenskı spisovatel", "Epika", "Povídka", 128, "Èeská lit 20. a 21. st.", 1976);
-        await EnsureBook("Obsluhoval jsem anglického krále", "Bohumil Hrabal", "Odeon", "Epika", "Román", 224, "Èeská lit 20. a 21. st.", 1983);
-        await EnsureBook("Taneèní hodiny pro starší a pokroèilé", "Bohumil Hrabal", "Èeskoslovenskı spisovatel", "Epika", "Povídka", 144, "Èeská lit 20. a 21. st.", 1964);
-        await EnsureBook("Pøíliš hluèná samota", "Bohumil Hrabal", "Èeskoslovenskı spisovatel", "Epika", "Novela", 104, "Èeská lit 20. a 21. st.", 1976);
+        await EnsureBook("OstÅ™e sledovanÃ© vlaky", "Bohumil Hrabal", "ÄŒeskoslovenskÃ½ spisovatel", "Epika", "Novela", 96, "ÄŒeskÃ¡ lit 20. a 21. st.", 1965);
+        await EnsureBook("PostÅ™iÅ¾iny", "Bohumil Hrabal", "ÄŒeskoslovenskÃ½ spisovatel", "Epika", "PovÃ­dka", 128, "ÄŒeskÃ¡ lit 20. a 21. st.", 1976);
+        await EnsureBook("Obsluhoval jsem anglickÃ©ho krÃ¡le", "Bohumil Hrabal", "Odeon", "Epika", "RomÃ¡n", 224, "ÄŒeskÃ¡ lit 20. a 21. st.", 1983);
+        await EnsureBook("TaneÄnÃ­ hodiny pro starÅ¡Ã­ a pokroÄilÃ©", "Bohumil Hrabal", "ÄŒeskoslovenskÃ½ spisovatel", "Epika", "PovÃ­dka", 144, "ÄŒeskÃ¡ lit 20. a 21. st.", 1964);
+        await EnsureBook("PÅ™Ã­liÅ¡ hluÄnÃ¡ samota", "Bohumil Hrabal", "ÄŒeskoslovenskÃ½ spisovatel", "Epika", "Novela", 104, "ÄŒeskÃ¡ lit 20. a 21. st.", 1976);
 
         // Kafka
-        await EnsureBook("Promìna", "Franz Kafka", "Odeon", "Epika", "Povídka", 72, "Sv. lit 20. a 21. st.", 1915);
-        await EnsureBook("Proces", "Franz Kafka", "Odeon", "Epika", "Román", 288, "Sv. lit 20. a 21. st.", 1925);
-        await EnsureBook("Zámek", "Franz Kafka", "Odeon", "Epika", "Román", 352, "Sv. lit 20. a 21. st.", 1926);
-        await EnsureBook("Amerika", "Franz Kafka", "Odeon", "Epika", "Román", 304, "Sv. lit 20. a 21. st.", 1927);
-        await EnsureBook("V kolonii pro zloèince", "Franz Kafka", "Odeon", "Epika", "Povídka", 48, "Sv. lit 20. a 21. st.", 1919);
+        await EnsureBook("PromÄ›na", "Franz Kafka", "Odeon", "Epika", "PovÃ­dka", 72, "Sv. lit 20. a 21. st.", 1915);
+        await EnsureBook("Proces", "Franz Kafka", "Odeon", "Epika", "RomÃ¡n", 288, "Sv. lit 20. a 21. st.", 1925);
+        await EnsureBook("ZÃ¡mek", "Franz Kafka", "Odeon", "Epika", "RomÃ¡n", 352, "Sv. lit 20. a 21. st.", 1926);
+        await EnsureBook("Amerika", "Franz Kafka", "Odeon", "Epika", "RomÃ¡n", 304, "Sv. lit 20. a 21. st.", 1927);
+        await EnsureBook("V kolonii pro zloÄince", "Franz Kafka", "Odeon", "Epika", "PovÃ­dka", 48, "Sv. lit 20. a 21. st.", 1919);
 
         // Kundera
-        await EnsureBook("ert", "Milan Kundera", "Èeskoslovenskı spisovatel", "Epika", "Román", 368, "Èeská lit 20. a 21. st.", 1967);
-        await EnsureBook("Nesnesitelná lehkost bytí", "Milan Kundera", "Odeon", "Epika", "Román", 320, "Èeská lit 20. a 21. st.", 1984);
-        await EnsureBook("Smìšné lásky", "Milan Kundera", "Èeskoslovenskı spisovatel", "Epika", "Soubor povídek", 288, "Èeská lit 20. a 21. st.", 1963);
-        await EnsureBook("Kniha smíchu a zapomnìní", "Milan Kundera", "Odeon", "Epika", "Román", 272, "Èeská lit 20. a 21. st.", 1978);
-        await EnsureBook("Identity", "Milan Kundera", "Odeon", "Epika", "Novela", 168, "Èeská lit 20. a 21. st.", 1998);
+        await EnsureBook("Å½ert", "Milan Kundera", "ÄŒeskoslovenskÃ½ spisovatel", "Epika", "RomÃ¡n", 368, "ÄŒeskÃ¡ lit 20. a 21. st.", 1967);
+        await EnsureBook("NesnesitelnÃ¡ lehkost bytÃ­", "Milan Kundera", "Odeon", "Epika", "RomÃ¡n", 320, "ÄŒeskÃ¡ lit 20. a 21. st.", 1984);
+        await EnsureBook("SmÄ›Å¡nÃ© lÃ¡sky", "Milan Kundera", "ÄŒeskoslovenskÃ½ spisovatel", "Epika", "Soubor povÃ­dek", 288, "ÄŒeskÃ¡ lit 20. a 21. st.", 1963);
+        await EnsureBook("Kniha smÃ­chu a zapomnÄ›nÃ­", "Milan Kundera", "Odeon", "Epika", "RomÃ¡n", 272, "ÄŒeskÃ¡ lit 20. a 21. st.", 1978);
+        await EnsureBook("Identity", "Milan Kundera", "Odeon", "Epika", "Novela", 168, "ÄŒeskÃ¡ lit 20. a 21. st.", 1998);
     }
 }

@@ -1,0 +1,24 @@
+@inject NavigationManager Navigation
+
+<div class="container text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Přesměrovávám...</span>
+    </div>
+    <p class="mt-3 text-muted">Přesměrovávám na přihlášení...</p>
+</div>
+
+@code {
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var targetPath = string.IsNullOrWhiteSpace(relativePath) ? "/" : relativePath.StartsWith('/') ? relativePath : $"/{relativePath}";
+        var encodedReturnUrl = Uri.EscapeDataString(targetPath);
+
+        Navigation.NavigateTo($"/login?returnUrl={encodedReturnUrl}", true);
+    }
+}

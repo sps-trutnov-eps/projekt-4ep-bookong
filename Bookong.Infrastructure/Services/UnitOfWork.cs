@@ -24,6 +24,8 @@ namespace Bookong.Infrastructure.Services
         public ITeachingMaterialRepository TeachingMaterials { get; }
         public IUserRepository Users { get; }
         public IWarehouseRepository Warehouses { get; }
+        public ISubjectRepository Subjects { get; }
+        public IBranchRepository Branches { get; }
 
         public UnitOfWork(BookongDbContext context)
         {
@@ -42,6 +44,8 @@ namespace Bookong.Infrastructure.Services
             TeachingMaterials = new TeachingMaterialRepository(_context);
             Users = new UserRepository(_context);
             Warehouses = new WarehouseRepository(_context);
+            Subjects = new SubjectRepository(_context);
+            Branches = new BranchRepository(_context);
         }
 
         public async Task CommitAsync()

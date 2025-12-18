@@ -2,57 +2,51 @@
 using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Bookong.Infrastructure.Repositories
 {
-    public class TeachingMaterialRepository : ITeachingMaterialRepository
+    public class TeachingMaterialRepository(BookongDbContext context) : ITeachingMaterialRepository
     {
-        private readonly BookongDbContext _context;
-
-        public TeachingMaterialRepository(BookongDbContext context)
-        {
-            _context = context;
-        }
+        private readonly BookongDbContext _context = context;
 
         public void Add(TeachingMaterial teachingMaterial)
         {
-            _context.TeachingMaterials.Add(teachingMaterial);
+            throw new NotImplementedException();
         }
 
         public void Delete(TeachingMaterial teachingMaterial)
         {
-            _context.TeachingMaterials.Remove(teachingMaterial);
+            throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<TeachingMaterial>> GetAllAsync()
+        public Task<IEnumerable<TeachingMaterial>> GetAllAsync()
         {
-            return await _context.TeachingMaterials.ToListAsync();
+            throw new NotImplementedException();
         }
 
-        public async Task<TeachingMaterial?> GetByIdAsync(int id)
+        public Task<TeachingMaterial?> GetByIdAsync(int id)
         {
-            return await _context.TeachingMaterials.FindAsync(id);
+            throw new NotImplementedException();
         }
 
-        public async Task<TeachingMaterial?> GetByPublicIdAsync(Guid publicId)
+        public Task<TeachingMaterial?> GetByPublicIdAsync(Guid publicId)
         {
-            return await _context.TeachingMaterials.FirstOrDefaultAsync(t => t.PublicId == publicId);
+            throw new NotImplementedException();
         }
 
         public Task<PagedResult<TeachingMaterial>> GetByTitleAsync(string title, int pageNumber = 1, int pageSize = 25)
         {
-            throw new NotImplementedException(); // Doplníš později podle potřeby
+            throw new NotImplementedException();
         }
 
         public Task<PagedResult<TeachingMaterial>> GetPagedAsync(int pageNumber = 1, int pageSize = 25)
         {
-            throw new NotImplementedException(); // Doplníš později podle potřeby
+            throw new NotImplementedException();
         }
 
         public void Update(TeachingMaterial teachingMaterial)
         {
-            _context.TeachingMaterials.Update(teachingMaterial);
+            throw new NotImplementedException();
         }
     }
 }

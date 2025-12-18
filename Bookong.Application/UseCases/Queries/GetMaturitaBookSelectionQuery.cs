@@ -14,16 +14,16 @@ namespace Bookong.Application.UseCases.Queries
     public class GetMaturitaBookSelectionQuery : IGetMaturitaBookSelectionQuery
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ISessionService _sessionService;
+        private readonly ICurrentUserService _currentUserService;
         private readonly ILogger<GetMaturitaBookSelectionQuery> _logger;
 
         public GetMaturitaBookSelectionQuery(
             IUnitOfWork unitOfWork,
-            ISessionService sessionService,
+            ICurrentUserService currentUserService,
             ILogger<GetMaturitaBookSelectionQuery> logger)
         {
             _unitOfWork = unitOfWork;
-            _sessionService = sessionService;
+            _currentUserService = currentUserService;
             _logger = logger;
         }
 
@@ -31,28 +31,28 @@ namespace Bookong.Application.UseCases.Queries
         {
             try
             {
-                // Get publicId of the current user from the session
+                // Get current authenticated user (if present)
                 User? user = null;
                 try
                 {
-                    var currentUserPublicId = await _sessionService.GetAsync("CurrentUserPublicId");
-                    _logger.LogDebug("Session CurrentUserPublicId = {CurrentUserPublicId}", currentUserPublicId);
+                    var currentUserPublicId = await _currentUserService.GetCurrentUserPublicIdAsync();
+                    _logger.LogDebug("Current user PublicId = {CurrentUserPublicId}", currentUserPublicId);
 
-                    if (!string.IsNullOrWhiteSpace(currentUserPublicId) && Guid.TryParse(currentUserPublicId, out var publicId))
+                    if (currentUserPublicId.HasValue)
                     {
-                        user = await _unitOfWork.Users.GetByPublicIdAsync(publicId);
+                        user = await _unitOfWork.Users.GetByPublicIdAsync(currentUserPublicId.Value);
                         if (user == null)
                         {
-                            _logger.LogDebug("User with PublicId {PublicId} not found, will fallback to seeded user.", publicId);
+                            _logger.LogDebug("User with PublicId {PublicId} not found, will fallback to seeded user.", currentUserPublicId);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Error reading CurrentUserPublicId from session, will fallback to seeded user.");
+                    _logger.LogWarning(ex, "Error reading current user identity, will fallback to seeded user.");
                 }
 
-                // Fallback to seeded user if no user in session
+                // Fallback to seeded user if no user in context
                 if (user is null)
                 {
                     var users = await _unitOfWork.Users.GetAllAsync();
