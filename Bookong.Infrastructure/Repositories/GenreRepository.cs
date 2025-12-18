@@ -2,6 +2,7 @@
 using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bookong.Infrastructure.Repositories
 {
@@ -11,37 +12,55 @@ namespace Bookong.Infrastructure.Repositories
 
         public void Add(Genre genre)
         {
-            throw new NotImplementedException();
+            _context.Genres.Add(genre);
         }
 
         public void Delete(Genre genre)
         {
-            throw new NotImplementedException();
+            _context.Genres.Remove(genre);
         }
 
-        public Task<IEnumerable<Genre>> GetAllAsync()
+        public async Task<IEnumerable<Genre>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _context.Genres
+                .AsNoTracking()
+                .OrderBy(g => g.Name)
+                .ToListAsync();
         }
 
-        public Task<Genre?> GetByIdAsync(int id)
+        public async Task<Genre?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _context.Genres
+                .AsNoTracking()
+                .FirstOrDefaultAsync(g => g.Id == id);
         }
 
-        public Task<PagedResult<Genre>> GetByNameAsync(string name, int pageNumber = 1, int pageSize = 25)
+        public async Task<Genre?> GetByPublicIdAsync(Guid publicId)
         {
-            throw new NotImplementedException();
+            return await _context.Genres
+                .AsNoTracking()
+                .FirstOrDefaultAsync(g => g.PublicId == publicId);
         }
 
-        public Task<Genre?> GetByPublicIdAsync(Guid publicId)
+        public async Task<PagedResult<Genre>> GetByNameAsync(string name, int pageNumber = 1, int pageSize = 25)
         {
-            throw new NotImplementedException();
+            var query = _context.Genres
+                .AsNoTracking()
+                .Where(g => g.Name.Contains(name))
+                .OrderBy(g => g.Name);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<Genre>(items, totalCount, pageNumber, pageSize);
         }
 
         public void Update(Genre genre)
         {
-            throw new NotImplementedException();
+            _context.Genres.Update(genre);
         }
     }
 }

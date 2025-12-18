@@ -1,39 +1,66 @@
 ﻿using Bookong.Domain.Common.Models;
+using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bookong.Infrastructure.Repositories
 {
     public class KindRepository(BookongDbContext context) : IKindRepository
     {
         private readonly BookongDbContext _context = context;
-        public void Add(Domain.Entities.Kind kind)
+
+        public void Add(Kind kind)
         {
-            throw new NotImplementedException();
+            _context.Kinds.Add(kind);
         }
-        public void Delete(Domain.Entities.Kind kind)
+
+        public void Delete(Kind kind)
         {
-            throw new NotImplementedException();
+            _context.Kinds.Remove(kind);
         }
-        public Task<IEnumerable<Domain.Entities.Kind>> GetAllAsync()
+
+        public async Task<IEnumerable<Kind>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _context.Kinds
+                .AsNoTracking()
+                .OrderBy(k => k.Name)
+                .ToListAsync();
         }
-        public Task<Domain.Entities.Kind?> GetByIdAsync(int id)
+
+        public async Task<Kind?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _context.Kinds
+                .AsNoTracking()
+                .FirstOrDefaultAsync(k => k.Id == id);
         }
-        public Task<PagedResult<Domain.Entities.Kind>> GetByNameAsync(string name, int pageNumber = 1, int pageSize = 25)
+
+        public async Task<Kind?> GetByPublicIdAsync(Guid publicId)
         {
-            throw new NotImplementedException();
+            return await _context.Kinds
+                .AsNoTracking()
+                .FirstOrDefaultAsync(k => k.PublicId == publicId);
         }
-        public Task<Domain.Entities.Kind?> GetByPublicIdAsync(Guid publicId)
+
+        public async Task<PagedResult<Kind>> GetByNameAsync(string name, int pageNumber = 1, int pageSize = 25)
         {
-            throw new NotImplementedException();
+            var query = _context.Kinds
+                .AsNoTracking()
+                .Where(k => k.Name.Contains(name))
+                .OrderBy(k => k.Name);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<Kind>(items, totalCount, pageNumber, pageSize);
         }
-        public void Update(Domain.Entities.Kind kind)
+
+        public void Update(Kind kind)
         {
-            throw new NotImplementedException();
+            _context.Kinds.Update(kind);
         }
     }
 }

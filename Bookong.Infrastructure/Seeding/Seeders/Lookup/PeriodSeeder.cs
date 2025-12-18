@@ -15,8 +15,8 @@ public class PeriodSeeder : ISeeder
 
     private static readonly string[] Defaults = new[]
     {
-        "Èeská lit 20. a 21. st.",
-        "Sv. a èeská lit 19. st.",
+        "ÄŒeskÃ¡ lit 20. a 21. st.",
+        "Sv. a ÄeskÃ¡ lit 19. st.",
         "Sv. lit 20. a 21. st."
     };
 

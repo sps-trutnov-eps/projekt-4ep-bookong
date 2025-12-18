@@ -15,8 +15,8 @@ public class AuthorSeeder : ISeeder
 
     private static readonly (string FullName, int BirthYear)[] Authors = new[]
     {
-        ("Karel Èapek", 1890),
-        ("Alois Jirásek", 1851),
+        ("Karel ÄŒapek", 1890),
+        ("Alois JirÃ¡sek", 1851),
         ("Bohumil Hrabal", 1914),
         ("Franz Kafka", 1883),
         ("Milan Kundera", 1929),

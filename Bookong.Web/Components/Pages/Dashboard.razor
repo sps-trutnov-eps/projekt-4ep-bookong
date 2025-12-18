@@ -1,0 +1,246 @@
+@using Bookong.Web.Components.Layout
+@using Bookong.Application.UseCases.Queries.Interfaces
+@using Bookong.Application.DTOs
+@using Microsoft.AspNetCore.Authorization
+@page "/dashboard"
+@attribute [Authorize(Roles = "Admin")]
+
+@layout MainLayout
+@inject IJSRuntime JS
+@inject IGetLibraryStatisticsQuery LibraryStatsQuery
+@inject IExportBooksQuery ExportBooksQuery
+@inject IGetAvailableBooksQuery GetAvailableBooks
+@inject ILogger<Dashboard> Logger
+
+<!-- Hero Section with white background -->
+<div class="bg-white pb-5 min-vh-100">
+    <div class="container px-4 text-center pt-5">
+        <!-- Welcome Message -->
+        <h1 class="page-hero-title fw-bold text-primary mb-3">
+            Dashboard
+        </h1>
+        <p class="lead text-muted mb-4 fs-5">
+            Přehled výpůjček knih a správa výpůjček
+        </p>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @errorMessage
+                <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+            </div>
+        }
+
+        <div class="mb-5 d-flex justify-content-center gap-3 flex-wrap">
+            <!-- Export všech knih -->
+            <button class="btn btn-primary btn-lg shadow d-flex align-items-center gap-2 px-4 py-2"
+                    @onclick="() => ExportToExcel()">
+                <i class="bi bi-cloud-arrow-down fs-4"></i>
+                <span class="fw-semibold">Export všech knih</span>
+            </button>
+
+            @* TODO: Stylově doladit export knih, aby vypadal dobře v rozložení stránky *@
+            @* Export konkrétních knih - zakomentováno, protože knihy se dají vyfiltrovat v Excelu *@
+            @* <button class="btn btn-outline-primary btn-lg shadow d-flex align-items-center gap-2 px-4 py-2"
+                    @onclick="() => ExportToExcel(new[] { 1, 2, 3 })">
+                <i class="bi bi-journal-arrow-down fs-4"></i>
+                <span class="fw-semibold">Export knih [1, 2, 3]</span>
+            </button> *@
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Načítání...</span>
+                </div>
+            </div>
+        }
+        else if (stats != null)
+        {
+            <!-- Statistické karty -->
+            <div class="row g-4 justify-content-center mb-5">
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 text-center border-0 shadow-lg card-hover">
+                        <div class="card-body d-flex flex-column align-items-center p-4">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3 icon-circle icon-circle-gradient">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M10 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
+                                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-7 7 7 7 0 0 0 14 0A7 7 0 0 0 8 1z" />
+                                </svg>
+                            </div>
+                            <h3 class="card-title h6 fw-bold mb-2 text-primary">Počet čtenářů</h3>
+                            <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">@stats.TotalUsers</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 text-center border-0 shadow-lg card-hover">
+                        <div class="card-body d-flex flex-column align-items-center p-4">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3 icon-circle icon-circle-gradient">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828z" />
+                                    <path d="M8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
+                                </svg>
+                            </div>
+                            <h3 class="card-title h6 fw-bold mb-2 text-primary">Aktivní výpůjčky</h3>
+                            <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">@stats.ActiveLoans</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 text-center border-0 shadow-lg card-hover">
+                        <div class="card-body d-flex flex-column align-items-center p-4">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3 icon-circle icon-circle-gradient">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828z" />
+                                    <path d="M8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
+                                </svg>
+                            </div>
+                            <h3 class="card-title h6 fw-bold mb-2 text-primary">Knih v knihovně</h3>
+                            <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">@stats.TotalBooksInLibrary</p>
+                        </div>
+                    </div>
+                </div>
+            </div>    
+
+            <!-- Seznam knih (přesunutý z Books.razor, upravený pouze pro přehled na dashboardu) -->
+            <div class="border rounded-3 shadow-sm bg-body mb-4 p-3">
+                <h2 class="h5 mb-3">Seznam knih</h2>
+
+                @if (isBooksLoading)
+                {
+                    <div class="d-flex justify-content-center py-3">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                }
+                else if (dashboardBooks == null || !dashboardBooks.Any())
+                {
+                    <div class="text-center">
+                        <p class="text-muted mb-0">Žádné knihy k zobrazení.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="col-1">#</th>
+                                    <th>Název knihy</th>
+                                    <th class="d-none d-md-table-cell">Autor</th>
+                                    <th class="text-end">Počet vypůjčení</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < dashboardBooks.Count; i++)
+                                {
+                                    var b = dashboardBooks[i];
+                                    <tr>
+                                        <td>@(i + 1)</td>
+                                        <td class="fw-medium">@b.Title</td>
+                                        <td class="d-none d-md-table-cell">@b.AuthorFullName</td>
+                                        <td class="text-end">
+                                            <span class="text-muted">N/A</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                Nepodařilo se načíst statistiky.
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private LibraryStatisticsDto? stats;
+    private bool isLoading = true;
+
+    // Books for dashboard
+    private List<BookListItemDto> dashboardBooks = new();
+    private bool isBooksLoading = true;
+
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        isBooksLoading = true;
+        errorMessage = null;
+
+        // Sekvenční načítání — NEparalelizovat EF dotazy přes stejný scoped DbContext
+        try
+        {
+            stats = await LibraryStatsQuery.ExecuteAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading statistics for dashboard");
+            errorMessage = "Nepodařilo se načíst statistiky.";
+        }
+
+        try
+        {
+            var books = await GetAvailableBooks.ExecuteAsync();
+            dashboardBooks = books?.ToList() ?? new();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading books for dashboard");
+            errorMessage = errorMessage == null
+                ? "Nepodařilo se načíst seznam knih."
+                : errorMessage + " (seznam knih).";
+        }
+        finally
+        {
+            isLoading = false;
+            isBooksLoading = false;
+        }
+    }
+
+    private async Task DownloadFileFromBytesAsync(string fileName, byte[] bytes)
+    {
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("downloadFileFromBytes", fileName, base64);
+    }
+
+
+    private async Task ExportToExcel(int[]? ids = null)
+    {
+        try
+        {
+            byte[] bytes;
+
+            if (ids != null && ids.Any())
+                bytes = await ExportBooksQuery.ExportToExcelAsync(ids);
+            else
+                bytes = await ExportBooksQuery.ExportAllToExcelAsync();
+
+            if (bytes == null || bytes.Length == 0)
+            {
+                await JS.InvokeVoidAsync("alert", "⚠️ Žádná data k exportu.");
+                return;
+            }
+
+            var fileName = $"Knihy_{DateTime.Now:yyyy-MM-dd_HH-mm}.xlsx";
+            await DownloadFileFromBytesAsync(fileName, bytes);
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"❌ Chyba při exportu: {ex.Message}");
+        }
+    }
+
+}
+
+

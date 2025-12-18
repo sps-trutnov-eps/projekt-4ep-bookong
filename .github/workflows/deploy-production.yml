@@ -1,0 +1,32 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:  # Umožní ruční spuštění z GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -e
+            : "${APP_DIR:=${HOME}/bookong-production-deployment}"
+            REPO_URL="git@github.com:${{ github.repository }}.git"
+            if [ ! -d "$APP_DIR" ]; then
+              mkdir -p "$APP_DIR"
+              git clone --depth=1 --branch main "$REPO_URL" "$APP_DIR"
+            fi
+            cd "$APP_DIR"
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            bash deploy/deploy.sh production
