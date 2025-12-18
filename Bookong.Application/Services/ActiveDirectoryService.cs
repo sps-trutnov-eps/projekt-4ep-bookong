@@ -7,7 +7,8 @@ namespace Bookong.Application.Services
 {
     public class ActiveDirectoryService : IActiveDirectoryService
     {
-        private readonly string _ldapServer = "skola.local";
+        private readonly string _ldapServer = "gateway.spstrutnov.cz";
+        private readonly string _baseDn = "OU=Uživatelé,DC=skola,DC=local";
 
         public Task<bool> ValidateCredetialsAsync(string username, string password)
         {
