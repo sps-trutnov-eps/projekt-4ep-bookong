@@ -1,0 +1,152 @@
+.materials-hero {
+  margin-top: 1.5rem; /* added: space between header and hero */
+  background: linear-gradient(135deg, #3b82f6 0%, #6d28d9 70%);
+  color: #fff;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 8px 30px rgba(99,102,241,0.12);
+}
+
+.materials-title {
+  font-weight: 800;
+  font-size: 1.6rem;
+  letter-spacing: -0.3px;
+}
+
+.materials-subtitle {
+  opacity: 0.95;
+  color: rgba(255,255,255,0.92);
+}
+
+/* Search glass */
+.search-glass {
+  background: rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 6px;
+  backdrop-filter: blur(6px);
+}
+
+.search-glass .input-group-text {
+  border: 0;
+  color: #fff;
+}
+
+.search-glass input {
+  color: #fff;
+  background: transparent;
+  height: 48px;
+}
+
+/* Form card (glass look) */
+.form-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,249,255,0.95));
+  border-radius: 14px;
+}
+
+/* Buttons */
+.btn-gradient {
+  background: linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%);
+  color: white;
+  border: 0;
+  box-shadow: 0 10px 30px rgba(6,182,212,0.12);
+}
+
+/* Cards */
+.card.created-card {
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform .18s cubic-bezier(.2,.9,.3,1), box-shadow .18s;
+  background: linear-gradient(180deg,#fff,#fbfdff);
+}
+
+.card.created-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(79,70,229,0.08);
+}
+
+/* text truncation */
+.created-list .text-truncate {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Input icons and rounded look */
+.input-group .input-group-text.icon-left {
+  background: transparent;
+  border: 0;
+  font-size: 18px;
+}
+
+.form-control.rounded-pill {
+  border-radius: 50rem;
+}
+
+/* small helpers */
+.muted { color: #6b7280; }
+.empty-state {
+  border-radius: 12px;
+  background: linear-gradient(180deg,#fff,#f4f7ff);
+}
+
+/* Hero buttons */
+.hero-buttons .btn {
+  border-radius: 12px;
+  padding: .45rem .8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+/* white button with subtle shadow */
+.btn-white-shadow {
+  background: rgba(255,255,255,0.98);
+  color: #0f172a;
+  border: 0;
+  box-shadow: 0 6px 20px rgba(2,6,23,0.06);
+}
+.btn-white-shadow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(2,6,23,0.08);
+}
+
+/* outline light button tweak */
+.btn-outline-light {
+  border-color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.95);
+}
+.btn-outline-light:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+
+/* ensure icon spacing */
+.hero-buttons svg { opacity: .95; }
+
+/* accessibility: focus states */
+.hero-buttons .btn:focus {
+  outline: 3px solid rgba(99,102,241,0.14);
+  outline-offset: 2px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 991.98px) {
+  .materials-hero { padding: 18px; }
+  .materials-title { font-size: 1.3rem; }
+}
+
+/* Ensure adequate gap on small screens (account for fixed/tall header) */
+@media (max-width: 767.98px) {
+  .materials-hero {
+    /* If your header is fixed, set --app-header-height in global CSS or Layout */
+    margin-top: 20px; /* changed to 20px for responsive view */
+    padding: 1.1rem 1rem;
+    border-radius: 18px;
+  }
+
+  .materials-title { font-size: 1.3rem; }
+}

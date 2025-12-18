@@ -34,6 +34,7 @@ builder.Services.AddScoped<ICompleteUserRegistrationUseCase, CompleteUserRegistr
 builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase>();
 builder.Services.AddScoped<IDeselectMaturitaBookUseCase, DeselectMaturitaBookUseCase>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ITeachingMaterialsApi, TeachingMaterialsApi>();
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddScoped<IActiveDirectoryService, MockActiveDirectoryService>();
