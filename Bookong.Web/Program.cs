@@ -44,7 +44,6 @@ builder.Services.AddScoped<IDeleteMaturitaBookUseCase, DeleteMaturitaBookUseCase
 
 // Session services
 builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 if (builder.Environment.IsDevelopment())
 {
