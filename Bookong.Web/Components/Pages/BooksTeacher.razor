@@ -236,11 +236,11 @@
                 var ok = await JS.InvokeAsync<bool>("confirm", "Opravdu chcete odebrat knihu z dostupných?");
                 if (!ok) return;
 
-                result = await DeleteMaturitaUseCase.RemoveFromAvailableAsync(bookPublicId);
+                result = await DeleteMaturitaUseCase.ExecuteAsync(bookPublicId);
             }
             else
             {
-                result = await CreateMaturitaUseCase.AddToAvailableAsync(bookPublicId);
+                result = await CreateMaturitaUseCase.ExecuteAsync(bookPublicId);
             }
 
             if (result.Success)

@@ -4,6 +4,6 @@ namespace Bookong.Application.UseCases.Interfaces
 {
     public interface IDeleteMaturitaBookUseCase
     {
-        Task<GenericResponse> RemoveFromAvailableAsync(Guid bookPublicId);
+        Task<GenericResponse> ExecuteAsync(Guid bookPublicId);
     }
 }
