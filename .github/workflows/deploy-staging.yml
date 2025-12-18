@@ -28,6 +28,6 @@ jobs:
             fi
             
             cd "$APP_DIR"
-            git fetch origin staging:staging
-            git checkout staging
+            git fetch origin
+            git checkout -B staging origin/staging
             bash deploy/deploy.sh staging

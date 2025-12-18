@@ -28,6 +28,6 @@ jobs:
             fi
             
             cd "$APP_DIR"
-            git fetch origin main:main
-            git checkout main
+            git fetch origin
+            git checkout -B main origin/main
             bash deploy/deploy.sh production
