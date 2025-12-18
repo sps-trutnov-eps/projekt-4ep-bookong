@@ -1,0 +1,227 @@
+@page "/login"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using Bookong.Application.DTOs
+@using Bookong.Web.Services
+@inject NavigationManager Navigation
+@inject AuthJsInterop AuthApi
+
+<div class="login-wrapper d-flex flex-column align-items-center justify-content-center text-center">
+
+   <div class="card shadow-sm p-4 login-card">
+   <h3 class="mb-4">@(isFirstTimeUser ? "Dokončení registrace" : "Přihlášení do systému")</h3>
+
+      @if (!isFirstTimeUser)
+      {
+          <EditForm Model="loginModel" OnValidSubmit="LoginUserAsync">
+              <DataAnnotationsValidator />
+  
+              @if (!string.IsNullOrEmpty(debugMessage))
+              {
+                  <div class="alert @(isError ? "alert-danger" : "alert-info")" role="alert">
+                      @debugMessage
+                  </div>
+              }
+
+              <div class="mb-3 text-start">
+                  <label class="form-label">Uživatelské jméno</label>
+                  <InputText @bind-Value="loginModel.Username" class="form-control" />
+                  <ValidationMessage For="@(() => loginModel.Username)" />
+              </div>
+
+              <div class="mb-3 text-start">
+                  <label class="form-label">Heslo</label>
+                  <InputText @bind-Value="loginModel.Password" class="form-control" type="password" />
+                  <ValidationMessage For="@(() => loginModel.Password)" />
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
+                  @if (isLoading)
+                  {
+                      <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <span>Přihlašování...</span>
+                  }
+                  else
+                  {
+                      <span>Přihlásit se</span>
+                  }
+              </button>
+          </EditForm>
+      }
+      else
+      {
+          <EditForm Model="registrationModel" OnValidSubmit="CompleteRegistrationAsync">
+              <DataAnnotationsValidator />
+  
+              @if (!string.IsNullOrEmpty(debugMessage))
+              {
+                  <div class="alert @(isError ? "alert-danger" : "alert-info")" role="alert">
+                      @debugMessage
+                  </div>
+              }
+
+              <div class="alert alert-info" role="alert">
+                  <p>Vítejte v systému! Pro dokončení registrace prosím vyplňte své jméno.</p>
+                  <p><strong>Uživatelské jméno:</strong> @currentUsername</p>
+                  <p><strong>Email:</strong> @currentUsername@@spstrutnov.cz</p>
+              </div>
+
+              <div class="mb-3 text-start">
+                  <label class="form-label">Celé jméno</label>
+                  <InputText @bind-Value="registrationModel.Name" class="form-control" placeholder="Zadejte vaše celé jméno" />
+                  <ValidationMessage For="@(() => registrationModel.Name)" />
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
+                  @if (isLoading)
+                  {
+                      <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <span>Dokončuji registraci...</span>
+                  }
+                  else
+                  {
+                      <span>Dokončit registraci</span>
+                  }
+              </button>
+          </EditForm>
+      }
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    private LoginModel loginModel { get; } = new();
+    private RegistrationModel registrationModel { get; } = new();
+    private string? debugMessage;
+    private bool isError;
+    private bool isLoading;
+    private bool isFirstTimeUser;
+    private string? currentUsername;
+
+    private Task LoginUserAsync() =>
+        ExecuteWithUiStateAsync(async () =>
+        {
+            var request = new LoginUserRequest
+            {
+                Email = loginModel.Username,
+                Password = loginModel.Password
+            };
+
+            var result = await AuthApi.LoginAsync(request);
+
+            if (result is null)
+            {
+                SetStatus("Přihlášení se nezdařilo", true);
+                return;
+            }
+
+            if (result.IsFirstTimeUser)
+            {
+                isFirstTimeUser = true;
+                currentUsername = result.Username ?? request.Email;
+                SetStatus(result.Message ?? "První přihlášení - doplňte své údaje.", false);
+                return;
+            }
+
+            if (result.Success)
+            {
+                Navigation.NavigateTo(GetSafeReturnUrl(), forceLoad: true);
+                return;
+            }
+
+            SetStatus(result.Message ?? "Přihlášení se nezdařilo", true);
+        }, "Chyba při přihlašování");
+
+    private Task CompleteRegistrationAsync() =>
+        ExecuteWithUiStateAsync(async () =>
+        {
+            if (string.IsNullOrWhiteSpace(currentUsername))
+            {
+                SetStatus("Nelze dokončit registraci bez uživatelského jména.", true);
+                return;
+            }
+
+            var request = new CompleteUserRegistrationRequest
+            {
+                Username = currentUsername,
+                Name = registrationModel.Name
+            };
+
+            var response = await AuthApi.CompleteRegistrationAsync(request);
+
+            if (response is not null && response.Success && response.UserId != Guid.Empty)
+            {
+                SetStatus("Registrace dokončena! Přesměrování...", false);
+                await Task.Delay(500);
+                Navigation.NavigateTo(GetSafeReturnUrl(), forceLoad: true);
+                return;
+            }
+
+            SetStatus(response?.Message ?? "Registrace se nezdařila", true);
+        }, "Chyba při dokončování registrace");
+
+    private string GetSafeReturnUrl()
+    {
+        if (string.IsNullOrWhiteSpace(ReturnUrl))
+        {
+            return "/portalpage";
+        }
+
+        if (Uri.TryCreate(ReturnUrl, UriKind.Absolute, out _))
+        {
+            return "/portalpage";
+        }
+
+        return ReturnUrl.StartsWith('/') ? ReturnUrl : $"/{ReturnUrl}";
+    }
+
+    private async Task ExecuteWithUiStateAsync(Func<Task> action, string errorPrefix)
+    {
+        isLoading = true;
+        ResetStatus();
+
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"{errorPrefix}: {ex.Message}", true);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ResetStatus()
+    {
+        debugMessage = null;
+        isError = false;
+    }
+
+    private void SetStatus(string? message, bool error)
+    {
+        debugMessage = message;
+        isError = error;
+    }
+
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "Uživatelské jméno je povinné.")]
+        public string Username { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Heslo je povinné.")]
+        public string Password { get; set; } = string.Empty;
+    }
+
+    public class RegistrationModel
+    {
+        [Required(ErrorMessage = "Celé jméno je povinné.")]
+        [MinLength(3, ErrorMessage = "Jméno musí mít alespoň 3 znaky.")]
+        public string Name { get; set; } = string.Empty;
+    }
+}

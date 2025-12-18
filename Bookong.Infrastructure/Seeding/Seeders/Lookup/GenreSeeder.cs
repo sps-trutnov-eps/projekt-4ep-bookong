@@ -16,7 +16,7 @@ public class GenreSeeder : ISeeder
     // Representative genres used in the dataset
     private static readonly string[] Defaults = new[]
     {
-        "Román", "Novela", "Povídka", "Románová kronika", "Historickı román", "Soubor povídek", "Soubor povìstí", "Drama"
+        "RomÃ¡n", "Novela", "PovÃ­dka", "RomÃ¡novÃ¡ kronika", "HistorickÃ½ romÃ¡n", "Soubor povÃ­dek", "Soubor povÄ›stÃ­", "Drama"
     };
 
     public async Task SeedAsync(BookongDbContext db, CancellationToken cancellationToken = default)

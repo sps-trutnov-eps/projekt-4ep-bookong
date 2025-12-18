@@ -8,6 +8,7 @@
 
 main {
     flex: 1;
+    padding-top: var(--header-height, 4.75rem);
 }
 
 .page-wave {

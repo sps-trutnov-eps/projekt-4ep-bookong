@@ -1,5 +1,4 @@
-@page "/"
-@inject Bookong.Application.Services.Interfaces.ISessionService SessionService
+﻿@page "/"
 
 <PageTitle>Home</PageTitle>
 <h1>Hello, world!</h1>
@@ -10,8 +9,17 @@
 @code {
     private string? userId;
 
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
-        userId = await SessionService.GetAsync("CurrentUserPublicId");
+        if (AuthenticationStateTask is null)
+        {
+            return;
+        }
+
+        var state = await AuthenticationStateTask;
+        userId = state.User.FindFirstValue(ClaimTypes.NameIdentifier);
     }
 }

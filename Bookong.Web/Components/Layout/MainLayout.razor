@@ -1,4 +1,6 @@
 @inherits LayoutComponentBase
+@using Bookong.Web.Components.DevTools
+@inject IWebHostEnvironment Environment
 
 <div class="d-flex flex-column min-vh-100">
     <HeaderLayout />
@@ -21,6 +23,12 @@
 
     <FooterLayout />
 </div>
+
+@if (Environment.IsDevelopment() || Environment.IsStaging())
+{
+    <DevToolsPanel />
+}
+
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
