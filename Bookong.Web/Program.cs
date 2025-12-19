@@ -18,11 +18,11 @@ using Bookong.Application.DTOs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<BookongDbContext>(options =>
+builder.Services.AddDbContextFactory<BookongDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Unit of Work
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 
 // Application UseCases, Queries
 builder.Services.AddScoped<IGetAvailableBooksQuery, GetAvailableBooksQuery>();

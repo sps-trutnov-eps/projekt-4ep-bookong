@@ -1,11 +1,12 @@
-﻿using Bookong.Domain.Interfaces;
+using Bookong.Domain.Interfaces;
 using Bookong.Infrastructure.Data;
 using Bookong.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Bookong.Infrastructure.Services
 {
-    public class UnitOfWork : IUnitOfWork
+    public class UnitOfWork : IUnitOfWork, IDisposable
     {
         private readonly BookongDbContext _context;
         private IDbContextTransaction? _currentTransaction;
@@ -27,9 +28,9 @@ namespace Bookong.Infrastructure.Services
         public ISubjectRepository Subjects { get; }
         public IBranchRepository Branches { get; }
 
-        public UnitOfWork(BookongDbContext context)
+        public UnitOfWork(IDbContextFactory<BookongDbContext> contextFactory)
         {
-            _context = context;
+            _context = contextFactory.CreateDbContext();
             Authors = new AuthorRepository(_context);
             BookLoans = new BookLoanRepository(_context);
             Books = new BookRepository(_context);
@@ -73,6 +74,12 @@ namespace Bookong.Infrastructure.Services
                     _currentTransaction = null;
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            _currentTransaction?.Dispose();
+            _context?.Dispose();
         }
     }
 }
