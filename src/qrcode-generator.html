@@ -32,7 +32,7 @@
     <nav class="navbar navbar-dark bg-primary">
       <div class="container-fluid">
         <a class="navbar-brand fw-bold d-flex align-items-center" href="index.html">
-          <img src="/src/img/logo.png" alt="Logo BooKong" height="40" class="me-2" />
+          <img src="/img/logo.png" alt="Logo BooKong" height="40" class="me-2" />
           BooKong
         </a>
       </div>
@@ -47,6 +47,19 @@
       <div class="card mb-4">
         <div class="card-body">
           <form id="book-form" class="row g-3" novalidate>
+            <!-- Výběr knihy ze souborů v Data/ (načteno z Excelu) -->
+            <div class="col-12">
+              <label for="book-select" class="form-label">Vyberte knihu (načteno ze složky Data)</label>
+              <select id="book-select" class="form-select">
+                <option value="">— vyberte —</option>
+              </select>
+              <div class="field-help">Seznam se načte z Excel souborů v Data/</div>
+            </div>
+            <div class="col-12">
+              <label for="excel-input" class="form-label">Načíst Excel soubor(y)</label>
+              <input id="excel-input" type="file" accept=".xls,.xlsx" multiple class="form-control" />
+              <div class="field-help">Vyberte jeden nebo více Excelů ze složky Data</div>
+            </div>
             <div class="col-md-8">
               <label for="title" class="form-label">Název</label>
               <input id="title" name="title" class="form-control" required />
@@ -95,7 +108,7 @@
         <div class="print-area d-inline-block text-center p-3">
           <div id="qrcode-wrap" class="qr-box mb-3">
             <!-- QR kód se vygeneruje sem -->
-            <div id="qrcode" aria-hidden="true"></div>
+            <div id="qrcode" aria-hidden="true"><canvas id="qrcanvas"></canvas></div>
           </div>
 
           <div id="book-summary" class="text-start">
@@ -116,6 +129,7 @@
 
   <!-- Knihovna pro QR (frontend) + jednoduchý skript pro návrh (design-only, bez ukládání) -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
     (function(){
       const el = id => document.getElementById(id);
@@ -124,27 +138,28 @@
       const clearBtn = el('clear-btn');
       const printBtn = el('print-btn');
       const qrcodeEl = el('qrcode');
+      const qrCanvas = el('qrcanvas');
       const summaryTitle = el('summary-title');
       const summaryMeta = el('summary-meta');
       const summaryExtra = el('summary-extra');
+      const excelInput = el('excel-input');
+      const bookSelect = el('book-select');
+
+      // uložené položky z Excelu
+      let excelBooks = [];
 
       function collectData() {
         return {
           title: el('title').value.trim(),
           author: el('author').value.trim(),
           isbn: el('isbn').value.trim(),
-          publisher: el('publisher').value.trim(),
-          literature: el('literature').value,     // přidané pole
-          year: el('year').value.trim(),
-          century: el('century').value.trim(),    // přidané pole
-          shelf: el('shelf').value.trim(),
-          note: el('note').value.trim()
+          literature: el('literature').value,
+          century: el('century').value.trim()
         };
       }
 
       function buildPayload(data) {
-        // Payload je JSON pro pozdější backend; přidány pole literature a century
-        // U stoleti se zajistíme, že nebude větší než 21
+        // Payload je JSON pro pozdější backend
         let centuryVal = data.century ? parseInt(data.century, 10) : undefined;
         if (!isNaN(centuryVal)) {
           centuryVal = Math.min(21, Math.max(1, centuryVal));
@@ -156,12 +171,8 @@
           title: data.title,
           author: data.author,
           isbn: data.isbn,
-          publisher: data.publisher,
           literature: data.literature,
-          year: data.year,
-          century: centuryVal,
-          shelf: data.shelf,
-          note: data.note
+          century: centuryVal
         });
       }
 
@@ -177,8 +188,6 @@
         const extras = [];
         if (data.isbn) extras.push('ISBN: ' + data.isbn);
         if (data.literature) extras.push('Literatura: ' + (data.literature === 'ceska' ? 'Česká' : data.literature === 'svetova' ? 'Světová' : data.literature));
-        if (data.shelf) extras.push('Polička: ' + data.shelf);
-        if (data.note) extras.push('Pozn.: ' + data.note);
         summaryExtra.textContent = extras.join(' | ');
       }
 
@@ -209,12 +218,17 @@
         const payload = buildPayload(data);
 
         // vyčistíme starý QR
-        qrcodeEl.innerHTML = '';
+        if (qrCanvas) {
+          const ctx = qrCanvas.getContext('2d');
+          ctx && ctx.clearRect(0, 0, qrCanvas.width, qrCanvas.height);
+        }
         try {
-          await QRCode.toCanvas(qrcodeEl, payload, { width: 240, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
+          await QRCode.toCanvas(qrCanvas, payload, { width: 240, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
         } catch (e) {
-          // fallback na generování jako SVG/ASCII
-          try { QRCode.toString(payload, { type: 'svg' }, function(err, svg){ qrcodeEl.innerHTML = svg || ''; }); } catch(err) {}
+          // fallback na SVG
+          try {
+            QRCode.toString(payload, { type: 'svg' }, function(err, svg){ qrcodeEl.innerHTML = svg || ''; });
+          } catch(err) {}
         }
 
         renderSummary(data);
@@ -239,6 +253,76 @@
 
       // Enter v poli -> vytvořit QR
       form.addEventListener('submit', function(e){ e.preventDefault(); generateQr(); });
+
+      // ============= Excel načítání =============
+      excelInput.addEventListener('change', async function(){
+        excelBooks = [];
+        bookSelect.innerHTML = '<option value="">— vyberte —</option>';
+
+        const files = Array.from(excelInput.files || []);
+        for (const file of files) {
+          const buf = await file.arrayBuffer();
+          const wb = XLSX.read(buf, { type: 'array' });
+          const sheetName = wb.SheetNames[0];
+          const ws = wb.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+          if (!rows || !rows.length) continue;
+
+          // najít hlavičku
+          let header = rows[0].map(x => String(x||'').trim());
+          // pokud první řádek není dobrý, najdeme první s alespoň 2 sloupci
+          if (header.filter(Boolean).length < 2) {
+            for (let i=1;i<Math.min(rows.length,10);i++) {
+              const h = rows[i].map(x => String(x||'').trim());
+              if (h.filter(Boolean).length >= 2) { header = h; break; }
+            }
+          }
+
+          const idx = (names) => {
+            const lower = header.map(h => h.toLowerCase());
+            for (const n of names) {
+              const pos = lower.indexOf(n.toLowerCase());
+              if (pos !== -1) return pos;
+            }
+            return -1;
+          };
+
+          const ti = idx(['nazev','název','title','kniha']);
+          const ai = idx(['autor','author']);
+          const ii = idx(['isbn']);
+
+          for (let r=1;r<rows.length;r++) {
+            const row = rows[r];
+            if (!row || (!row[ti] && !row[ai])) continue;
+            const title = String(row[ti]||'').trim();
+            const author = String(row[ai]||'').trim();
+            const isbn = String(row[ii]||'').trim();
+            if (!title) continue;
+            excelBooks.push({ title, author, isbn });
+          }
+        }
+
+        // naplnit select
+        const frag = document.createDocumentFragment();
+        excelBooks.forEach((b, i) => {
+          const opt = document.createElement('option');
+          opt.value = String(i);
+          opt.textContent = b.title + (b.author ? ` — ${b.author}` : '');
+          frag.appendChild(opt);
+        });
+        bookSelect.appendChild(frag);
+      });
+
+      // po vybrání knihy vyplnit formulář
+      bookSelect.addEventListener('change', function(){
+        const idx = parseInt(bookSelect.value, 10);
+        if (!isNaN(idx) && excelBooks[idx]) {
+          const b = excelBooks[idx];
+          el('title').value = b.title || '';
+          el('author').value = b.author || '';
+          el('isbn').value = b.isbn || '';
+        }
+      });
     })();
   </script>
 
