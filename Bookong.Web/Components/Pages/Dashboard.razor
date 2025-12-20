@@ -1,6 +1,8 @@
 @using Bookong.Web.Components.Layout
 @using Bookong.Application.UseCases.Queries.Interfaces
 @using Bookong.Application.DTOs
+@using Bookong.Application.UseCases.Interfaces
+@using Bookong.Domain.Interfaces
 @using Microsoft.JSInterop
 @page "/dashboard"
 @layout MainLayout
@@ -9,169 +11,304 @@
 @inject IExportBooksQuery ExportBooksQuery
 @inject IExportBookQrCodesQueryV2 ExportBookQrCodes
 @inject IGetAvailableBooksQuery GetAvailableBooks
+@inject IGetAllBookLoansQuery GetAllBookLoans
+@inject IGetBookLoanStatusQuery GetBookLoanStatus
+@inject ICreateBookLoanUseCase CreateBookLoan
+@inject IReturnBookUseCase ReturnBook
+@inject IProlongBookLoanUseCase ProlongBookLoan
+@inject IUnitOfWork _uow
 @inject ILogger<Dashboard> Logger
+@implements IAsyncDisposable
 
 <!-- Hero Section with white background -->
 <div class="bg-white pb-5" style="min-height: 80vh;">
     <div class="container px-4 text-center pt-5">
         <!-- Welcome Message -->
-        <h1 class="fw-bold text-primary mb-3" style="font-size: 3rem; letter-spacing: -0.02em;">
-            Dashboard
+      <h1 class="fw-bold text-primary mb-3" style="font-size: 3rem; letter-spacing: -0.02em;">
+     Dashboard
         </h1>
         <p class="lead text-muted mb-4" style="font-size: 1.1rem;">
-            Přehled výpůjček knih a správa výpůjček
-        </p>
+Přehled výpůjček knih a správa výpůjček
+    </p>
 
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                @errorMessage
-                <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
-            </div>
+     @if (!string.IsNullOrEmpty(errorMessage))
+      {
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+         @errorMessage
+     <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+</div>
         }
+
+   <!-- QR Scanner and Manual Input Buttons -->
+        <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center mb-4">
+<button class="btn btn-primary btn-lg" @onclick="OpenQrScanner">
+   <i class="bi bi-qr-code-scan me-2"></i>Skenovat QR kód knihy
+            </button>
+        <button class="btn btn-outline-primary btn-lg" @onclick="OpenManualInput">
+    <i class="bi bi-keyboard me-2"></i>Zadat ID ručně
+            </button>
+        </div>
 
         <div class="mb-5 d-flex justify-content-center gap-3">
             <!-- Export všech knih -->
-            <button class="btn btn-primary btn-lg shadow d-flex align-items-center gap-2 px-4 py-2"
-                    @onclick="() => ExportToExcel()">
-                <i class="bi bi-cloud-arrow-down fs-4"></i>
-                <span class="fw-semibold">Export všech knih</span>
-            </button>
+   <button class="btn btn-primary btn-lg shadow d-flex align-items-center gap-2 px-4 py-2"
+               @onclick="() => ExportToExcel()">
+       <i class="bi bi-cloud-arrow-down fs-4"></i>
+             <span class="fw-semibold">Export všech knih</span>
+       </button>
+   </div>
 
-            @* TODO: Stylově doladit export knih, aby vypadal dobře v rozložení stránky *@
-            @* Export konkrétních knih - zakomentováno, protože knihy se dají vyfiltrovat v Excelu *@
-            @* <button class="btn btn-outline-primary btn-lg shadow d-flex align-items-center gap-2 px-4 py-2"
-                    @onclick="() => ExportToExcel(new[] { 1, 2, 3 })">
-                <i class="bi bi-journal-arrow-down fs-4"></i>
-                <span class="fw-semibold">Export knih [1, 2, 3]</span>
-            </button> *@
-        </div>
-
-        @if (isLoading)
+ @if (isLoading)
         {
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Načítání...</span>
-                </div>
-            </div>
+    <div class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Načítání...</span>
+     </div>
+       </div>
         }
         else if (stats != null)
-        {
-            <!-- Statistické karty -->
+      {
+     <!-- Statistické karty -->
             <div class="row g-4 justify-content-center mb-5">
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
-                        <div class="card-body d-flex flex-column align-items-center p-4">
-                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
-                                 style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M10 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
-                                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-7 7 7 7 0 0 0 14 0A7 7 0 0 0 8 1z" />
-                                </svg>
-                            </div>
-                            <h3 class="card-title h6 fw-bold mb-2 text-primary">Počet čtenářů</h3>
-                            <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">@stats.TotalUsers</p>
-                        </div>
-                    </div>
-                </div>
+       <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
+                  <div class="card-body d-flex flex-column align-items-center p-4">
+             <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
+  style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
+       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+        <path d="M10 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
+   <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-7 7 7 7 0 0 0 14 0A7 7 0 0 0 8 1z" />
+              </svg>
+   </div>
+    <h3 class="card-title h6 fw-bold mb-2 text-primary">Počet čtenářů</h3>
+    <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">@stats.TotalUsers</p>
+       </div>
+         </div>
+    </div>
 
                 <div class="col-12 col-md-6 col-lg-4">
-                    <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
-                        <div class="card-body d-flex flex-column align-items-center p-4">
-                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
-                                 style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828z" />
-                                    <path d="M8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
-                                </svg>
-                            </div>
-                            <h3 class="card-title h6 fw-bold mb-2 text-primary">Aktivní výpůjčky</h3>
-                            <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">@stats.ActiveLoans</p>
-                        </div>
-                    </div>
+          <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
+     <div class="card-body d-flex flex-column align-items-center p-4">
+         <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
+      style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+    <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828z" />
+       <path d="M8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
+             </svg>
+  </div>
+          <h3 class="card-title h6 fw-bold mb-2 text-primary">Aktivní výpůjčky</h3>
+         <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">@stats.ActiveLoans</p>
+    </div>
+             </div>
+      </div>
+
+       <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
+    <div class="card-body d-flex flex-column align-items-center p-4">
+             <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
+       style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
+           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+       <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828z" />
+                <path d="M8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
+    </svg>
+          </div>
+          <h3 class="card-title h6 fw-bold mb-2 text-primary">Knih v knihovně</h3>
+      <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">@stats.TotalBooksInLibrary</p>
                 </div>
+           </div>
+          </div>
+     </div>
 
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
-                        <div class="card-body d-flex flex-column align-items-center p-4">
-                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
-                                 style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828z" />
-                                    <path d="M8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
-                                </svg>
-                            </div>
-                            <h3 class="card-title h6 fw-bold mb-2 text-primary">Knih v knihovně</h3>
-                            <p class="card-text flex-grow-1 mb-0 text-muted fs-4 fw-semibold">@stats.TotalBooksInLibrary</p>
-                        </div>
-                    </div>
-                </div>
-            </div>    
+            <!-- Active Book Loans Section -->
+     @if (!isLoansLoading)
+     {
+           <div class="border rounded-3 shadow-sm bg-body mb-4">
+               <div class="p-3 border-bottom">
+      <h2 class="h5 mb-0">Aktivní výpůjčky</h2>
+          </div>
 
-            <!-- Seznam knih (přesunutý z Books.razor, upravený pouze pro přehled na dashboardu) -->
-            <div class="border rounded-3 shadow-sm bg-body mb-4 p-3">
-                <h2 class="h5 mb-3">Seznam knih</h2>
+  @if (bookLoans == null || !GetActiveLoans().Any())
+          {
+      <div class="text-center py-4">
+   <div class="alert alert-info mb-0">
+       <i class="bi bi-info-circle me-2"></i>
+           Žádné aktivní výpůjčky nebyly nalezeny.
+     </div>
+  </div>
+  }
+         else
+             {
+      <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+        <tr>
+<th style="width:5%">#</th>
+         <th>Název knihy</th>
+      <th class="d-none d-lg-table-cell">Autor</th>
+         <th class="d-none d-md-table-cell">Čtenář</th>
+         <th class="d-none d-xl-table-cell">Email</th>
+  <th>Datum vypůjčení</th>
+       <th class="text-center">Dnů vypůjčeno</th>
+     </tr>
+            </thead>
+        <tbody>
+  @{
+    var pagedLoans = GetPagedLoans();
+      for (int i = 0; i < pagedLoans.Count; i++)
+           {
+     var loan = pagedLoans[i];
+  var globalIndex = (currentPage - 1) * pageSize + i + 1;
+     <tr>
+<td>@globalIndex</td>
+    <td class="fw-medium">@loan.BookTitle</td>
+             <td class="d-none d-lg-table-cell text-muted">@loan.BookAuthor</td>
+       <td class="d-none d-md-table-cell">@loan.UserFullName</td>
+   <td class="d-none d-xl-table-cell text-muted">@loan.UserEmail</td>
+ <td>
+         <small class="text-muted">
+  @loan.LoanDate.ToLocalTime().ToString("dd.MM.yyyy")
+  </small>
+           </td>
+         <td class="text-center">
+              <span class="badge bg-primary">
+        @loan.DaysLoaned dnů
+          </span>
+   </td>
+         </tr>
+      }
+         }
+      </tbody>
+       </table>
+  </div>
 
-                @if (isBooksLoading)
-                {
-                    <div class="d-flex justify-content-center py-3">
-                        <div class="spinner-border text-primary" role="status"></div>
-                    </div>
-                }
-                else if (dashboardBooks == null || !dashboardBooks.Any())
-                {
-                    <div class="text-center">
-                        <p class="text-muted mb-0">Žádné knihy k zobrazení.</p>
-                    </div>
-                }
-                else
-                {
-                    <div class="table-responsive">
-                        <table class="table table-sm table-striped align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width:4%">#</th>
-                                    <th>Název knihy</th>
-                                    <th class="d-none d-md-table-cell">Autor</th>
-                                    <th class="text-end">Počet vypůjčení</th>
-                                    <th class="text-center" style="width:10%">QR kód</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for (int i = 0; i < dashboardBooks.Count; i++)
-                                {
-                                    var b = dashboardBooks[i];
-                                    <tr>
-                                        <td>@(i + 1)</td>
-                                        <td class="fw-medium">@b.Title</td>
-                                        <td class="d-none d-md-table-cell">@b.AuthorFullName</td>
-                                        <td class="text-end">
-                                            <span class="text-muted">N/A</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-primary" 
-                                                    @onclick="() => ExportBookQrCode(b.InternalId)"
-                                                    title="Exportovat QR kód této knihy">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                                    <path d="M0 0h7v7H0V0zm8 0h7v7H8V0zM0 8h7v7H0V8zm8 0h7v7H8V8z"/>
-                                                    <path d="M1 1h5v5H1V1zm8 0h5v5H9V1zM1 9h5v5H1V9zm8 0h5v5H9V9z" fill="white"/>
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-            </div>
-        }
-        else
+   <!-- Pagination -->
+        @if (totalPages > 1)
+          {
+ <div class="d-flex justify-content-between align-items-center p-3 border-top">
+           <div class="text-muted small">
+         Zobrazeno @((currentPage - 1) * pageSize + 1) - @Math.Min(currentPage * pageSize, GetActiveLoans().Count) z @GetActiveLoans().Count
+      </div>
+         <nav aria-label="Navigace stránkování výpůjček">
+             <ul class="pagination mb-0">
+          <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+  <button class="page-link" @onclick="() => ChangePage(currentPage - 1)" disabled="@(currentPage == 1)">
+      <i class="bi bi-chevron-left"></i>
+           </button>
+      </li>
+    
+      @if (GetStartPage() > 1)
         {
-            <div class="alert alert-warning">
-                Nepodařilo se načíst statistiky.
-            </div>
+  <li class="page-item">
+             <button class="page-link" @onclick="() => ChangePage(1)">1</button>
+        </li>
+     @if (GetStartPage() > 2)
+     {
+      <li class="page-item disabled">
+      <span class="page-link">...</span>
+    </li>
+  }
+  }
+
+       @for (int page = GetStartPage(); page <= GetEndPage(); page++)
+      {
+                var pageNumber = page;
+  <li class="page-item @(currentPage == pageNumber ? "active" : "")">
+        <button class="page-link" @onclick="() => ChangePage(pageNumber)">
+     @pageNumber
+               </button>
+   </li>
+           }
+
+         @if (GetEndPage() < totalPages)
+ {
+           @if (GetEndPage() < totalPages - 1)
+   {
+   <li class="page-item disabled">
+        <span class="page-link">...</span>
+    </li>
         }
+     <li class="page-item">
+     <button class="page-link" @onclick="() => ChangePage(totalPages)">@totalPages</button>
+   </li>
+      }
+          
+                   <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+          <button class="page-link" @onclick="() => ChangePage(currentPage + 1)" disabled="@(currentPage == totalPages)">
+          <i class="bi bi-chevron-right"></i>
+       </button>
+   </li>
+                 </ul>
+            </nav>
+   </div>
+   }
+            }
+      </div>
+            }
+
+  <!-- Seznam knih -->
+  <div class="border rounded-3 shadow-sm bg-body mb-4 p-3">
+        <h2 class="h5 mb-3">Seznam knih</h2>
+
+        @if (isBooksLoading)
+       {
+        <div class="d-flex justify-content-center py-3">
+ <div class="spinner-border text-primary" role="status"></div>
+    </div>
+    }
+                else if (dashboardBooks == null || !dashboardBooks.Any())
+{
+           <div class="text-center">
+     <p class="text-muted mb-0">Žádné knihy k zobrazení.</p>
+               </div>
+     }
+  else
+     {
+          <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle mb-0">
+<thead class="table-light">
+    <tr>
+  <th style="width:4%">#</th>
+                <th>Název knihy</th>
+         <th class="d-none d-md-table-cell">Autor</th>
+  <th class="text-end">Počet vypůjčení</th>
+               <th class="text-center" style="width:10%">QR kód</th>
+            </tr>
+</thead>
+       <tbody>
+           @for (int i = 0; i < dashboardBooks.Count; i++)
+       {
+       var b = dashboardBooks[i];
+ <tr>
+<td>@(i + 1)</td>
+    <td class="fw-medium">@b.Title</td>
+   <td class="d-none d-md-table-cell">@b.AuthorFullName</td>
+   <td class="text-end">
+ <span class="text-muted">N/A</span>
+              </td>
+               <td class="text-center">
+      <button class="btn btn-sm btn-outline-primary" 
+ @onclick="() => ExportBookQrCode(b.InternalId)"
+         title="Exportovat QR kód této knihy">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M0 0h7v7H0V0zm8 0h7v7H8V0zM0 8h7v7H0V8zm8 0h7v7H8V8z"/>
+   <path d="M1 1h5v5H1V1zm8 0h5v5H9V1zM1 9h5v5H1V9zm8 0h5v5H9V9z" fill="white"/>
+             </svg>
+             </button>
+        </td>
+         </tr>
+           }
+      </tbody>
+     </table>
+         </div>
+     }
+      </div>
+        }
+   else
+        {
+   <div class="alert alert-warning">
+                Nepodařilo se načíst statistiky.
+   </div>
+   }
     </div>
 </div>
 
@@ -179,32 +316,203 @@
 <div class="position-relative w-100 overflow-hidden" style="line-height: 0;">
     <!-- Primary Wave -->
     <svg class="w-100 d-block" style="height: 5rem;" viewBox="0 0 1200 120" preserveAspectRatio="none">
-        <path d="M0,0 C300,80 900,0 1200,80 L1200,120 L0,120 Z" fill="#0a4db8"></path>
+ <path d="M0,0 C300,80 900,0 1200,80 L1200,120 L0,120 Z" fill="#0a4db8"></path>
     </svg>
     <!-- Secondary Wave -->
-    <svg class="w-100 d-block" style="height: 5rem; margin-top: -0.25rem; background-color: #0a4db8;" viewBox="0 0 1200 120" preserveAspectRatio="none">
-        <path d="M0,0 C400,60 800,0 1200,60 L1200,120 L0,120 Z" fill="#083d96"></path>
+  <svg class="w-100 d-block" style="height: 5rem; margin-top: -0.25rem; background-color: #0a4db8;" viewBox="0 0 1200 120" preserveAspectRatio="none">
+    <path d="M0,0 C400,60 800,0 1200,60 L1200,120 L0,120 Z" fill="#083d96"></path>
     </svg>
 </div>
+
+<!-- QR Scanner Modal -->
+@if (showQrScanner)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+         <div class="modal-header">
+ <h5 class="modal-title">Skenovat QR kód knihy</h5>
+           <button type="button" class="btn-close" @onclick="CloseQrScanner"></button>
+      </div>
+        <div class="modal-body text-center">
+       @if (scannerError != null)
+  {
+          <div class="alert alert-danger">@scannerError</div>
+       }
+     <video id="qr-video" style="width: 100%; max-width: 500px; border: 2px solid #0a4db8; border-radius: 8px;"></video>
+          <p class="text-muted mt-3">Namiřte kameru na QR kód knihy</p>
+ </div>
+     <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" @onclick="CloseQrScanner">Zrušit</button>
+   </div>
+   </div>
+        </div>
+    </div>
+}
+
+<!-- Book Action Modal -->
+@if (showBookActionModal && scannedBook != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+   <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+            <div class="modal-header">
+     <h5 class="modal-title">Detail knihy</h5>
+         <button type="button" class="btn-close" @onclick="CloseBookActionModal"></button>
+</div>
+  <div class="modal-body">
+ @if (actionMessage != null)
+          {
+                <div class="alert @(actionSuccess ? "alert-success" : "alert-danger") alert-dismissible">
+      @actionMessage
+   <button type="button" class="btn-close" @onclick="() => actionMessage = null"></button>
+        </div>
+    }
+         
+      <div class="card border-0 shadow-sm mb-3">
+         <div class="card-body">
+                <h4 class="card-title text-primary">@scannedBook.BookTitle</h4>
+    <p class="card-text">
+   <strong>Autor:</strong> @scannedBook.BookAuthor<br />
+        <strong>Žánr:</strong> @scannedBook.Genre
+ </p>
+      
+       @if (scannedBook.IsCurrentlyLoaned)
+           {
+      <div class="alert alert-info">
+      <i class="bi bi-info-circle me-2"></i>
+               <strong>Aktuálně vypůjčeno</strong><br />
+          Vypůjčil: @scannedBook.CurrentBorrowerName<br />
+       Datum vypůjčení: @scannedBook.LoanDate?.ToLocalTime().ToString("dd.MM.yyyy HH:mm")<br />
+      Vypůjčeno po dobu: @scannedBook.DaysLoaned dnů
+               </div>
+           }
+else
+         {
+<div class="alert alert-success">
+  <i class="bi bi-check-circle me-2"></i>
+      Kniha je k dispozici k vypůjčení
+             </div>
+                }
+  </div>
+       </div>
+
+       @if (scannedBook.IsCurrentlyLoaned)
+    {
+    <div class="d-flex gap-2">
+            <button class="btn btn-success flex-fill" @onclick="ReturnScannedBook" disabled="@isProcessing">
+              <i class="bi bi-arrow-return-left me-2"></i>Vrátit knihu
+          </button>
+        <button class="btn btn-primary flex-fill" @onclick="ProlongScannedBook" disabled="@isProcessing">
+       <i class="bi bi-clock-history me-2"></i>Prodloužit o 14 dní
+        </button>
+     </div>
+         }
+    else
+{
+      <div class="mb-3">
+ <label class="form-label">Vyberte uživatele</label>
+          <select class="form-select" @bind="selectedUserId">
+        <option value="0">-- Vyberte uživatele --</option>
+      @foreach (var user in availableUsers)
+     {
+         <option value="@user.Id">@user.Name (@user.Email)</option>
+             }
+   </select>
+       </div>
+      <button class="btn btn-primary w-100" @onclick="LendScannedBook" disabled="@(isProcessing || selectedUserId == 0)">
+       <i class="bi bi-book me-2"></i>Vypůjčit knihu
+      </button>
+    }
+              </div>
+      <div class="modal-footer">
+   <button type="button" class="btn btn-secondary" @onclick="CloseBookActionModal">Zavřít</button>
+     </div>
+       </div>
+      </div>
+    </div>
+}
+
+<!-- Manual Input Modal -->
+@if (showManualInput)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+     <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+              <h5 class="modal-title">Zadat ID knihy ručně</h5>
+     <button type="button" class="btn-close" @onclick="CloseManualInput"></button>
+       </div>
+         <div class="modal-body">
+           @if (manualInputError != null)
+                {
+            <div class="alert alert-danger alert-dismissible">
+          @manualInputError
+  <button type="button" class="btn-close" @onclick="() => manualInputError = null"></button>
+      </div>
+              }
+          <div class="mb-3">
+          <label for="publicIdInput" class="form-label">PublicId knihy (GUID)</label>
+<input type="text" 
+  class="form-control" 
+             id="publicIdInput" 
+   @bind="manualPublicIdInput" 
+         placeholder="např. 12345678-1234-1234-1234-123456789abc"
+          @onkeypress="HandleManualInputKeyPress" />
+  <small class="form-text text-muted">
+            Zadejte PublicId knihy ve formátu GUID
+        </small>
+    </div>
+ </div>
+    <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" @onclick="CloseManualInput">Zrušit</button>
+   <button type="button" class="btn btn-primary" @onclick="SubmitManualInput" disabled="@(string.IsNullOrWhiteSpace(manualPublicIdInput))">
+      <i class="bi bi-search me-2"></i>Vyhledat knihu
+      </button>
+       </div>
+            </div>
+        </div>
+</div>
+}
 
 @code {
     private LibraryStatisticsDto? stats;
     private bool isLoading = true;
 
-    // Books for dashboard
     private List<BookListItemDto> dashboardBooks = new();
     private bool isBooksLoading = true;
+
+    private List<BookLoanListItemDto> bookLoans = new();
+    private bool isLoansLoading = true;
+    private int currentPage = 1;
+    private const int pageSize = 6;
+
+    private int totalPages => (int)Math.Ceiling(GetActiveLoans().Count / (double)pageSize);
+
+    private bool showQrScanner = false;
+    private bool showBookActionModal = false;
+    private bool showManualInput = false;
+    private string? scannerError;
+    private string? manualInputError;
+    private string? actionMessage;
+    private bool actionSuccess;
+  private BookLoanStatusDto? scannedBook;
+    private int selectedUserId = 0;
+    private List<UserDto> availableUsers = new();
+    private bool isProcessing = false;
+    private DotNetObjectReference<Dashboard>? dotNetRef;
+    private string manualPublicIdInput = string.Empty;
 
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
-    {
-        isLoading = true;
+ {
+    isLoading = true;
         isBooksLoading = true;
-        errorMessage = null;
+  isLoansLoading = true;
+     errorMessage = null;
 
-        // Sekvenční načítání — NEparalelizovat EF dotazy přes stejný scoped DbContext
-        try
+      try
         {
             stats = await LibraryStatsQuery.ExecuteAsync();
         }
@@ -212,58 +520,390 @@
         {
             Logger.LogError(ex, "Error loading statistics for dashboard");
             errorMessage = "Nepodařilo se načíst statistiky.";
-        }
+    }
 
         try
         {
-            var books = await GetAvailableBooks.ExecuteAsync();
+ var books = await GetAvailableBooks.ExecuteAsync();
             dashboardBooks = books?.ToList() ?? new();
         }
-        catch (Exception ex)
+  catch (Exception ex)
         {
-            Logger.LogError(ex, "Error loading books for dashboard");
-            errorMessage = errorMessage == null
-                ? "Nepodařilo se načíst seznam knih."
-                : errorMessage + " (seznam knih).";
+ Logger.LogError(ex, "Error loading books for dashboard");
+        errorMessage = errorMessage == null
+      ? "Nepodařilo se načíst seznam knih."
+      : errorMessage + " (seznam knih).";
         }
         finally
         {
-            isLoading = false;
             isBooksLoading = false;
         }
+
+      try
+        {
+       var loans = await GetAllBookLoans.ExecuteAsync();
+ bookLoans = loans?.ToList() ?? new();
+     
+            await LoadAvailableUsers();
+   }
+     catch (Exception ex)
+      {
+            Logger.LogError(ex, "Error loading book loans");
+      errorMessage = errorMessage == null
+   ? "Nepodařilo se načíst výpůjčky knih."
+             : errorMessage + " (výpůjčky).";
+        }
+        finally
+  {
+     isLoansLoading = false;
+      isLoading = false;
+      }
+    }
+
+    private async Task LoadAvailableUsers()
+    {
+        try
+  {
+        var users = await _uow.Users.GetAllAsync();
+            availableUsers = users.Select(u => new UserDto 
+            { 
+    Id = u.Id, 
+    Name = u.Name, 
+                Email = u.Email 
+      }).ToList();
+        }
+        catch (Exception ex)
+   {
+            Logger.LogError(ex, "Error loading users");
+        }
+    }
+
+    private async Task OpenQrScanner()
+    {
+        showQrScanner = true;
+        scannerError = null;
+     StateHasChanged();
+        
+        await Task.Delay(100);
+  
+        try
+        {
+            dotNetRef = DotNetObjectReference.Create(this);
+      var success = await JS.InvokeAsync<bool>("qrScanner.startScanner", "qr-video", dotNetRef);
+ 
+          if (!success)
+       {
+  scannerError = "Nepodařilo se spustit skenování QR kódu.";
+      }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error starting QR scanner");
+          scannerError = "Chyba při spuštění skeneru: " + ex.Message;
+     }
+    }
+
+    private async Task CloseQrScanner()
+{
+        try
+        {
+  await JS.InvokeVoidAsync("qrScanner.stopScanner");
+        }
+        catch { }
+        
+        showQrScanner = false;
+        scannerError = null;
+        dotNetRef?.Dispose();
+        dotNetRef = null;
+  }
+
+    private void OpenManualInput()
+  {
+    showManualInput = true;
+        manualInputError = null;
+      manualPublicIdInput = string.Empty;
+    }
+
+    private void CloseManualInput()
+    {
+    showManualInput = false;
+        manualInputError = null;
+        manualPublicIdInput = string.Empty;
+    }
+
+    private async Task HandleManualInputKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(manualPublicIdInput))
+        {
+         await SubmitManualInput();
+        }
+    }
+
+    private async Task SubmitManualInput()
+    {
+        if (string.IsNullOrWhiteSpace(manualPublicIdInput))
+            return;
+
+        if (Guid.TryParse(manualPublicIdInput.Trim(), out var bookPublicId))
+        {
+            CloseManualInput();
+     await LoadBookDetails(bookPublicId);
+        }
+        else
+     {
+            manualInputError = "Neplatný formát ID. Zadejte prosím platný GUID (např. 12345678-1234-1234-1234-123456789abc).";
+        }
+    }
+
+    private async Task LoadBookDetails(Guid bookPublicId)
+    {
+        try
+     {
+            scannedBook = await GetBookLoanStatus.ExecuteAsync(bookPublicId);
+         
+   if (scannedBook == null)
+          {
+    actionMessage = "Kniha nebyla nalezena.";
+    actionSuccess = false;
+            }
+    else
+    {
+                showBookActionModal = true;
+       actionMessage = null;
+        selectedUserId = 0;
+          }
+ 
+         StateHasChanged();
+    }
+  catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading book details");
+   actionMessage = "Chyba při načítání informací o knize.";
+ actionSuccess = false;
+      }
+    }
+
+    private async Task LendScannedBook()
+    {
+        if (selectedUserId == 0 || scannedBook == null)
+            return;
+
+   isProcessing = true;
+        StateHasChanged();
+
+        try
+    {
+   var dto = new CreateBookLoanDto
+            {
+        BookId = scannedBook.BookId,
+UserId = selectedUserId
+            };
+
+            var response = await CreateBookLoan.ExecuteAsync(dto);
+ actionMessage = response.Message;
+         actionSuccess = response.Success;
+
+            if (response.Success)
+      {
+    await RefreshLoans();
+ await Task.Delay(2000);
+     await CloseBookActionModal();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error lending book");
+            actionMessage = "Chyba při vypůjčování knihy.";
+      actionSuccess = false;
+        }
+        finally
+        {
+    isProcessing = false;
+            StateHasChanged();
+   }
+    }
+
+    private async Task ReturnScannedBook()
+    {
+  if (scannedBook == null)
+ return;
+
+        isProcessing = true;
+   StateHasChanged();
+
+        try
+        {
+        var response = await ReturnBook.ExecuteAsync(scannedBook.BookPublicId);
+     actionMessage = response.Message;
+   actionSuccess = response.Success;
+
+   if (response.Success)
+          {
+                await RefreshLoans();
+            await Task.Delay(2000);
+          await CloseBookActionModal();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error returning book");
+            actionMessage = "Chyba při vracení knihy.";
+       actionSuccess = false;
+        }
+        finally
+      {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ProlongScannedBook()
+    {
+   if (scannedBook == null)
+            return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+try
+        {
+            var dto = new ProlongBookLoanDto
+     {
+       BookPublicId = scannedBook.BookPublicId,
+   DaysToProlong = 14
+     };
+
+          var response = await ProlongBookLoan.ExecuteAsync(dto);
+            actionMessage = response.Message;
+  actionSuccess = response.Success;
+
+ if (response.Success)
+      {
+  await RefreshLoans();
+      await Task.Delay(2000);
+       await CloseBookActionModal();
+ }
+        }
+        catch (Exception ex)
+        {
+  Logger.LogError(ex, "Error prolonging loan");
+            actionMessage = "Chyba při prodlužování výpůjčky.";
+      actionSuccess = false;
+        }
+      finally
+        {
+     isProcessing = false;
+ StateHasChanged();
+        }
+    }
+
+  private async Task RefreshLoans()
+    {
+        try
+        {
+      var loans = await GetAllBookLoans.ExecuteAsync();
+            bookLoans = loans?.ToList() ?? new();
+            
+  var updatedStats = await LibraryStatsQuery.ExecuteAsync();
+            if (updatedStats != null)
+            {
+      stats = updatedStats;
+            }
+        }
+        catch (Exception ex)
+        {
+      Logger.LogError(ex, "Error refreshing loans");
+        }
+    }
+
+    private async Task CloseBookActionModal()
+    {
+        showBookActionModal = false;
+ scannedBook = null;
+   actionMessage = null;
+        selectedUserId = 0;
+        StateHasChanged();
+    }
+
+    private List<BookLoanListItemDto> GetActiveLoans()
+    {
+      return bookLoans.Where(bl => !bl.IsReturned).ToList();
+    }
+
+    private List<BookLoanListItemDto> GetPagedLoans()
+    {
+        return GetActiveLoans()
+    .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+       .ToList();
+    }
+
+    private int GetStartPage()
+    {
+ return Math.Max(1, currentPage - 2);
+    }
+
+    private int GetEndPage()
+    {
+ return Math.Min(totalPages, currentPage + 2);
+  }
+
+    private void ChangePage(int newPage)
+    {
+        if (newPage < 1 || newPage > totalPages)
+     return;
+
+  currentPage = newPage;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task OnQRCodeScanned(string qrData)
+    {
+ await CloseQrScanner();
+        
+        if (Guid.TryParse(qrData, out var bookPublicId))
+        {
+            await LoadBookDetails(bookPublicId);
+        }
+        else
+        {
+       actionMessage = "Neplatný QR kód. Zkuste to prosím znovu.";
+            actionSuccess = false;
+     StateHasChanged();
+    }
     }
 
     private async Task DownloadFileFromBytesAsync(string fileName, byte[] bytes)
     {
-        var base64 = Convert.ToBase64String(bytes);
-        await JS.InvokeVoidAsync("downloadFileFromBytes", fileName, base64);
+   var base64 = Convert.ToBase64String(bytes);
+      await JS.InvokeVoidAsync("downloadFileFromBytes", fileName, base64);
     }
 
-
-    private async Task ExportToExcel(int[]? ids = null)
+ private async Task ExportToExcel(int[]? ids = null)
     {
-        try
+     try
         {
             byte[] bytes;
 
             if (ids != null && ids.Any())
-                bytes = await ExportBooksQuery.ExportToExcelAsync(ids);
+      bytes = await ExportBooksQuery.ExportToExcelAsync(ids);
             else
-                bytes = await ExportBooksQuery.ExportAllToExcelAsync();
+   bytes = await ExportBooksQuery.ExportAllToExcelAsync();
 
             if (bytes == null || bytes.Length == 0)
             {
-                await JS.InvokeVoidAsync("alert", "⚠️ Žádná data k exportu.");
-                return;
-            }
+   await JS.InvokeVoidAsync("alert", "⚠️ Žádná data k exportu.");
+     return;
+     }
 
-            var fileName = $"Knihy_{DateTime.Now:yyyy-MM-dd_HH-mm}.xlsx";
-            await DownloadFileFromBytesAsync(fileName, bytes);
+   var fileName = $"Knihy_{DateTime.Now:yyyy-MM-dd_HH-mm}.xlsx";
+  await DownloadFileFromBytesAsync(fileName, bytes);
         }
-        catch (Exception ex)
+      catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", $"❌ Chyba při exportu: {ex.Message}");
-        }
+await JS.InvokeVoidAsync("alert", $"❌ Chyba při exportu: {ex.Message}");
+      }
     }
 
     private async Task ExportBookQrCode(int bookId)
@@ -272,22 +912,31 @@
         {
             var excelBytes = await ExportBookQrCodes.ExportToExcelAsync(new int[] { bookId });
   
-            if (excelBytes == null || excelBytes.Length == 0)
-            {
-                await JS.InvokeVoidAsync("alert", "⚠️ Nepodařilo se vygenerovat QR kód.");
-                return;
-            }
+  if (excelBytes == null || excelBytes.Length == 0)
+    {
+       await JS.InvokeVoidAsync("alert", "⚠️ Nepodařilo se vygenerovat QR kód.");
+    return;
+      }
 
             var fileName = $"QR_Kod_Kniha_{bookId}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
             await DownloadFileFromBytesAsync(fileName, excelBytes);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error exporting QR code for book {BookId}", bookId);
+  Logger.LogError(ex, "Error exporting QR code for book {BookId}", bookId);
             await JS.InvokeVoidAsync("alert", $"❌ Chyba při exportu QR kódu: {ex.Message}");
         }
     }
 
+    public async ValueTask DisposeAsync()
+    {
+   if (showQrScanner)
+        {
+    await CloseQrScanner();
+        }
+        
+dotNetRef?.Dispose();
+ }
 }
 
 
