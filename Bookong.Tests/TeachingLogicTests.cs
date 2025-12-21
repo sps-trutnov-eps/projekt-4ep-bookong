@@ -70,5 +70,20 @@ namespace Bookong.Tests
 
             Assert.False(result); // Musí být FALSE (chyba)
         }
+
+        // --- NOVÝ TEST (Case Insensitive) ---
+        [Fact]
+        public void Filter_LowerCaseSearch_ShouldFindCapitalizedItem()
+        {
+            var logic = new TeachingLogicService();
+            var data = GetTestData();
+
+            // Hledáme "matematika" malými písmeny, ale v datech je "Matematika"
+            var result = logic.FilterFolders(data, "matematika", null, null, null, null);
+
+            // Musí to najít, i když velikost písmen nesedí
+            Assert.Single(result);
+            Assert.Equal("Matematika", result.First().Name);
+        }
     }
 }
