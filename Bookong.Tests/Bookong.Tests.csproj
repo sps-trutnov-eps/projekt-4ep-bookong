@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Bookong.Domain\Bookong.Domain.csproj" />
     <ProjectReference Include="..\Bookong.Infrastructure\Bookong.Infrastructure.csproj" />
+    <ProjectReference Include="..\Bookong.Web\Bookong.Web.csproj" />
   </ItemGroup>
 
 </Project>
