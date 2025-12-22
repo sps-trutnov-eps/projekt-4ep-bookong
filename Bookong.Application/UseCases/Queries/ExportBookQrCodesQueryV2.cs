@@ -30,7 +30,33 @@ namespace Bookong.Application.UseCases.Queries
         public async Task<byte[]> ExportToExcelAsync(int[] ids)
         {
             var data = await ExecuteAsync(ids);
+            return GenerateExcelFromData(data);
+        }
 
+        public async Task<byte[]> ExportToExcelByPublicIdsAsync(Guid[] publicIds)
+        {
+            var allBooks = await _uow.Books.GetAllAsync();
+            var books = allBooks.Where(b => publicIds.Contains(b.PublicId)).ToList();
+
+            var data = books.Select(b => new BookQrCodeDto
+            {
+                InternalId = b.Id,
+                PublicId = b.PublicId,
+                Name = b.Name,
+                QrCodeImage = _uow.Books.GenerateQrCodeImage(b.PublicId)
+            }).ToList();
+
+            return GenerateExcelFromData(data);
+        }
+
+        public async Task<byte[]> ExportAllToExcelAsync()
+        {
+            int[] bookIds = await _uow.Books.GetAllIdsAsync();
+            return await ExportToExcelAsync(bookIds);
+        }
+
+        private byte[] GenerateExcelFromData(IEnumerable<BookQrCodeDto> data)
+        {
             using var workbook = new XLWorkbook();
             var ws = workbook.Worksheets.Add("QR Kódy knih");
 
@@ -87,12 +113,6 @@ namespace Bookong.Application.UseCases.Queries
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
             return stream.ToArray();
-        }
-
-        public async Task<byte[]> ExportAllToExcelAsync()
-        {
-            int[] bookIds = await _uow.Books.GetAllIdsAsync();
-            return await ExportToExcelAsync(bookIds);
         }
     }
 }

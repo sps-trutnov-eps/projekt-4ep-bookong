@@ -17,15 +17,12 @@ namespace Bookong.Application.UseCases.Queries
 
         public async Task<IReadOnlyList<BookListItemDto>> ExecuteAsync()
         {
-            // Fix: IBookRepository does not support Include/Where/Select directly.
-            // Use GetAllAsync() and project manually.
             var books = await _uow.Books.GetAllAsync();
 
             var result = books
                 .Where(b => b.Borrowable)
                 .Select(b => new BookListItemDto
                 {
-                    InternalId = b.Id,
                     PublicId = b.PublicId,
                     Title = b.Name,
                     AuthorFullName = $"{b.Author.FirstName} {b.Author.LastName}",

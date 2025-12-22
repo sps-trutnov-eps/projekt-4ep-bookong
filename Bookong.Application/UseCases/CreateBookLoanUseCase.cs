@@ -18,26 +18,26 @@ namespace Bookong.Application.UseCases
         {
             try
             {
-                var book = await _uow.Books.GetByIdAsync(dto.BookId);
+                var book = await _uow.Books.GetByPublicIdAsync(dto.BookPublicId);
                 if (book == null)
                     return GenericResponse.FailureResponse("Kniha nebyla nalezena.");
 
-                var user = await _uow.Users.GetByIdAsync(dto.UserId);
+                var user = await _uow.Users.GetByPublicIdAsync(dto.PublicId);
                 if (user == null)
                     return GenericResponse.FailureResponse("Uživatel nebyl nalezen.");
 
                 var existingLoans = await _uow.BookLoans.GetAllAsync();
                 var activeLoan = existingLoans.FirstOrDefault(bl => 
-                    bl.BookId == dto.BookId && bl.ReturnDate == null);
+                    bl.BookId == book.Id && bl.ReturnDate == null);
 
                 if (activeLoan != null)
                     return GenericResponse.FailureResponse("Tato kniha je již vypůjčena.");
 
                 var bookLoan = new BookLoan
                 {
-                    BookId = dto.BookId,
+                    BookId = book.Id,
                     Book = null!,
-                    UserId = dto.UserId,
+                    UserId = user.Id,
                     User = null!,
                     LoanDate = DateTime.UtcNow
                 };

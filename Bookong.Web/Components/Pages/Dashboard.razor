@@ -287,7 +287,7 @@
                                         </td>
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-outline-primary"
-                                                    @onclick="() => ExportBookQrCode(b.InternalId)"
+                                                    @onclick="() => ExportBookQrCodeByPublicId(b.PublicId)"
                                                     title="Exportovat QR kód této knihy">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                                                     <path d="M0 0h7v7H0V0zm8 0h7v7H8V0zM0 8h7v7H0V8zm8 0h7v7H8V8z" />
@@ -412,15 +412,15 @@
                     {
                         <div class="mb-3">
                             <label class="form-label">Vyberte uživatele</label>
-                            <select class="form-select" @bind="selectedUserId">
-                                <option value="0">-- Vyberte uživatele --</option>
+                            <select class="form-select" @bind="selectedUserPublicId">
+                                <option value="@Guid.Empty">-- Vyberte uživatele --</option>
                                 @foreach (var user in availableUsers)
                                 {
-                                    <option value="@user.Id">@user.Name (@user.Email)</option>
+                                    <option value="@user.PublicId">@user.Name (@user.Email)</option>
                                 }
                             </select>
                         </div>
-                        <button class="btn btn-primary w-100" @onclick="LendScannedBook" disabled="@(isProcessing || selectedUserId == 0)">
+                        <button class="btn btn-primary w-100" @onclick="LendScannedBook" disabled="@(isProcessing || selectedUserPublicId == Guid.Empty)">
                             <i class="bi bi-book me-2"></i>Vypůjčit knihu
                         </button>
                     }
@@ -492,14 +492,14 @@
     private bool showQrScanner = false;
     private bool showBookActionModal = false;
     private bool showManualInput = false;
-    private string? scannerError;
-    private string? manualInputError;
+  private string? scannerError;
+  private string? manualInputError;
     private string? actionMessage;
     private bool actionSuccess;
     private BookLoanStatusDto? scannedBook;
-    private int selectedUserId = 0;
+    private Guid selectedUserPublicId = Guid.Empty;
     private List<UserDto> availableUsers = new();
-    private bool isProcessing = false;
+  private bool isProcessing = false;
     private DotNetObjectReference<Dashboard>? dotNetRef;
     private string manualPublicIdInput = string.Empty;
 
@@ -567,7 +567,7 @@
             var users = await _uow.Users.GetAllAsync();
             availableUsers = users.Select(u => new UserDto
             {
-                Id = u.Id,
+                PublicId = u.PublicId,
                 Name = u.Name,
                 Email = u.Email
             }).ToList();
@@ -662,65 +662,65 @@
             scannedBook = await GetBookLoanStatus.ExecuteAsync(bookPublicId);
 
             if (scannedBook == null)
+     {
+    actionMessage = "Kniha nebyla nalezena.";
+    actionSuccess = false;
+   }
+        else
             {
-                actionMessage = "Kniha nebyla nalezena.";
-                actionSuccess = false;
-            }
-            else
-            {
-                showBookActionModal = true;
+    showBookActionModal = true;
                 actionMessage = null;
-                selectedUserId = 0;
-            }
+   selectedUserPublicId = Guid.Empty;
+       }
 
             StateHasChanged();
         }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error loading book details");
+     catch (Exception ex)
+{
+        Logger.LogError(ex, "Error loading book details");
             actionMessage = "Chyba při načítání informací o knize.";
             actionSuccess = false;
         }
-    }
+  }
 
     private async Task LendScannedBook()
     {
-        if (selectedUserId == 0 || scannedBook == null)
-            return;
+        if (selectedUserPublicId == Guid.Empty || scannedBook == null)
+   return;
 
         isProcessing = true;
         StateHasChanged();
 
         try
         {
-            var dto = new CreateBookLoanDto
-            {
-                BookId = scannedBook.BookId,
-                UserId = selectedUserId
-            };
+var dto = new CreateBookLoanDto
+       {
+     BookPublicId = scannedBook.BookPublicId,
+           PublicId = selectedUserPublicId
+  };
 
-            var response = await CreateBookLoan.ExecuteAsync(dto);
+    var response = await CreateBookLoan.ExecuteAsync(dto);
             actionMessage = response.Message;
-            actionSuccess = response.Success;
+     actionSuccess = response.Success;
 
-            if (response.Success)
-            {
-                await RefreshLoans();
-                await Task.Delay(2000);
-                await CloseBookActionModal();
-            }
+       if (response.Success)
+    {
+    await RefreshLoans();
+      await Task.Delay(2000);
+    await CloseBookActionModal();
+   }
+    }
+     catch (Exception ex)
+    {
+          Logger.LogError(ex, "Error lending book");
+          actionMessage = "Chyba při vypůjčování knihy.";
+      actionSuccess = false;
         }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error lending book");
-            actionMessage = "Chyba při vypůjčování knihy.";
-            actionSuccess = false;
-        }
-        finally
-        {
-            isProcessing = false;
+  finally
+      {
+          isProcessing = false;
             StateHasChanged();
-        }
+    }
     }
 
     private async Task ReturnScannedBook()
@@ -821,7 +821,7 @@
         showBookActionModal = false;
         scannedBook = null;
         actionMessage = null;
-        selectedUserId = 0;
+        selectedUserPublicId = Guid.Empty;
         StateHasChanged();
     }
 
@@ -928,6 +928,28 @@
         }
     }
 
+    private async Task ExportBookQrCodeByPublicId(Guid bookPublicId)
+    {
+   try
+        {
+            var excelBytes = await ExportBookQrCodes.ExportToExcelByPublicIdsAsync(new Guid[] { bookPublicId });
+
+        if (excelBytes == null || excelBytes.Length == 0)
+         {
+         await JS.InvokeVoidAsync("alert", "⚠️ Nepodařilo se vygenerovat QR kód.");
+     return;
+            }
+
+       var fileName = $"QR_Kod_Kniha_{bookPublicId}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+      await DownloadFileFromBytesAsync(fileName, excelBytes);
+   }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error exporting QR code for book {BookPublicId}", bookPublicId);
+    await JS.InvokeVoidAsync("alert", $"❌ Chyba při exportu QR kódu: {ex.Message}");
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (showQrScanner)
@@ -938,5 +960,260 @@
         dotNetRef?.Dispose();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

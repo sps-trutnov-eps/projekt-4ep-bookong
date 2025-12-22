@@ -2,7 +2,6 @@ namespace Bookong.Application.DTOs
 {
     public class BookLoanListItemDto
     {
-        public int Id { get; set; }
         public Guid PublicId { get; set; }
         public string BookTitle { get; set; } = string.Empty;
         public string BookAuthor { get; set; } = string.Empty;

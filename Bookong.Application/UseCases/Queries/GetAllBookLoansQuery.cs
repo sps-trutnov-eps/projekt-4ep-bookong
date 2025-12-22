@@ -20,7 +20,6 @@ namespace Bookong.Application.UseCases.Queries
             var result = loans
                 .Select(bl => new BookLoanListItemDto
                 {
-                    Id = bl.Id,
                     PublicId = bl.PublicId,
                     BookTitle = bl.Book.Name,
                     BookAuthor = $"{bl.Book.Author.FirstName} {bl.Book.Author.LastName}",

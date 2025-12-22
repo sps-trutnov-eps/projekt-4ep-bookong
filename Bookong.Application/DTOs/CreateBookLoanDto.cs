@@ -1,9 +1,9 @@
-﻿namespace Bookong.Application.DTOs
+namespace Bookong.Application.DTOs
 {
     public class CreateBookLoanDto
     {
-        public int BookId { get; set; }
-        public int UserId { get; set; }
+        public Guid BookPublicId { get; set; }
+        public Guid PublicId { get; set; }
         public DateTime? ReturnDate { get; set; }
     }
 }
