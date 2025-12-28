@@ -19,6 +19,9 @@ builder.Services.AddDbContext<BookongDbContext>(options =>
 // Unit of Work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+// Application Services
+builder.Services.AddScoped<IBookQrCodeImageGenerationService, BookQrCodeImageGenerationService>();
+
 // Application UseCases, Queries
 builder.Services.AddScoped<IGetAvailableBooksQuery, GetAvailableBooksQuery>();
 builder.Services.AddScoped<IGetMaturitaBookSelectionQuery, GetMaturitaBookSelectionQuery>();

@@ -20,8 +20,5 @@ namespace Bookong.Domain.Interfaces
         Task<IEnumerable<Book>> GetByIdsAsync(int[] ids);
 
         Task<int[]> GetAllIdsAsync();
-
-        // QR Code generation based on book's PublicId
-        byte[] GenerateQrCodeImage(Guid bookPublicId);
     }
 }

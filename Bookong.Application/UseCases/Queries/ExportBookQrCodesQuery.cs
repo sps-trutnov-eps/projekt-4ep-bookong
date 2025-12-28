@@ -8,10 +8,12 @@ namespace Bookong.Application.UseCases.Queries
     public class ExportBookQrCodesQuery : IExportBookQrCodesQuery
     {
         private readonly IUnitOfWork _uow;
+        private readonly IBookQrCodeImageGenerationService _qrCodeService;
 
-        public ExportBookQrCodesQuery(IUnitOfWork uow)
+        public ExportBookQrCodesQuery(IUnitOfWork uow, IBookQrCodeImageGenerationService qrCodeService)
         {
             _uow = uow;
+            _qrCodeService = qrCodeService;
         }
 
         public async Task<IEnumerable<BookQrCodeDto>> ExecuteAsync(int[] ids)
@@ -23,7 +25,7 @@ namespace Bookong.Application.UseCases.Queries
                 InternalId = b.Id,
                 PublicId = b.PublicId,
                 Name = b.Name,
-                QrCodeImage = _uow.Books.GenerateQrCodeImage(b.PublicId)
+                QrCodeImage = _qrCodeService.GenerateQrCodeImage(b.PublicId)
             }).ToList();
         }
 
@@ -43,7 +45,7 @@ namespace Bookong.Application.UseCases.Queries
                 InternalId = b.Id,
                 PublicId = b.PublicId,
                 Name = b.Name,
-                QrCodeImage = _uow.Books.GenerateQrCodeImage(b.PublicId)
+                QrCodeImage = _qrCodeService.GenerateQrCodeImage(b.PublicId)
             }).ToList();
 
             return GenerateExcelFromData(data);
