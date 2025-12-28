@@ -26,7 +26,7 @@ builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase
 builder.Services.AddScoped<IDeselectMaturitaBookUseCase, DeselectMaturitaBookUseCase>();
 builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
 builder.Services.AddScoped<IExportBooksQuery, ExportBooksQuery>();
-builder.Services.AddScoped<IExportBookQrCodesQueryV2, ExportBookQrCodesQueryV2>();
+builder.Services.AddScoped<IExportBookQrCodesQuery, ExportBookQrCodesQuery>();
 builder.Services.AddScoped<IGetAllBookLoansQuery, GetAllBookLoansQuery>();
 builder.Services.AddScoped<IGetBookLoanStatusQuery, GetBookLoanStatusQuery>();
 builder.Services.AddScoped<ICreateBookLoanUseCase, CreateBookLoanUseCase>();

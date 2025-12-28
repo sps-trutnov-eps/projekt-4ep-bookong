@@ -5,11 +5,11 @@ using ClosedXML.Excel;
 
 namespace Bookong.Application.UseCases.Queries
 {
-    public class ExportBookQrCodesQueryV2 : IExportBookQrCodesQueryV2
+    public class ExportBookQrCodesQuery : IExportBookQrCodesQuery
     {
         private readonly IUnitOfWork _uow;
 
-        public ExportBookQrCodesQueryV2(IUnitOfWork uow)
+        public ExportBookQrCodesQuery(IUnitOfWork uow)
         {
             _uow = uow;
         }
