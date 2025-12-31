@@ -72,11 +72,14 @@ namespace Bookong.Application.UseCases.Queries
             header.Style.Font.Bold = true;
             header.Style.Fill.BackgroundColor = XLColor.LightBlue;
             header.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            header.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+            ws.Row(1).Height = 25;
 
             // Set column widths
             ws.Column(1).Width = 10;
             ws.Column(2).Width = 40;
-            ws.Column(3).Width = 20;
+            ws.Column(3).Width = 18;
             ws.Column(4).Width = 40;
 
             int row = 2;
@@ -89,16 +92,17 @@ namespace Bookong.Application.UseCases.Queries
                 // Book name
                 ws.Cell(row, 2).Value = book.Name;
                 ws.Cell(row, 2).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                ws.Cell(row, 2).Style.Alignment.WrapText = true;
 
                 // QR Code image
                 try
                 {
                     using var qrStream = new MemoryStream(book.QrCodeImage);
                     var picture = ws.AddPicture(qrStream)
-                .MoveTo(ws.Cell(row, 3))
-                    .Scale(0.45);
+                        .MoveTo(ws.Cell(row, 3), 3, 3)
+                        .WithSize(125, 125);
 
-                    ws.Row(row).Height = 70;
+                    ws.Row(row).Height = 96;
                 }
                 catch (Exception ex)
                 {
