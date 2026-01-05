@@ -38,8 +38,6 @@ builder.Services.AddScoped<ICreateBookUseCase, CreateBookUseCase>();
 builder.Services.AddScoped<ICheckDuplicateQuery, CheckDuplicateQuery>();
 
 // Session services
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
 builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
 builder.Services.AddScoped<ICompleteUserRegistrationUseCase, CompleteUserRegistrationUseCase>();
 builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase>();
