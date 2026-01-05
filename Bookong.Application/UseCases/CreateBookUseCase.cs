@@ -108,8 +108,7 @@ namespace Bookong.Application.UseCases
                     {
                         PublicId = Guid.NewGuid(),
                         Name = temp.Name ?? string.Empty,
-                        Address = address,
-                        AddressId = 0
+                        Address = address
                     };
 
                     _unitOfWork.Warehouses.Add(newWarehouse);
