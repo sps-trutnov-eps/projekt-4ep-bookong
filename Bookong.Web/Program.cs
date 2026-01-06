@@ -34,8 +34,16 @@ builder.Services.AddScoped<ICompleteUserRegistrationUseCase, CompleteUserRegistr
 builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase>();
 builder.Services.AddScoped<IDeselectMaturitaBookUseCase, DeselectMaturitaBookUseCase>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-builder.Services.AddScoped<IActiveDirectoryService, ActiveDirectoryService>();
 
+// Use mock AD service in development, real one in production
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddScoped<IActiveDirectoryService, MockActiveDirectoryService>();
+}
+else
+{
+    builder.Services.AddScoped<IActiveDirectoryService, ActiveDirectoryService>();
+}
 
 builder.Services.AddHttpContextAccessor();
 
