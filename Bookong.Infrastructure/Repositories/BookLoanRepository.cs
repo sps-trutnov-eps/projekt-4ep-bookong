@@ -23,10 +23,13 @@ namespace Bookong.Infrastructure.Repositories
         public async Task<IEnumerable<BookLoan>> GetAllAsync()
         {
             return await _context.BookLoans
+                .AsNoTracking()
                 .Include(bl => bl.Book)
-                .ThenInclude(b => b.Author)
+                    .ThenInclude(b => b.Author)
                 .Include(bl => bl.Book)
-                .ThenInclude(b => b.Genre)
+                    .ThenInclude(b => b.Period)
+                .Include(bl => bl.Book)
+                    .ThenInclude(b => b.Kind)
                 .Include(bl => bl.User)
                 .ToListAsync();
         }
@@ -41,14 +44,51 @@ namespace Bookong.Infrastructure.Repositories
             return await _context.BookLoans.FirstOrDefaultAsync(bl => bl.PublicId == publicId);
         }
 
-        public Task<PagedResult<BookLoan>> GetByUserAsync(User user, int pageNumber = 1, int pageSize = 25)
+        public async Task<PagedResult<BookLoan>> GetByUserAsync(User user, int pageNumber = 1, int pageSize = 25)
         {
-            throw new NotImplementedException();
+            var query = _context.BookLoans
+                .AsNoTracking()
+                .Include(bl => bl.Book)
+                    .ThenInclude(b => b.Author)
+                .Include(bl => bl.Book)
+                    .ThenInclude(b => b.Period)
+                .Include(bl => bl.Book)
+                    .ThenInclude(b => b.Kind)
+                .Include(bl => bl.User)
+                .Where(bl => bl.UserId == user.Id);
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(bl => bl.LoanDate)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<BookLoan>(items, totalCount, pageNumber, pageSize);
         }
 
-        public Task<PagedResult<BookLoan>> GetPagedAsync(int pageNumber = 1, int pageSize = 25)
+        public async Task<PagedResult<BookLoan>> GetPagedAsync(int pageNumber = 1, int pageSize = 25)
         {
-            throw new NotImplementedException();
+            var query = _context.BookLoans
+                .AsNoTracking()
+                .Include(bl => bl.Book)
+                    .ThenInclude(b => b.Author)
+                .Include(bl => bl.Book)
+                    .ThenInclude(b => b.Period)
+                .Include(bl => bl.Book)
+                    .ThenInclude(b => b.Kind)
+                .Include(bl => bl.User);
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(bl => bl.LoanDate)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<BookLoan>(items, totalCount, pageNumber, pageSize);
         }
 
         public void Update(BookLoan bookLoan)

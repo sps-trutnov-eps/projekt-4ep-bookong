@@ -31,6 +31,7 @@ builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery
 builder.Services.AddScoped<IExportBooksQuery, ExportBooksQuery>();
 builder.Services.AddScoped<IExportBookQrCodesQuery, ExportBookQrCodesQuery>();
 builder.Services.AddScoped<IGetAllBookLoansQuery, GetAllBookLoansQuery>();
+builder.Services.AddScoped<IGetUserBookLoansQuery, GetUserBookLoansQuery>();
 builder.Services.AddScoped<IGetBookLoanStatusQuery, GetBookLoanStatusQuery>();
 builder.Services.AddScoped<ICreateBookLoanUseCase, CreateBookLoanUseCase>();
 builder.Services.AddScoped<IReturnBookUseCase, ReturnBookUseCase>();

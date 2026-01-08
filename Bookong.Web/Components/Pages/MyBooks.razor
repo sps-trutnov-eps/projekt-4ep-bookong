@@ -1,16 +1,17 @@
 @using Bookong.Web.Components.Layout
-@using Bookong.Domain.Entities
+@using Bookong.Application.DTOs
+@using Bookong.Application.UseCases.Queries.Interfaces
+@using Bookong.Application.Services.Interfaces
 @using Bookong.Domain.Interfaces
-@using Microsoft.AspNetCore.Components.Authorization
 
 @page "/mybooks"
 @layout MainLayout
+@inject IGetUserBookLoansQuery GetUserBookLoansQuery
+@inject ISessionService SessionService
 @inject IUnitOfWork UnitOfWork
-@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>Moje knihy - BooKong</PageTitle>
 
-<!-- Main: Buttons -->
 <main class="container my-5 flex-grow-1 d-flex justify-content-center align-items-center">
   <div class="w-100" style="max-width: 900px;">
     <h2 class="mb-4 text-primary text-center">Moje knihy</h2>
@@ -46,14 +47,14 @@
                     @foreach (var loan in borrowedBooks)
                     {
                         <tr>
-                            <td>@loan.Book.Name</td>
-                            <td>@loan.Book.Author.FirstName @loan.Book.Author.LastName</td>
-                            <td>@loan.Book.Period.Name</td>
-                            <td>@loan.Book.Kind.Name</td>
-                            <td>@loan.Book.ISBN</td>
+                            <td>@loan.BookTitle</td>
+                            <td>@loan.BookAuthor</td>
+                            <td>@loan.BookPeriod</td>
+                            <td>@loan.BookKind</td>
+                            <td>@loan.BookISBN</td>
                             <td>
                                 <button class="btn btn-success btn-sm me-2" @onclick="() => ReturnBook(loan)">Vrátit</button>
-                                <button class="btn btn-primary btn-sm" @onclick="() => BorrowAgain(loan)">Půjčit znovu</button>
+                                <button class="btn btn-primary btn-sm" @onclick="() => ProlongLoan(loan)">Půjčit znovu</button>
                             </td>
                         </tr>
                     }
@@ -71,41 +72,37 @@
 </main>
 
 @code {
-    private List<BookLoan> borrowedBooks = new();
-    private User currentUser;
+    private List<BookLoanListItemDto> borrowedBooks = new();
     private bool isLoading = true;
     private string message = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+        var userPublicIdStr = await SessionService.GetAsync("CurrentUserPublicId");
 
-        if (user.Identity.IsAuthenticated)
+        if (!string.IsNullOrEmpty(userPublicIdStr) && Guid.TryParse(userPublicIdStr, out var userPublicId))
         {
-            // Assume SamAccountName is the username
-            currentUser = await UnitOfWork.Users.GetBySamAccountNameAsync(user.Identity.Name);
-            if (currentUser != null)
+            var user = await UnitOfWork.Users.GetByPublicIdAsync(userPublicId);
+            
+            if (user != null)
             {
-                var pagedResult = await UnitOfWork.BookLoans.GetByUserAsync(currentUser, 1, 1000);
-                borrowedBooks = pagedResult.Items.Where(b => b.ReturnDate == null).ToList();
+                var allLoans = await GetUserBookLoansQuery.ExecuteAsync(user.SamAccountName);
+                borrowedBooks = allLoans.Where(loan => !loan.IsReturned).ToList();
             }
         }
 
         isLoading = false;
     }
 
-    private async Task ReturnBook(BookLoan loan)
+    private async Task ReturnBook(BookLoanListItemDto loan)
     {
-        // Simulate return book action
         borrowedBooks.Remove(loan);
         message = "Kniha byla úspěšně vrácena.";
         StateHasChanged();
     }
 
-    private async Task BorrowAgain(BookLoan loan)
+    private async Task ProlongLoan(BookLoanListItemDto loan)
     {
-        // Simulate borrow again action
         message = "Žádost o opětovné vypůjčení byla odeslána.";
         StateHasChanged();
     }

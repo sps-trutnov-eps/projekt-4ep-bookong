@@ -5,6 +5,9 @@ namespace Bookong.Application.DTOs
         public Guid PublicId { get; set; }
         public string BookTitle { get; set; } = string.Empty;
         public string BookAuthor { get; set; } = string.Empty;
+        public string BookPeriod { get; set; } = string.Empty;
+        public string BookKind { get; set; } = string.Empty;
+        public string BookISBN { get; set; } = string.Empty;
         public string UserFullName { get; set; } = string.Empty;
         public string UserEmail { get; set; } = string.Empty;
         public DateTime LoanDate { get; set; }
