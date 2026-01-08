@@ -2,6 +2,7 @@
 @using Bookong.Application.UseCases.Queries.Interfaces
 @using Bookong.Application.DTOs
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
 @page "/dashboard"
 @* @attribute [Authorize(Roles = "Admin")] *@
 
@@ -33,10 +34,11 @@
 
         <div class="mb-5 d-flex justify-content-center gap-3 flex-wrap">
             <!-- Import knih -->
-            <button class="btn btn-success btn-lg shadow d-flex align-items-center gap-2 px-4 py-2">
+            <label for="importFile" class="btn btn-success btn-lg shadow d-flex align-items-center gap-2 px-4 py-2" style="cursor: pointer;">
                 <i class="bi bi-cloud-arrow-up fs-4"></i>
                 <span class="fw-semibold">Import knih z Excelu</span>
-            </button>
+            </label>
+            <InputFile id="importFile" accept=".xlsx,.xls" style="display: none;" />
 
             <!-- Export všech knih -->
             <button class="btn btn-primary btn-lg shadow d-flex align-items-center gap-2 px-4 py-2"
