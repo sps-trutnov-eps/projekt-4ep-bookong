@@ -22,7 +22,7 @@ namespace Bookong.Application.UseCases
                 if (book == null)
                     return GenericResponse.FailureResponse("Kniha nebyla nalezena.");
 
-                var user = await _uow.Users.GetByPublicIdAsync(dto.PublicId);
+                var user = await _uow.Users.GetByPublicIdAsync(dto.UserPublicId);
                 if (user == null)
                     return GenericResponse.FailureResponse("Uživatel nebyl nalezen.");
 
