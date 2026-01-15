@@ -21,6 +21,7 @@ namespace Bookong.Application.UseCases.Queries
                 .Select(bl => new BookLoanListItemDto
                 {
                     PublicId = bl.PublicId,
+                    BookPublicId = bl.Book.PublicId,
                     BookTitle = bl.Book.Name,
                     BookAuthor = $"{bl.Book.Author.FirstName} {bl.Book.Author.LastName}",
                     UserFullName = bl.User.Name,

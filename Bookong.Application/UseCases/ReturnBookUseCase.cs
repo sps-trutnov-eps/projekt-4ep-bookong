@@ -22,11 +22,16 @@ namespace Bookong.Application.UseCases
                     return GenericResponse.FailureResponse("Kniha nebyla nalezena.");
 
                 var allLoans = await _uow.BookLoans.GetAllAsync();
-                var activeLoan = allLoans.FirstOrDefault(bl => 
+                var activeLoanDetached = allLoans.FirstOrDefault(bl => 
                     bl.BookId == book.Id && bl.ReturnDate == null);
 
-                if (activeLoan == null)
+                if (activeLoanDetached == null)
                     return GenericResponse.FailureResponse("Tato kniha není aktuálně vypůjčena.");
+
+                // Fetch the tracked entity to update it safely
+                var activeLoan = await _uow.BookLoans.GetByIdAsync(activeLoanDetached.Id);
+                if (activeLoan == null)
+                    return GenericResponse.FailureResponse("Chyba při načítání výpůjčky.");
 
                 activeLoan.ReturnDate = DateTime.UtcNow;
                 _uow.BookLoans.Update(activeLoan);

@@ -3,6 +3,7 @@ namespace Bookong.Application.DTOs
     public class BookLoanListItemDto
     {
         public Guid PublicId { get; set; }
+        public Guid BookPublicId { get; set; }
         public string BookTitle { get; set; } = string.Empty;
         public string BookAuthor { get; set; } = string.Empty;
         public string BookPeriod { get; set; } = string.Empty;

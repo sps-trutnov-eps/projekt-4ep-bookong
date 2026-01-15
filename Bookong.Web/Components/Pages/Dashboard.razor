@@ -14,8 +14,7 @@
 @inject IGetAllBookLoansQuery GetAllBookLoans
 @inject IGetBookLoanStatusQuery GetBookLoanStatus
 @inject ICreateBookLoanUseCase CreateBookLoan
-@inject IReturnBookUseCase ReturnBook
-@inject IProlongBookLoanUseCase ProlongBookLoan
+@inject IReturnBookUseCase ReturnBookUseCaseService
 @inject IUnitOfWork _uow
 @inject ILogger<Dashboard> Logger
 @implements IAsyncDisposable
@@ -149,6 +148,7 @@
                                         <th class="d-none d-xl-table-cell">Email</th>
                                         <th>Datum vypůjčení</th>
                                         <th class="text-center">Dnů vypůjčeno</th>
+                                        <th class="text-center">Akce</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -173,6 +173,21 @@
                                                     <span class="badge bg-primary">
                                                         @loan.DaysLoaned dnů
                                                     </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm @(loanIdPendingConfirmation == loan.BookPublicId ? "btn-danger" : "btn-outline-danger")" 
+                                                            @onclick="() => ReturnLoan(loan.BookPublicId)"
+                                                            disabled="@isProcessing"
+                                                            title="@(loanIdPendingConfirmation == loan.BookPublicId ? "Potvrdit vrácení" : "Vrátit knihu")">
+                                                        @if (loanIdPendingConfirmation == loan.BookPublicId)
+                                                        {
+                                                            <span class="small fw-bold">Potvrdit</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="bi bi-arrow-return-left"></i>
+                                                        }
+                                                    </button>
                                                 </td>
                                             </tr>
                                         }
@@ -403,9 +418,6 @@
                             <button class="btn btn-success flex-fill" @onclick="ReturnScannedBook" disabled="@isProcessing">
                                 <i class="bi bi-arrow-return-left me-2"></i>Vrátit knihu
                             </button>
-                            <button class="btn btn-primary flex-fill" @onclick="ProlongScannedBook" disabled="@isProcessing">
-                                <i class="bi bi-clock-history me-2"></i>Prodloužit o 14 dní
-                            </button>
                         </div>
                     }
                     else
@@ -504,6 +516,7 @@
     private string manualPublicIdInput = string.Empty;
 
     private string? errorMessage;
+    private Guid? loanIdPendingConfirmation = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -733,7 +746,7 @@ var dto = new CreateBookLoanDto
 
         try
         {
-            var response = await ReturnBook.ExecuteAsync(scannedBook.BookPublicId);
+            var response = await ReturnBookUseCaseService.ExecuteAsync(scannedBook.BookPublicId);
             actionMessage = response.Message;
             actionSuccess = response.Success;
 
@@ -757,38 +770,38 @@ var dto = new CreateBookLoanDto
         }
     }
 
-    private async Task ProlongScannedBook()
+    private async Task ReturnLoan(Guid bookPublicId)
     {
-        if (scannedBook == null)
-            return;
+        if (isProcessing) return;
 
+        if (loanIdPendingConfirmation != bookPublicId)
+        {
+            loanIdPendingConfirmation = bookPublicId;
+            StateHasChanged();
+            return;
+        }
+
+        loanIdPendingConfirmation = null;
         isProcessing = true;
         StateHasChanged();
 
         try
         {
-            var dto = new ProlongBookLoanDto
-            {
-                BookPublicId = scannedBook.BookPublicId,
-                DaysToProlong = 14
-            };
-
-            var response = await ProlongBookLoan.ExecuteAsync(dto);
-            actionMessage = response.Message;
-            actionSuccess = response.Success;
-
+            var response = await ReturnBookUseCaseService.ExecuteAsync(bookPublicId);
+            
             if (response.Success)
             {
                 await RefreshLoans();
-                await Task.Delay(2000);
-                await CloseBookActionModal();
+            }
+            else
+            {
+                 await JS.InvokeVoidAsync("alert", response.Message);
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error prolonging loan");
-            actionMessage = "Chyba při prodlužování výpůjčky.";
-            actionSuccess = false;
+            Logger.LogError(ex, "Error returning book from table");
+            await JS.InvokeVoidAsync("alert", "Chyba při vracení knihy.");
         }
         finally
         {
