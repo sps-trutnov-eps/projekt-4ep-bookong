@@ -1,6 +1,6 @@
-﻿namespace Bookong.Domain.Interfaces
+namespace Bookong.Domain.Interfaces
 {
-    public interface IUnitOfWork
+    public interface IUnitOfWork : IDisposable
     {
         public IAuthorRepository Authors { get; }
         public IBookLoanRepository BookLoans { get; }
@@ -16,6 +16,8 @@
         public ITeachingMaterialRepository TeachingMaterials { get; }
         public IUserRepository Users { get; }
         public IWarehouseRepository Warehouses { get; }
+        public ISubjectRepository Subjects { get; }
+        public IBranchRepository Branches { get; }
 
         Task CommitAsync();
     }

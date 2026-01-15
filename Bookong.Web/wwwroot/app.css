@@ -2,6 +2,10 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+:root {
+    --header-height: 4.75rem;
+}
+
 a, .btn-link {
     color: #006bb7;
 }
@@ -84,4 +88,15 @@ h1:focus {
     color: #fff;
     background-color: #007bff;
     border-radius: 5px;
+}
+
+.login-wrapper {
+    min-height: calc(100vh - var(--header-height, 4.75rem));
+    padding: 2.5rem 1rem;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 380px;
+    transform: none !important;
 }

@@ -1,0 +1,347 @@
+html, body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+:root {
+  /* Design tokens extracted from TeachingMaterials styles */
+  --primary-500: #3b82f6; /* blue */
+  --primary-700: #1e40af;
+  --accent-600: #06b6d4; /* cyan */
+  --accent-700: #06b6d4;
+  --hero-gradient-a: #3b82f6;
+  --hero-gradient-b: #6d28d9;
+  /* Footer uses a darker variant so wave and footer are visually distinct */
+  --footer-gradient-a: #0a4db8;
+  --footer-gradient-b: #4c1d95;
+  /* Solid footer preview color (darker) */
+  --footer-solid: #071735;
+  --btn-gradient-a: #4f46e5;
+  --btn-gradient-b: #06b6d4;
+  --card-radius: 12px;
+  --card-radius-lg: 14px;
+  --card-shadow: 0 8px 30px rgba(99,102,241,0.12);
+  --elevated-shadow: 0 18px 40px rgba(79,70,229,0.08);
+  --text-muted: #6b7280;
+  --white-strong: #ffffff;
+}
+
+/* Global link and button styles */
+a, .btn-link {
+    color: #006bb7;
+}
+
+/* Primary button - global gradient style (kept for backward compatibility) */
+.btn-primary {
+    color: #fff;
+    background: linear-gradient(135deg, #0a4db8, #083d96);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #083d96, #0a4db8);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(10, 77, 184, 0.3);
+}
+
+/* Apply TeachingMaterials "btn-gradient" look to all standard buttons except outlines and link-style buttons. */
+.btn:not(.btn-link):not([class*="btn-outline"]) {
+  background: linear-gradient(90deg, var(--btn-gradient-a) 0%, var(--btn-gradient-b) 100%) !important;
+  color: #fff !important;
+  border: 0 !important;
+  box-shadow: 0 10px 30px rgba(6,182,212,0.12);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.btn:not(.btn-link):not([class*="btn-outline"]):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(6,182,212,0.14);
+}
+
+.btn:not(.btn-link):not([class*="btn-outline"]):focus,
+.btn:not(.btn-link):not([class*="btn-outline"]).focus {
+  outline: 3px solid rgba(99,102,241,0.14);
+  outline-offset: 2px;
+}
+
+/* Page hero title - reusable class for large page headings (consistent with Portal/Statistics) */
+.page-hero-title {
+  font-weight: 700; /* similar to fw-bold */
+  font-size: 3rem;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+
+@media (max-width: 767.98px) {
+  .page-hero-title {
+    font-size: 2rem;
+  }
+}
+
+/* Focus outlines for interactive elements */
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+/* Navbar and brand small interactions (global) */
+.navbar-brand:hover {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+}
+
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+}
+
+/* Prevent body scroll when menu is open (global) */
+body.menu-open {
+    overflow: hidden;
+}
+
+/* General layout helpers */
+.content {
+    padding-top: 1.1rem;
+}
+
+h1:focus {
+    outline: none;
+}
+
+/* Form validation */
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid #26b050;
+}
+
+.invalid {
+    outline: 1px solid #e50000;
+}
+
+.validation-message {
+    color: #e50000;
+}
+
+/* Blazor error boundary - global fallback UI */
+.blazor-error-boundary {
+    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1zbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny4jNzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDg2IDkzLjUyOTUgNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My4zNzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+}
+
+.blazor-error-boundary::after {
+    content: "An error has occurred.";
+}
+
+.darker-border-checkbox.form-check-input {
+    border-color: #929292;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
+
+/* Generic hover utility used across components/layouts */
+.hover-bg-light:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: background-color 0.2s ease;
+}
+
+/* Global blazor error UI (moved from layout css) */
+#blazor-error-ui {
+    color-scheme: light only;
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+/* Utility for marking active links globally */
+.active-link {
+    color: #fff;
+    background-color: #007bff;
+    border-radius: 5px;
+}
+
+/* --- TeachingMaterials visual styles (target bootstrap utilities via data-attributes) --- */
+[data-tm="materials-hero"] {
+  margin-top: 1.5rem; /* space between header and hero */
+  background: linear-gradient(135deg, var(--hero-gradient-a) 0%, var(--hero-gradient-b) 70%);
+  color: var(--white-strong);
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: var(--card-shadow);
+}
+
+[data-tm="materials-hero"] h1 {
+  font-weight: 800;
+  font-size: 1.6rem;
+  letter-spacing: -0.3px;
+}
+
+[data-tm="materials-hero"] p {
+  opacity: 0.95;
+  color: rgba(255,255,255,0.92);
+}
+
+/* Search glass - applied when using Bootstrap utilities plus data attribute */
+[data-tm="search-glass"] {
+  /* keep a subtle glass effect on top of bg-white bg-opacity-10 */
+  backdrop-filter: blur(6px);
+}
+
+[data-tm="search-glass"] .input-group-text {
+  border: 0;
+  color: #fff;
+  background: transparent;
+}
+
+[data-tm="search-glass"] input {
+  color: #fff;
+  background: transparent;
+  height: 48px;
+  border: 0;
+}
+
+/* Form card (glass look) targeted to Bootstrap card */
+.card[data-tm="form-card"] {
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,249,255,0.95));
+  border-radius: var(--card-radius-lg);
+}
+
+.card[data-tm="form-card"] .btn-primary {
+  background: linear-gradient(90deg, var(--btn-gradient-a) 0%, var(--btn-gradient-b) 100%);
+  color: white;
+  border: 0;
+  box-shadow: 0 10px 30px rgba(6,182,212,0.12);
+}
+
+.card[data-tm="form-card"] .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 36px rgba(6,182,212,0.14);
+}
+
+/* Cards (created items) */
+.card[data-tm="created-card"] {
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  transition: transform .18s cubic-bezier(.2,.9,.3,1), box-shadow .18s;
+  background: linear-gradient(180deg,#fff,#fbfdff);
+}
+
+.card[data-tm="created-card"]:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--elevated-shadow);
+}
+
+/* text truncation */
+.created-list .text-truncate {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Input icons and rounded look */
+.input-group .input-group-text.icon-left {
+  background: transparent;
+  border: 0;
+  font-size: 18px;
+}
+
+.form-control.rounded-pill {
+  border-radius: 50rem;
+}
+
+/* small helpers */
+.muted { color: var(--text-muted); }
+
+.card[data-tm="empty-state"] {
+  border-radius: 12px;
+  background: linear-gradient(180deg,#fff,#f4f7ff);
+}
+
+/* Hero buttons */
+.hero-buttons .btn {
+  border-radius: 12px;
+  padding: .45rem .8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+/* outline light button tweak */
+.btn-outline-light {
+  border-color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.95);
+}
+.btn-outline-light:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+
+/* ensure icon spacing */
+.hero-buttons svg { opacity: .95; }
+
+/* accessibility: focus states */
+.hero-buttons .btn:focus {
+  outline: 3px solid rgba(99,102,241,0.14);
+  outline-offset: 2px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 991.98px) {
+  [data-tm="materials-hero"] { padding: 18px; }
+  [data-tm="materials-hero"] h1 { font-size: 1.3rem; }
+}
+
+/* Ensure adequate gap on small screens (account for fixed/tall header) */
+@media (max-width: 767.98px) {
+  [data-tm="materials-hero"] {
+    margin-top: 20px; /* responsive view */
+    padding: 1.1rem 1rem;
+    border-radius: 18px;
+  }
+
+  [data-tm="materials-hero"] h1 { font-size: 1.3rem; }
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--elevated-shadow) !important;
+}
+
+/* Icon circle */
+.icon-circle {
+  width: 4rem;
+  height: 4rem;
+}
+
+/* Icon circle with gradient background */
+.icon-circle-gradient {
+  background: linear-gradient(135deg, #0a4db8, #583d96);
+}

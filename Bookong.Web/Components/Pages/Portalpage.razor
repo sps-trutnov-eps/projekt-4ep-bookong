@@ -2,37 +2,38 @@
 
 @page "/portalpage"
 @layout MainLayout
+@attribute [Authorize]
 
 
 <!-- Hero Section with white background -->
-<div class="bg-white pb-5" style="min-height: 80vh;">
+<div class="bg-white pb-5">
     <div class="container px-4 text-center pt-5">
         <!-- Welcome Message -->
-        <h1 class="fw-bold text-primary mb-3" style="font-size: 3rem; letter-spacing: -0.02em;">
+   <h1 class="page-hero-title fw-bold text-primary mb-3">
             Vítejte v BooKongu
-        </h1>
-        <p class="lead text-muted mb-4" style="font-size: 1.1rem;">
-            Váš školní knihovní systém pro snadnou správu knih a výpůjček
+     </h1>
+ <p class="lead text-muted mb-4 fs-5">
+  Váš školní knihovní systém pro snadnou správu knih a výpůjček
         </p>
 
         <!-- Quick Search Bar -->
-@*         <div class="row justify-content-center mb-5">
-            <div class="col-12 col-md-8 col-lg-6">
-                <div class="position-relative">
-                    <input type="search"
-                            class="form-control ps-5 pe-4 rounded-pill border-2 shadow-sm"
-                            style="height: 3.2rem; font-size: 1rem; border-color: #0a4db8;"
-                            placeholder="Hledejte knihy, autory nebo ISBN..." />
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="position-absolute top-50 start-0 translate-middle-y ms-4 text-muted" viewBox="0 0 16 16">
-                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                    </svg>
-                </div>
+@*       <div class="row justify-content-center mb-5">
+<div class="col-12 col-md-8 col-lg-6">
+     <div class="position-relative">
+        <input type="search"
+      class="form-control ps-5 pe-4 rounded-pill border-2 shadow-sm"
+         style="height: 3.2rem; font-size: 1rem; border-color: #0a4db8;"
+   placeholder="Hledejte knihy, autory nebo ISBN..." />
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="position-absolute top-50 start-0 translate-middle-y ms-4 text-muted" viewBox="0 0 16 16">
+    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+       </svg>
+        </div>
             </div>
-        </div> *@
+    </div> *@
 
         <!-- Main Features Section -->
         <div class="row g-4 justify-content-center">
-            <!-- Quick Book Search & Rent -->
+   <!-- Quick Book Search & Rent -->
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
                     <div class="card-body d-flex flex-column align-items-center p-4">
@@ -56,7 +57,7 @@
                 </div>
             </div>
 
-            <!-- Manage Rentals -->
+   <!-- Manage Rentals -->
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
                     <div class="card-body d-flex flex-column align-items-center p-4">
@@ -104,16 +105,4 @@
             </div>
         </div>
     </div>
-</div>
-
-<!-- Wave Container -->
-<div class="position-relative w-100 overflow-hidden" style="line-height: 0;">
-    <!-- Primary Wave -->
-    <svg class="w-100 d-block" style="height: 5rem;" viewBox="0 0 1200 120" preserveAspectRatio="none">
-        <path d="M0,0 C300,80 900,0 1200,80 L1200,120 L0,120 Z" fill="#0a4db8"></path>
-    </svg>
-    <!-- Secondary Wave -->
-    <svg class="w-100 d-block" style="height: 5rem; margin-top: -0.25rem; background-color: #0a4db8;" viewBox="0 0 1200 120" preserveAspectRatio="none">
-        <path d="M0,0 C400,60 800,0 1200,60 L1200,120 L0,120 Z" fill="#083d96"></path>
-    </svg>
 </div>

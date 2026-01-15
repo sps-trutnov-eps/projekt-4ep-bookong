@@ -1,12 +1,34 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@using Bookong.Web.Components.DevTools
+@inject IWebHostEnvironment Environment
 
 <div class="d-flex flex-column min-vh-100">
     <HeaderLayout />
     <main class="flex-grow-1">
         @Body
     </main>
+
+    <!-- Decorative wave between main content and footer -->
+    <div class="page-wave" aria-hidden="true">
+        <svg viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="waveGradient" x1="0%" x2="100%">
+                    <stop offset="0%" stop-color="var(--hero-gradient-a, #3b82f6)" />
+                    <stop offset="100%" stop-color="var(--hero-gradient-b, #6d28d9)" />
+                </linearGradient>
+            </defs>
+            <path d="M0,32L48,48C96,64,192,96,288,96C384,96,480,64,576,53.3C672,43,768,53,864,64C960,75,1056,85,1152,85.3C1248,85,1344,75,1392,69.3L1440,64L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z" fill="url(#waveGradient)"></path>
+        </svg>
+    </div>
+
     <FooterLayout />
 </div>
+
+@if (Environment.IsDevelopment() || Environment.IsStaging())
+{
+    <DevToolsPanel />
+}
+
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>

@@ -10,6 +10,8 @@ namespace Bookong.Domain.Interfaces
         Task<MaturitaBook?> GetByPublicIdAsync(Guid publicId);
         Task<PagedResult<MaturitaBook>> GetFilteredAsync(BookSearchCriteria criteria, int pageNumber = 1, int pageSize = 25);
         Task<PagedResult<MaturitaBook>> GetAllAsync();
+        Task<IEnumerable<MaturitaBook>> GetAllWithDetailsAsync();
+        Task<MaturitaBook?> FindExistingAsync(string name, int authorId, int genreId, int kindId, int periodId);
         void Add(MaturitaBook maturitaBook);
         void Update(MaturitaBook maturitaBook);
         void Delete(MaturitaBook maturitaBook);

@@ -4,7 +4,10 @@
 @using Bookong.Application.UseCases.Interfaces
 @using Bookong.Domain.Interfaces
 @using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Authorization
 @page "/dashboard"
+@attribute [Authorize(Roles = "Admin")]
+
 @layout MainLayout
 @inject IJSRuntime JS
 @inject IGetLibraryStatisticsQuery LibraryStatsQuery
@@ -20,13 +23,13 @@
 @implements IAsyncDisposable
 
 <!-- Hero Section with white background -->
-<div class="bg-white pb-5" style="min-height: 80vh;">
+<div class="bg-white pb-5 min-vh-100">
     <div class="container px-4 text-center pt-5">
         <!-- Welcome Message -->
-        <h1 class="fw-bold text-primary mb-3" style="font-size: 3rem; letter-spacing: -0.02em;">
+        <h1 class="page-hero-title fw-bold text-primary mb-3">
             Dashboard
         </h1>
-        <p class="lead text-muted mb-4" style="font-size: 1.1rem;">
+        <p class="lead text-muted mb-4 fs-5">
             Přehled výpůjček knih a správa výpůjček
         </p>
 
@@ -70,10 +73,9 @@
             <!-- Statistické karty -->
             <div class="row g-4 justify-content-center mb-5">
                 <div class="col-12 col-md-6 col-lg-4">
-                    <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
+                    <div class="card h-100 text-center border-0 shadow-lg card-hover">
                         <div class="card-body d-flex flex-column align-items-center p-4">
-                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
-                                 style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3 icon-circle icon-circle-gradient">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
                                     <path d="M10 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
                                     <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-7 7 7 7 0 0 0 14 0A7 7 0 0 0 8 1z" />
@@ -86,10 +88,9 @@
                 </div>
 
                 <div class="col-12 col-md-6 col-lg-4">
-                    <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
+                    <div class="card h-100 text-center border-0 shadow-lg card-hover">
                         <div class="card-body d-flex flex-column align-items-center p-4">
-                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
-                                 style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3 icon-circle icon-circle-gradient">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
                                     <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828z" />
                                     <path d="M8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
@@ -102,10 +103,9 @@
                 </div>
 
                 <div class="col-12 col-md-6 col-lg-4">
-                    <div class="card h-100 text-center border-0 shadow-lg" style="transition: transform 0.3s ease;">
+                    <div class="card h-100 text-center border-0 shadow-lg card-hover">
                         <div class="card-body d-flex flex-column align-items-center p-4">
-                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3"
-                                 style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #0a4db8, #083d96);">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mb-3 icon-circle icon-circle-gradient">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
                                     <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828z" />
                                     <path d="M8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
@@ -282,7 +282,7 @@
                         <table class="table table-sm table-striped align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width:4%">#</th>
+                                    <th class="col-1">#</th>
                                     <th>Název knihy</th>
                                     <th class="d-none d-md-table-cell">Autor</th>
                                     <th class="text-end">Počet vypůjčení</th>

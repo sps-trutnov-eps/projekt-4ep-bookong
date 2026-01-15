@@ -7,7 +7,7 @@
 @inject ILogger<Maturita> Logger
 
 <div class="container my-4">
-    <h1 class="display-6 fw-semibold mb-4">Maturitní seznam</h1>
+    <h1 class="fw-bold text-primary mb-3 page-hero-title">Maturitní seznam</h1>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -89,7 +89,7 @@
                 <table class="table table-striped table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th style="width:4%">#</th>
+                            <th class="col-1">#</th>
                             <th>Název</th>
                             <th class="d-none d-md-table-cell">Autor</th>
                             <th class="d-none d-lg-table-cell">Žánr</th>

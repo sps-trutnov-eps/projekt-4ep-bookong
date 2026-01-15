@@ -1,3 +1,5 @@
+/* Scoped layout CSS - do not use @import here (scoped CSS disallows it) */
+
 .page {
     position: relative;
     display: flex;
@@ -6,6 +8,31 @@
 
 main {
     flex: 1;
+    padding-top: var(--header-height, 4.75rem);
+}
+
+.page-wave {
+    width: 100%;
+    line-height: 0;
+    height: 6rem; /* visible area for wave */
+    margin-top: -1px; /* slight overlap */
+}
+
+.page-wave svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* make sure footer sits above wave if needed */
+footer, .footer {
+    position: relative;
+    z-index: 2;
+}
+
+.page-wave {
+    position: relative;
+    z-index: 1;
 }
 
 .sidebar {

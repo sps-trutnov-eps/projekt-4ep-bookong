@@ -3,12 +3,13 @@
 @using Bookong.Application.UseCases.Interfaces
 @using Bookong.Application.DTOs
 @inject IGetAvailableBooksQuery GetAvailableBooks
+@inject IGetMaturitaBooksQuery GetAvailableMaturitaBooksQuery
 @inject ISelectMaturitaBookUseCase SelectMaturitaBook
 @inject NavigationManager NavigationManager
 @inject ILogger<Books> Logger
 
 <div class="container my-4">
-    <h1 class="display-6 fw-semibold mb-4">Seznam knih</h1>
+    <h1 class="fw-bold text-primary mb-3 page-hero-title">Seznam knih</h1>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -101,6 +102,7 @@
                         @for (int i = 0; i < filteredItems.Count; i++)
                         {
                             var book = filteredItems[i];
+                            var isAvailable = IsBookAvailable(book);
                             <tr>
                                 <td>@(i + 1)</td>
                                 <td class="fw-medium">@book.Title</td>
@@ -110,11 +112,17 @@
                                 <td class="text-end">
                                     <div class="btn-group">
                                         <a class="btn btn-sm btn-outline-primary" href="@($"/books/{book.PublicId}")">Detail</a>
-                                        <button type="button" class="btn btn-sm btn-outline-success" @onclick="() => OnAddToSelection(book.PublicId)">
+                                        <button type="button" class="btn btn-sm btn-outline-success"
+                                                disabled="@(!isAvailable || isProcessing && processingBookId == book.PublicId)"
+                                                @onclick="() => OnAddToSelection(book.PublicId)">
                                             @if (isProcessing && processingBookId == book.PublicId)
                                             {
                                                 <span class="spinner-border spinner-border-sm" role="status"></span>
                                                 <span class="ms-1">Přidávám...</span>
+                                            }
+                                            else if (!isAvailable)
+                                            {
+                                                <span title="Kniha není dostupná k maturitě">Nedostupná</span>
                                             }
                                             else
                                             {
@@ -156,6 +164,9 @@
     private List<string> genres = new();
     private List<string> types = new();
 
+    // availability - tracks books by composite key (Title, Author, Genre, Kind)
+    private HashSet<string> availableBookKeys = new();
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -185,6 +196,12 @@
                 .OrderBy(t => t)
                 .ToList();
 
+            // Load available books and create composite keys
+            var availableBooks = await GetAvailableMaturitaBooksQuery.ExecuteAsync();
+            availableBookKeys = availableBooks
+                .Select(b => GetBookKey(b.Title, b.AuthorFullName, b.GenreName, b.KindName))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
             ApplyFilters();
         }
         catch (Exception ex)
@@ -198,9 +215,31 @@
         }
     }
 
+    private string GetBookKey(string? title, string? author, string? genre, string? kind)
+    {
+        return $"{title?.Trim()}|{author?.Trim()}|{genre?.Trim()}|{kind?.Trim()}".ToLowerInvariant();
+    }
+
+    private bool IsBookAvailable(BookListItemDto book)
+    {
+        var key = GetBookKey(book.Title, book.AuthorFullName, book.Genre, book.Kind);
+        return availableBookKeys.Contains(key);
+    }
+
     private async Task OnAddToSelection(Guid bookId)
     {
         if (isProcessing) return;
+
+        // Find the book to check availability
+        var book = items?.FirstOrDefault(b => b.PublicId == bookId);
+        if (book == null) return;
+
+        // protect: ensure book is available
+        if (!IsBookAvailable(book))
+        {
+            errorMessage = "Tato kniha není dostupná k maturitě.";
+            return;
+        }
 
         try
         {
