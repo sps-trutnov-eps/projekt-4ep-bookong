@@ -7,6 +7,7 @@ namespace Bookong.Domain.Interfaces
         public IBookRepository Books { get; }
         public IBookReservationRepository BookReservations { get; }
         public IGenreRepository Genres { get; }
+        public IImportRepository Import { get; }
         public IKindRepository Kinds { get; }
         public IMaturitaBookAssignmentRequestRepository MaturitaBookAssignmentRequests { get; }
         public IMaturitaBookRepository MaturitaBooks { get; }
