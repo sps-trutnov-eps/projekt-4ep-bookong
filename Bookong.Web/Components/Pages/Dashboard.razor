@@ -298,7 +298,7 @@
                                         <td class="fw-medium">@b.Title</td>
                                         <td class="d-none d-md-table-cell">@b.AuthorFullName</td>
                                         <td class="text-end">
-                                            <span class="text-muted">N/A</span>
+                                            <span class="badge bg-secondary rounded-pill">@b.LoanCount</span>
                                         </td>
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-outline-primary"
@@ -422,15 +422,34 @@
                     }
                     else
                     {
-                        <div class="mb-3">
+                        <div class="mb-3 position-relative">
                             <label class="form-label">Vyberte uživatele</label>
-                            <select class="form-select" @bind="selectedUserPublicId">
-                                <option value="@Guid.Empty">-- Vyberte uživatele --</option>
-                                @foreach (var user in availableUsers)
-                                {
-                                    <option value="@user.PublicId">@user.Name (@user.Email)</option>
-                                }
-                            </select>
+                            <input type="text" 
+                                   class="form-control" 
+                                   placeholder="Začněte psát jméno nebo email..." 
+                                   value="@userSearchValue"
+                                   @oninput="HandleUserSearchInput"
+                                   @onfocus="() => isUserSearchFocused = true"
+                                   @onblur="OnUserSearchBlur" />
+                            
+                            @if (isUserSearchFocused && !string.IsNullOrWhiteSpace(userSearchValue) && GetFilteredUsers().Any())
+                            {
+                                <div class="list-group position-absolute w-100 shadow mt-1" style="z-index: 1050; max-height: 200px; overflow-y: auto;">
+                                    @foreach (var user in GetFilteredUsers())
+                                    {
+                                        <button type="button" class="list-group-item list-group-item-action" @onclick="() => SelectUser(user)">
+                                            <strong>@user.Name</strong> <br/>
+                                            <small class="text-muted">@user.Email</small>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                            @if (selectedUserPublicId != Guid.Empty && string.IsNullOrWhiteSpace(userSearchValue))
+                            {
+                                <div class="form-text text-success">
+                                    Vybrán uživatel: @availableUsers.FirstOrDefault(u => u.PublicId == selectedUserPublicId)?.Name
+                                </div>
+                            }
                         </div>
                         <button class="btn btn-primary w-100" @onclick="LendScannedBook" disabled="@(isProcessing || selectedUserPublicId == Guid.Empty)">
                             <i class="bi bi-book me-2"></i>Vypůjčit knihu
@@ -516,6 +535,10 @@
     private string manualPublicIdInput = string.Empty;
 
     private string? errorMessage;
+    
+    // Autocomplete fields
+    private string userSearchValue = string.Empty;
+    private bool isUserSearchFocused = false;
     private Guid? loanIdPendingConfirmation = null;
 
     protected override async Task OnInitializedAsync()
@@ -675,26 +698,27 @@
             scannedBook = await GetBookLoanStatus.ExecuteAsync(bookPublicId);
 
             if (scannedBook == null)
-     {
-    actionMessage = "Kniha nebyla nalezena.";
-    actionSuccess = false;
-   }
-        else
             {
-    showBookActionModal = true;
+                actionMessage = "Kniha nebyla nalezena.";
+                actionSuccess = false;
+            }
+            else
+            {
+                showBookActionModal = true;
                 actionMessage = null;
-   selectedUserPublicId = Guid.Empty;
-       }
+                selectedUserPublicId = Guid.Empty;
+                userSearchValue = string.Empty; // Reset autocomplete
+            }
 
             StateHasChanged();
         }
-     catch (Exception ex)
-{
-        Logger.LogError(ex, "Error loading book details");
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading book details");
             actionMessage = "Chyba při načítání informací o knize.";
             actionSuccess = false;
         }
-  }
+    }
 
     private async Task LendScannedBook()
     {
@@ -835,7 +859,39 @@ var dto = new CreateBookLoanDto
         scannedBook = null;
         actionMessage = null;
         selectedUserPublicId = Guid.Empty;
+        userSearchValue = string.Empty; // Reset autocomplete
         StateHasChanged();
+    }
+
+    private IEnumerable<UserDto> GetFilteredUsers()
+    {
+        if (string.IsNullOrWhiteSpace(userSearchValue))
+            return Enumerable.Empty<UserDto>();
+
+        return availableUsers.Where(u => 
+            u.Name.Contains(userSearchValue, StringComparison.OrdinalIgnoreCase) || 
+            u.Email.Contains(userSearchValue, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void HandleUserSearchInput(ChangeEventArgs e)
+    {
+        userSearchValue = e.Value?.ToString() ?? string.Empty;
+        selectedUserPublicId = Guid.Empty; // Reset selection on edit
+        isUserSearchFocused = true;
+    }
+
+    private async Task OnUserSearchBlur()
+    {
+        // Delay to allow click event on suggestion to fire
+        await Task.Delay(200);
+        isUserSearchFocused = false;
+    }
+
+    private void SelectUser(UserDto user)
+    {
+        selectedUserPublicId = user.PublicId;
+        userSearchValue = user.Name;
+        isUserSearchFocused = false;
     }
 
     private List<BookLoanListItemDto> GetActiveLoans()
