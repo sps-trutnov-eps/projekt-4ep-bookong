@@ -7,7 +7,7 @@
 @page "/mybooks"
 @layout MainLayout
 @inject IGetUserBookLoansQuery GetUserBookLoansQuery
-@inject ISessionService SessionService
+@inject ICurrentUserService CurrentUserService
 @inject IUnitOfWork UnitOfWork
 
 <PageTitle>Moje knihy - BooKong</PageTitle>
@@ -78,11 +78,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var userPublicIdStr = await SessionService.GetAsync("CurrentUserPublicId");
+        var userPublicId = await CurrentUserService.GetCurrentUserPublicIdAsync();
 
-        if (!string.IsNullOrEmpty(userPublicIdStr) && Guid.TryParse(userPublicIdStr, out var userPublicId))
+        if (userPublicId != null)
         {
-            var user = await UnitOfWork.Users.GetByPublicIdAsync(userPublicId);
+            var user = await UnitOfWork.Users.GetByPublicIdAsync(userPublicId.Value);
             
             if (user != null)
             {
