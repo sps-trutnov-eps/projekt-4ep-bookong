@@ -40,7 +40,6 @@
                         <th scope="col">Století</th>
                         <th scope="col">Literatura</th>
                         <th scope="col">ISBN</th>
-                        <th scope="col">Akce</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,10 +51,6 @@
                             <td>@loan.BookPeriod</td>
                             <td>@loan.BookKind</td>
                             <td>@loan.BookISBN</td>
-                            <td>
-                                <button class="btn btn-success btn-sm me-2" @onclick="() => ReturnBook(loan)">Vrátit</button>
-                                <button class="btn btn-primary btn-sm" @onclick="() => ProlongLoan(loan)">Půjčit znovu</button>
-                            </td>
                         </tr>
                     }
                 </tbody>
@@ -92,18 +87,5 @@
         }
 
         isLoading = false;
-    }
-
-    private async Task ReturnBook(BookLoanListItemDto loan)
-    {
-        borrowedBooks.Remove(loan);
-        message = "Kniha byla úspěšně vrácena.";
-        StateHasChanged();
-    }
-
-    private async Task ProlongLoan(BookLoanListItemDto loan)
-    {
-        message = "Žádost o opětovné vypůjčení byla odeslána.";
-        StateHasChanged();
     }
 }
