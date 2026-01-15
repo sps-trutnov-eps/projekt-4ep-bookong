@@ -1,5 +1,6 @@
 @using Bookong.Web.Components.Layout
 @using Bookong.Application.UseCases.Queries.Interfaces
+@using Bookong.Application.UseCases.Interfaces
 @using Bookong.Application.DTOs
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Forms
@@ -10,6 +11,7 @@
 @inject IJSRuntime JS
 @inject IGetLibraryStatisticsQuery LibraryStatsQuery
 @inject IExportBooksQuery ExportBooksQuery
+@inject IImportBooksUseCase ImportBooksUseCase
 @inject IGetAvailableBooksQuery GetAvailableBooks
 @inject ILogger<Dashboard> Logger
 
@@ -38,7 +40,7 @@
                 <i class="bi bi-cloud-arrow-up fs-4"></i>
                 <span class="fw-semibold">Import knih z Excelu</span>
             </label>
-            <InputFile id="importFile" accept=".xlsx,.xls" style="display: none;" />
+            <InputFile id="importFile" OnChange="HandleImport" accept=".xlsx,.xls" style="display: none;" />
 
             <!-- Export všech knih -->
             <button class="btn btn-primary btn-lg shadow d-flex align-items-center gap-2 px-4 py-2"
@@ -246,6 +248,55 @@
         catch (Exception ex)
         {
             await JS.InvokeVoidAsync("alert", $"❌ Chyba při exportu: {ex.Message}");
+        }
+    }
+
+    private async Task HandleImport(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        
+        if (file == null)
+        {
+            errorMessage = "Nebyl vybrán žádný soubor.";
+            return;
+        }
+
+        const long maxFileSize = 10 * 1024 * 1024;
+        if (file.Size > maxFileSize)
+        {
+            errorMessage = "Soubor je příliš velký. Maximum je 10 MB.";
+            return;
+        }
+
+        try
+        {
+            Logger.LogInformation("=== IMPORT SOUBORU - START ===");
+            Logger.LogInformation($"Název souboru: {file.Name}");
+            Logger.LogInformation($"Velikost: {file.Size} bytes");
+            Logger.LogInformation($"Content Type: {file.ContentType}");
+
+            errorMessage = null;
+            StateHasChanged();
+
+            using var stream = file.OpenReadStream(maxFileSize);
+            var response = await ImportBooksUseCase.ImportFromExcelAsync(stream, file.Name);
+
+            Logger.LogInformation("=== IMPORT SOUBORU - KONEC ===");
+
+            if (response.Success)
+            {
+                await JS.InvokeVoidAsync("alert", $"✅ {response.Message}");
+            }
+            else
+            {
+                errorMessage = response.Message;
+                Logger.LogError($"Import selhal: {response.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Chyba při importu souboru");
+            errorMessage = $"Chyba při importu: {ex.Message}";
         }
     }
 }
