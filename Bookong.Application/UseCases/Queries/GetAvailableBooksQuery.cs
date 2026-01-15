@@ -1,8 +1,6 @@
 using Bookong.Application.DTOs;
 using Bookong.Application.UseCases.Queries.Interfaces;
 using Bookong.Domain.Interfaces;
-using Bookong.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Bookong.Application.UseCases.Queries
 {
@@ -17,8 +15,6 @@ namespace Bookong.Application.UseCases.Queries
 
         public async Task<IReadOnlyList<BookListItemDto>> ExecuteAsync()
         {
-            // Fix: IBookRepository does not support Include/Where/Select directly.
-            // Use GetAllAsync() and project manually.
             var books = await _uow.Books.GetAllAsync();
 
             var result = books
@@ -27,9 +23,11 @@ namespace Bookong.Application.UseCases.Queries
                 {
                     PublicId = b.PublicId,
                     Title = b.Name,
-                    AuthorFullName = $"{b.Author.FirstName} {b.Author.LastName}",
-                    Genre = b.Genre.Name,
-                    Kind = b.Kind.Name,
+                    AuthorFullName = b.Author != null 
+                        ? $"{b.Author.FirstName} {b.Author.LastName}" 
+                        : "Neznámý autor",
+                    Genre = b.Genre?.Name ?? "Nezařazeno",
+                    Kind = b.Kind?.Name ?? "Nezařazeno",
                     Borrowable = b.Borrowable
                 })
                 .ToList();

@@ -14,93 +14,49 @@ namespace Bookong.Infrastructure.Repositories
             return await _context.Authors.AsNoTracking().ToListAsync();
         }
 
-        public async Task<List<Genre>> GetAllGenresAsync()
+        public async Task<List<Publisher>> GetAllPublishersAsync()
         {
-            return await _context.Genres.AsNoTracking().ToListAsync();
+            return await _context.Publishers.AsNoTracking().ToListAsync();
         }
 
-        public async Task<List<Kind>> GetAllKindsAsync()
+        public Author? FindAuthor(string firstName, string lastName, List<Author> authors)
         {
-            return await _context.Kinds.AsNoTracking().ToListAsync();
-        }
-
-        public async Task<List<Period>> GetAllPeriodsAsync()
-        {
-            return await _context.Periods.AsNoTracking().ToListAsync();
-        }
-
-        public async Task<List<Warehouse>> GetAllWarehousesAsync()
-        {
-            return await _context.Warehouses.AsNoTracking().ToListAsync();
-        }
-
-        public Author? FindAuthor(string fullName, List<Author> authors)
-        {
-            if (string.IsNullOrWhiteSpace(fullName))
+            if (string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName))
                 return null;
-
-            var firstName = GetFirstName(fullName);
-            var lastName = GetLastName(fullName);
 
             return authors.FirstOrDefault(a =>
-                a.FirstName.Equals(firstName, StringComparison.OrdinalIgnoreCase) &&
-                a.LastName.Equals(lastName, StringComparison.OrdinalIgnoreCase));
+                a.FirstName.Equals(firstName?.Trim() ?? "", StringComparison.OrdinalIgnoreCase) &&
+                a.LastName.Equals(lastName?.Trim() ?? "", StringComparison.OrdinalIgnoreCase));
         }
 
-        public Genre? FindGenre(string name, List<Genre> genres)
+        public Publisher? FindPublisher(string name, List<Publisher> publishers)
         {
             if (string.IsNullOrWhiteSpace(name))
                 return null;
 
-            return genres.FirstOrDefault(g => g.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            return publishers.FirstOrDefault(p => p.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase));
         }
 
-        public Kind? FindKind(string name, List<Kind> kinds)
+        public void CreateAuthorIfNotExists(string firstName, string lastName, List<Author> authors, ref bool needsCommit)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                return null;
-
-            return kinds.FirstOrDefault(k => k.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-        }
-
-        public Period? FindPeriod(string name, List<Period> periods)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                return null;
-
-            return periods.FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-        }
-
-        public Warehouse? FindWarehouse(string name, List<Warehouse> warehouses)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                return null;
-
-            return warehouses.FirstOrDefault(w => w.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-        }
-
-        public void CreateAuthorIfNotExists(string fullName, List<Author> authors, ref bool needsCommit)
-        {
-            if (string.IsNullOrWhiteSpace(fullName))
+            if (string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName))
                 return;
 
-            var firstName = GetFirstName(fullName);
-            var lastName = GetLastName(fullName);
-            var parts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            var middleName = parts.Length > 2 ? parts[1] : "";
+            var trimmedFirstName = firstName?.Trim() ?? "";
+            var trimmedLastName = lastName?.Trim() ?? "";
 
             var existingAuthor = authors.FirstOrDefault(a =>
-                a.FirstName.Equals(firstName, StringComparison.OrdinalIgnoreCase) &&
-                a.LastName.Equals(lastName, StringComparison.OrdinalIgnoreCase));
+                a.FirstName.Equals(trimmedFirstName, StringComparison.OrdinalIgnoreCase) &&
+                a.LastName.Equals(trimmedLastName, StringComparison.OrdinalIgnoreCase));
 
             if (existingAuthor == null)
             {
                 var author = new Author
                 {
                     PublicId = Guid.NewGuid(),
-                    FirstName = firstName,
-                    MiddleName = middleName,
-                    LastName = lastName
+                    FirstName = trimmedFirstName,
+                    MiddleName = "",
+                    LastName = trimmedLastName
                 };
                 _context.Authors.Add(author);
                 authors.Add(author);
@@ -108,92 +64,23 @@ namespace Bookong.Infrastructure.Repositories
             }
         }
 
-        public void CreateGenreIfNotExists(string name, List<Genre> genres, ref bool needsCommit)
+        public void CreatePublisherIfNotExists(string name, List<Publisher> publishers, ref bool needsCommit)
         {
             if (string.IsNullOrWhiteSpace(name))
                 return;
 
-            var existingGenre = genres.FirstOrDefault(g => g.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            var trimmedName = name.Trim();
+            var existingPublisher = publishers.FirstOrDefault(p => p.Name.Equals(trimmedName, StringComparison.OrdinalIgnoreCase));
 
-            if (existingGenre == null)
+            if (existingPublisher == null)
             {
-                var genre = new Genre
+                var publisher = new Publisher
                 {
                     PublicId = Guid.NewGuid(),
-                    Name = name
+                    Name = trimmedName
                 };
-                _context.Genres.Add(genre);
-                genres.Add(genre);
-                needsCommit = true;
-            }
-        }
-
-        public void CreateKindIfNotExists(string name, List<Kind> kinds, ref bool needsCommit)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                return;
-
-            var existingKind = kinds.FirstOrDefault(k => k.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-
-            if (existingKind == null)
-            {
-                var kind = new Kind
-                {
-                    PublicId = Guid.NewGuid(),
-                    Name = name
-                };
-                _context.Kinds.Add(kind);
-                kinds.Add(kind);
-                needsCommit = true;
-            }
-        }
-
-        public void CreatePeriodIfNotExists(string name, List<Period> periods, ref bool needsCommit)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                return;
-
-            var existingPeriod = periods.FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-
-            if (existingPeriod == null)
-            {
-                var period = new Period
-                {
-                    PublicId = Guid.NewGuid(),
-                    Name = name
-                };
-                _context.Periods.Add(period);
-                periods.Add(period);
-                needsCommit = true;
-            }
-        }
-
-        public void CreateWarehouseIfNotExists(string name, List<Warehouse> warehouses, ref bool needsCommit)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                return;
-
-            var existingWarehouse = warehouses.FirstOrDefault(w => w.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-
-            if (existingWarehouse == null)
-            {
-                var defaultAddress = new Address
-                {
-                    PublicId = Guid.NewGuid(),
-                    Street = "N/A",
-                    Number = "0",
-                    City = "N/A",
-                    ZipCode = "00000"
-                };
-
-                var warehouse = new Warehouse
-                {
-                    PublicId = Guid.NewGuid(),
-                    Name = name,
-                    Address = defaultAddress
-                };
-                _context.Warehouses.Add(warehouse);
-                warehouses.Add(warehouse);
+                _context.Publishers.Add(publisher);
+                publishers.Add(publisher);
                 needsCommit = true;
             }
         }
@@ -201,24 +88,6 @@ namespace Bookong.Infrastructure.Repositories
         public void AddBook(Book book)
         {
             _context.Books.Add(book);
-        }
-
-        private static string GetFirstName(string fullName)
-        {
-            if (string.IsNullOrWhiteSpace(fullName))
-                return "";
-
-            var parts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            return parts.Length > 0 ? parts[0] : "";
-        }
-
-        private static string GetLastName(string fullName)
-        {
-            if (string.IsNullOrWhiteSpace(fullName))
-                return "";
-
-            var parts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            return parts.Length > 1 ? parts[^1] : "";
         }
     }
 }

@@ -16,7 +16,6 @@ namespace Bookong.Infrastructure.Services
         public IBookRepository Books { get; }
         public IBookReservationRepository BookReservations { get; }
         public IGenreRepository Genres { get; }
-        public IImportRepository Import { get; }
         public IKindRepository Kinds { get; }
         public IMaturitaBookAssignmentRequestRepository MaturitaBookAssignmentRequests { get; }
         public IMaturitaBookRepository MaturitaBooks { get; }
@@ -37,7 +36,6 @@ namespace Bookong.Infrastructure.Services
             Books = new BookRepository(_context);
             BookReservations = new BookReservationRepository(_context);
             Genres = new GenreRepository(_context);
-            Import = new ImportRepository(_context);
             Kinds = new KindRepository(_context);
             MaturitaBookAssignmentRequests = new MaturitaBookAssignmentRequestRepository(_context);
             MaturitaBooks = new MaturitaBookRepository(_context);
