@@ -47,12 +47,14 @@ namespace Bookong.Application.UseCases
                 var publishers = (await _uow.Publishers.GetAllAsync()).ToList();
                 var genres = (await _uow.Genres.GetAllAsync()).ToList();
                 var kinds = (await _uow.Kinds.GetAllAsync()).ToList();
+                var periods = (await _uow.Periods.GetAllAsync()).ToList();
 
                 bool needsCommit = false;
 
-                // Create default Genre and Kind if they don't exist
+                // Create default Genre, Kind and Period if they don't exist
                 CreateGenreIfNotExists(DefaultGenreName, genres, ref needsCommit);
                 CreateKindIfNotExists(DefaultKindName, kinds, ref needsCommit);
+                CreatePeriodIfNotExists(DefaultGenreName, periods, ref needsCommit);
 
                 foreach (var bookData in importedBooksData)
                 {
@@ -68,11 +70,13 @@ namespace Bookong.Application.UseCases
                     publishers = (await _uow.Publishers.GetAllAsync()).ToList();
                     genres = (await _uow.Genres.GetAllAsync()).ToList();
                     kinds = (await _uow.Kinds.GetAllAsync()).ToList();
+                    periods = (await _uow.Periods.GetAllAsync()).ToList();
                 }
 
-                // Get default Genre and Kind for assignment
+                // Get default Genre, Kind and Period for assignment
                 var defaultGenre = genres.FirstOrDefault(g => g.Name == DefaultGenreName);
                 var defaultKind = kinds.FirstOrDefault(k => k.Name == DefaultKindName);
+                var defaultPeriod = periods.FirstOrDefault(p => p.Name == DefaultGenreName);
 
                 int successCount = 0;
                 int errorCount = 0;
@@ -92,13 +96,16 @@ namespace Bookong.Application.UseCases
 
                         var book = new Book
                         {
+                            PublicId = Guid.NewGuid(),
                             Name = bookData.Name,
                             ISBN = bookData.ISBN,
                             AuthorId = author?.Id,
                             PublisherId = publisher?.Id,
                             GenreId = defaultGenre?.Id,
                             KindId = defaultKind?.Id,
+                            PeriodId = defaultPeriod?.Id,
                             DateRelease = dateRelease,
+                            Pages = 0,
                             Borrowable = true
                         };
 
@@ -237,6 +244,21 @@ namespace Bookong.Application.UseCases
                 };
                 _uow.Kinds.Add(kind);
                 kinds.Add(kind);
+                needsCommit = true;
+            }
+        }
+
+        private void CreatePeriodIfNotExists(string periodName, List<Period> periods, ref bool needsCommit)
+        {
+            if (!periods.Any(p => p.Name == periodName))
+            {
+                var period = new Period 
+                { 
+                    PublicId = Guid.NewGuid(),
+                    Name = periodName 
+                };
+                _uow.Periods.Add(period);
+                periods.Add(period);
                 needsCommit = true;
             }
         }
