@@ -14,6 +14,8 @@ namespace Bookong.Application.UseCases
 
         private const string DefaultGenreName = "Nezařazeno";
         private const string DefaultKindName = "Nezařazeno";
+        private const string DefaultPeriodName = "Nezařazeno";
+        private const string DefaultWarehouseName = "Hlavní sklad";
 
         public ImportBooksUseCase(IUnitOfWork uow, ILogger<ImportBooksUseCase> logger)
         {
@@ -43,69 +45,91 @@ namespace Bookong.Application.UseCases
                     return GenericResponse.FailureResponse("V souboru nebyly nalezeny žádné platné knihy.");
                 }
 
+                _logger.LogInformation("📊 Načteno {Count} knih z excelu", importedBooksData.Count);
+                _logger.LogInformation("📊 Z toho má Public ID: {WithId}, bez Public ID: {WithoutId}", 
+                    importedBooksData.Count(b => b.PublicId.HasValue),
+                    importedBooksData.Count(b => !b.PublicId.HasValue));
+
+                var existingBooks = (await _uow.Books.GetAllAsync()).ToList();
+
+                _logger.LogInformation("📚 V databázi je celkem {Count} knih", existingBooks.Count);
                 var authors = (await _uow.Authors.GetAllAsync()).ToList();
-                var publishers = (await _uow.Publishers.GetAllAsync()).ToList();
                 var genres = (await _uow.Genres.GetAllAsync()).ToList();
                 var kinds = (await _uow.Kinds.GetAllAsync()).ToList();
                 var periods = (await _uow.Periods.GetAllAsync()).ToList();
+                var warehouses = (await _uow.Warehouses.GetAllAsync()).ToList();
 
                 bool needsCommit = false;
 
-                // Create default Genre, Kind and Period if they don't exist
                 CreateGenreIfNotExists(DefaultGenreName, genres, ref needsCommit);
                 CreateKindIfNotExists(DefaultKindName, kinds, ref needsCommit);
-                CreatePeriodIfNotExists(DefaultGenreName, periods, ref needsCommit);
+                CreatePeriodIfNotExists(DefaultPeriodName, periods, ref needsCommit);
+                CreateWarehouseIfNotExists(DefaultWarehouseName, warehouses, ref needsCommit);
 
                 foreach (var bookData in importedBooksData)
                 {
                     CreateAuthorIfNotExists(bookData.AuthorFirstName, bookData.AuthorLastName, authors, ref needsCommit);
-                    CreatePublisherIfNotExists(bookData.Publisher, publishers, ref needsCommit);
+                    CreateGenreIfNotExists(bookData.Genre, genres, ref needsCommit);
+                    CreateKindIfNotExists(bookData.Kind, kinds, ref needsCommit);
+                    CreatePeriodIfNotExists(bookData.Period, periods, ref needsCommit);
+                    CreateWarehouseIfNotExists(bookData.Warehouse, warehouses, ref needsCommit);
                 }
 
                 if (needsCommit)
                 {
                     await _uow.CommitAsync();
 
+                    existingBooks = (await _uow.Books.GetAllAsync()).ToList();
                     authors = (await _uow.Authors.GetAllAsync()).ToList();
-                    publishers = (await _uow.Publishers.GetAllAsync()).ToList();
                     genres = (await _uow.Genres.GetAllAsync()).ToList();
                     kinds = (await _uow.Kinds.GetAllAsync()).ToList();
                     periods = (await _uow.Periods.GetAllAsync()).ToList();
+                    warehouses = (await _uow.Warehouses.GetAllAsync()).ToList();
                 }
-
-                // Get default Genre, Kind and Period for assignment
-                var defaultGenre = genres.FirstOrDefault(g => g.Name == DefaultGenreName);
-                var defaultKind = kinds.FirstOrDefault(k => k.Name == DefaultKindName);
-                var defaultPeriod = periods.FirstOrDefault(p => p.Name == DefaultGenreName);
 
                 int successCount = 0;
                 int errorCount = 0;
+                int skippedCount = 0;
 
                 foreach (var bookData in importedBooksData)
                 {
                     try
                     {
+                        if (bookData.PublicId.HasValue && existingBooks.Any(b => b.PublicId == bookData.PublicId.Value))
+                        {
+                            skippedCount++;
+                            continue;
+                        }
+
+                        if (!bookData.PublicId.HasValue)
+                        {
+                            _logger.LogWarning("Kniha {BookName} nemá Public ID v excelu - bude vytvořeno nové", bookData.Name);
+                        }
+
                         var author = FindAuthor(bookData.AuthorFirstName, bookData.AuthorLastName, authors);
-                        var publisher = FindPublisher(bookData.Publisher, publishers);
+                        var genre = FindGenre(bookData.Genre, genres);
+                        var kind = FindKind(bookData.Kind, kinds);
+                        var period = FindPeriod(bookData.Period, periods);
+                        var warehouse = FindWarehouse(bookData.Warehouse, warehouses);
 
                         DateTime? dateRelease = null;
-                        if (!string.IsNullOrEmpty(bookData.YearRelease) && int.TryParse(bookData.YearRelease, out var year))
+                        if (bookData.DateRelease.HasValue)
                         {
-                            dateRelease = new DateTime(year, 1, 1);
+                            dateRelease = bookData.DateRelease.Value;
                         }
 
                         var book = new Book
                         {
-                            PublicId = Guid.NewGuid(),
+                            PublicId = bookData.PublicId ?? Guid.NewGuid(),
                             Name = bookData.Name,
                             ISBN = bookData.ISBN,
                             AuthorId = author?.Id,
-                            PublisherId = publisher?.Id,
-                            GenreId = defaultGenre?.Id,
-                            KindId = defaultKind?.Id,
-                            PeriodId = defaultPeriod?.Id,
+                            GenreId = genre?.Id,
+                            KindId = kind?.Id,
+                            PeriodId = period?.Id,
+                            WarehouseId = warehouse?.Id,
                             DateRelease = dateRelease,
-                            Pages = 0,
+                            Pages = bookData.Pages > 0 ? (ushort?)bookData.Pages : null,
                             Borrowable = true
                         };
 
@@ -121,9 +145,14 @@ namespace Bookong.Application.UseCases
 
                 await _uow.CommitAsync();
 
-                _logger.LogInformation("Import dokončen: {SuccessCount} knih importováno, {ErrorCount} chyb", successCount, errorCount);
+                _logger.LogInformation("Import dokončen: {SuccessCount} knih importováno, {SkippedCount} přeskočeno, {ErrorCount} chyb", successCount, skippedCount, errorCount);
 
                 var message = $"Import dokončen! Úspěšně importováno {successCount} knih.";
+
+                if (skippedCount > 0)
+                {
+                    message += $" Přeskočeno duplicit: {skippedCount}.";
+                }
 
                 if (errorCount > 0)
                 {
@@ -156,21 +185,53 @@ namespace Bookong.Application.UseCases
             {
                 try
                 {
-                    var name = row.Cell(2).GetValue<string>();
-                    var authorLastName = row.Cell(3).GetValue<string>();
-                    var authorFirstName = row.Cell(4).GetValue<string>();
-                    var isbn = row.Cell(5).GetValue<string>();
-                    var publisher = row.Cell(6).GetValue<string>();
-                    var yearRelease = row.Cell(10).GetValue<string>();
+                    var name = row.Cell(1).GetValue<string>();
+                    var authorFullName = row.Cell(2).GetValue<string>();
+                    var isbn = row.Cell(3).GetValue<string>();
+                    var genre = row.Cell(4).GetValue<string>();
+                    var kind = row.Cell(5).GetValue<string>();
+                    var period = row.Cell(6).GetValue<string>();
+                    var pagesStr = row.Cell(7).GetValue<string>();
+                    var dateStr = row.Cell(8).GetValue<string>();
+                    var warehouse = row.Cell(9).GetValue<string>();
+                    var publicIdStr = row.Cell(11).GetValue<string>();
+
+                    var (firstName, lastName) = SplitAuthorName(authorFullName);
+
+                    int pages = 0;
+                    if (!string.IsNullOrWhiteSpace(pagesStr) && int.TryParse(pagesStr, out var p))
+                    {
+                        pages = p;
+                    }
+
+                    DateTime? dateRelease = null;
+                    if (!string.IsNullOrWhiteSpace(dateStr) && dateStr != "Neznámé datum")
+                    {
+                        if (DateTime.TryParseExact(dateStr, "dd.MM.yyyy", null, System.Globalization.DateTimeStyles.None, out var date))
+                        {
+                            dateRelease = date;
+                        }
+                    }
+
+                    Guid? publicId = null;
+                    if (!string.IsNullOrWhiteSpace(publicIdStr) && Guid.TryParse(publicIdStr, out var guid))
+                    {
+                        publicId = guid;
+                    }
 
                     var bookData = new ImportedBookData
                     {
-                        Name = string.IsNullOrWhiteSpace(name) ? "Unknown" : name.Trim(),
-                        AuthorLastName = string.IsNullOrWhiteSpace(authorLastName) ? "Unknown" : authorLastName.Trim(),
-                        AuthorFirstName = string.IsNullOrWhiteSpace(authorFirstName) ? "" : authorFirstName.Trim(),
-                        ISBN = string.IsNullOrWhiteSpace(isbn) ? null : isbn.Trim(),
-                        Publisher = string.IsNullOrWhiteSpace(publisher) ? "Unknown" : publisher.Trim(),
-                        YearRelease = string.IsNullOrWhiteSpace(yearRelease) ? null : yearRelease.Trim()
+                        Name = string.IsNullOrWhiteSpace(name) || name == "Bez názvu" ? "Unknown" : name.Trim(),
+                        AuthorFirstName = firstName,
+                        AuthorLastName = lastName,
+                        ISBN = string.IsNullOrWhiteSpace(isbn) || isbn == "Bez ISBN" ? null : isbn.Trim(),
+                        Genre = string.IsNullOrWhiteSpace(genre) || genre == "Nezařazeno" ? DefaultGenreName : genre.Trim(),
+                        Kind = string.IsNullOrWhiteSpace(kind) || kind == "Nezařazeno" ? DefaultKindName : kind.Trim(),
+                        Period = string.IsNullOrWhiteSpace(period) || period == "Nezařazeno" ? DefaultPeriodName : period.Trim(),
+                        Warehouse = string.IsNullOrWhiteSpace(warehouse) || warehouse == "Nezařazeno" ? DefaultWarehouseName : warehouse.Trim(),
+                        Pages = pages,
+                        DateRelease = dateRelease,
+                        PublicId = publicId
                     };
 
                     importedBooksData.Add(bookData);
@@ -184,6 +245,26 @@ namespace Bookong.Application.UseCases
             }
 
             return importedBooksData;
+        }
+
+        private (string firstName, string lastName) SplitAuthorName(string fullName)
+        {
+            if (string.IsNullOrWhiteSpace(fullName) || fullName == "Neznámý autor")
+            {
+                return ("Unknown", "Author");
+            }
+
+            var parts = fullName.Trim().Split(' ', 2);
+            if (parts.Length == 2)
+            {
+                return (parts[0], parts[1]);
+            }
+            else if (parts.Length == 1)
+            {
+                return (string.Empty, parts[0]);
+            }
+
+            return ("Unknown", "Author");
         }
 
         private void CreateAuthorIfNotExists(string firstName, string lastName, List<Author> authors, ref bool needsCommit)
@@ -203,17 +284,25 @@ namespace Bookong.Application.UseCases
             }
         }
 
-        private void CreatePublisherIfNotExists(string publisherName, List<Publisher> publishers, ref bool needsCommit)
+        private void CreateWarehouseIfNotExists(string warehouseName, List<Warehouse> warehouses, ref bool needsCommit)
         {
-            if (!publishers.Any(p => p.Name == publisherName))
+            if (!warehouses.Any(w => w.Name == warehouseName))
             {
-                var publisher = new Publisher 
+                var warehouse = new Warehouse 
                 { 
                     PublicId = Guid.NewGuid(),
-                    Name = publisherName 
+                    Name = warehouseName,
+                    Address = new Address
+                    {
+                        PublicId = Guid.NewGuid(),
+                        Street = "Neznámá",
+                        Number = "0",
+                        City = "Neznámé",
+                        ZipCode = "00000"
+                    }
                 };
-                _uow.Publishers.Add(publisher);
-                publishers.Add(publisher);
+                _uow.Warehouses.Add(warehouse);
+                warehouses.Add(warehouse);
                 needsCommit = true;
             }
         }
@@ -268,9 +357,24 @@ namespace Bookong.Application.UseCases
             return authors.FirstOrDefault(a => a.FirstName == firstName && a.LastName == lastName);
         }
 
-        private Publisher? FindPublisher(string publisherName, IEnumerable<Publisher> publishers)
+        private Genre? FindGenre(string genreName, IEnumerable<Genre> genres)
         {
-            return publishers.FirstOrDefault(p => p.Name == publisherName);
+            return genres.FirstOrDefault(g => g.Name == genreName);
+        }
+
+        private Kind? FindKind(string kindName, IEnumerable<Kind> kinds)
+        {
+            return kinds.FirstOrDefault(k => k.Name == kindName);
+        }
+
+        private Period? FindPeriod(string periodName, IEnumerable<Period> periods)
+        {
+            return periods.FirstOrDefault(p => p.Name == periodName);
+        }
+
+        private Warehouse? FindWarehouse(string warehouseName, IEnumerable<Warehouse> warehouses)
+        {
+            return warehouses.FirstOrDefault(w => w.Name == warehouseName);
         }
 
         private record ImportedBookData
@@ -279,8 +383,13 @@ namespace Bookong.Application.UseCases
             public string AuthorFirstName { get; init; } = "";
             public string AuthorLastName { get; init; } = "";
             public string? ISBN { get; init; }
-            public string Publisher { get; init; } = "";
-            public string? YearRelease { get; init; }
+            public string Genre { get; init; } = "";
+            public string Kind { get; init; } = "";
+            public string Period { get; init; } = "";
+            public string Warehouse { get; init; } = "";
+            public int Pages { get; init; }
+            public DateTime? DateRelease { get; init; }
+            public Guid? PublicId { get; init; }
         }
     }
 }
