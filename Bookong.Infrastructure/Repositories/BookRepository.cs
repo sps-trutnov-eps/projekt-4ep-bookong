@@ -1,4 +1,4 @@
-﻿using Bookong.Domain.Common.Models;
+using Bookong.Domain.Common.Models;
 using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
 using Bookong.Domain.Queries;
@@ -183,6 +183,5 @@ namespace Bookong.Infrastructure.Repositories
                 .Select(b => b.Id)
                 .ToArrayAsync();
         }
-
     }
 }

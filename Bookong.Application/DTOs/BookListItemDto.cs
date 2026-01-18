@@ -8,5 +8,6 @@ namespace Bookong.Application.DTOs
         public string Genre { get; set; } = string.Empty;
         public string Kind { get; set; } = string.Empty;
         public bool Borrowable { get; set; }
+        public int LoanCount { get; set; }
     }
 }
