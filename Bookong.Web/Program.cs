@@ -18,14 +18,18 @@ using Bookong.Application.DTOs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<BookongDbContext>(options =>
+builder.Services.AddDbContextFactory<BookongDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Unit of Work
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
+
+// Application Services
+builder.Services.AddScoped<IBookQrCodeImageGenerationService, BookQrCodeImageGenerationService>();
 
 // Application UseCases, Queries
 builder.Services.AddScoped<IGetAvailableBooksQuery, GetAvailableBooksQuery>();
+builder.Services.AddScoped<IGetAllBooksQuery, GetAllBooksQuery>();
 builder.Services.AddScoped<IGetMaturitaBookSelectionQuery, GetMaturitaBookSelectionQuery>();
 builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
 builder.Services.AddScoped<IExportBooksQuery, ExportBooksQuery>();
@@ -42,6 +46,24 @@ builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
 builder.Services.AddScoped<ICompleteUserRegistrationUseCase, CompleteUserRegistrationUseCase>();
 builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase>();
 builder.Services.AddScoped<IDeselectMaturitaBookUseCase, DeselectMaturitaBookUseCase>();
+builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
+builder.Services.AddScoped<IExportBooksQuery, ExportBooksQuery>();
+builder.Services.AddScoped<IExportBookQrCodesQuery, ExportBookQrCodesQuery>();
+builder.Services.AddScoped<IGetAllBookLoansQuery, GetAllBookLoansQuery>();
+builder.Services.AddScoped<IGetUserBookLoansQuery, GetUserBookLoansQuery>();
+builder.Services.AddScoped<IGetBookLoanStatusQuery, GetBookLoanStatusQuery>();
+builder.Services.AddScoped<ICreateBookLoanUseCase, CreateBookLoanUseCase>();
+builder.Services.AddScoped<IReturnBookUseCase, ReturnBookUseCase>();
+builder.Services.AddScoped<IProlongBookLoanUseCase, ProlongBookLoanUseCase>();
+// Queries
+builder.Services.AddScoped<IGetMaturitaBooksQuery, GetMaturitaBooksQuery>();
+
+// Use Cases
+builder.Services.AddScoped<ICreateMaturitaBookUseCase, CreateMaturitaBookUseCase>();
+builder.Services.AddScoped<IDeleteMaturitaBookUseCase, DeleteMaturitaBookUseCase>();
+
+// Session services
+builder.Services.AddDistributedMemoryCache();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 if (builder.Environment.IsDevelopment())
 {
