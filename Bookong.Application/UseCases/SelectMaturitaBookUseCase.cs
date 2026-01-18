@@ -30,29 +30,20 @@ namespace Bookong.Application.UseCases
         {
             try
             {
-                // Get user from authentication state (if present)
                 User? user = null;
                 try
                 {
                     var currentUserPublicId = await _currentUserService.GetCurrentUserPublicIdAsync();
-                    _logger.LogDebug("Current user PublicId = {CurrentUserPublicId}", currentUserPublicId);
-
                     if (currentUserPublicId.HasValue)
                     {
                         user = await _unitOfWork.Users.GetByPublicIdAsync(currentUserPublicId.Value);
-
-                        if (user == null)
-                        {
-                            _logger.LogDebug("User with PublicId {PublicId} not found, will fallback to seeded user.", currentUserPublicId);
-                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Error reading current user identity, will fallback to seeded user.");
+                    _logger.LogWarning(ex, "Error reading current user identity, will fallback.");
                 }
 
-                // Fallback to seeded user if no user in session
                 if (user is null)
                 {
                     var users = await _unitOfWork.Users.GetAllAsync();
@@ -60,33 +51,54 @@ namespace Bookong.Application.UseCases
 
                     if (user is null)
                     {
-                        _logger.LogError("No users found in database. Please run seed data first.");
-                        return GenericResponse.FailureResponse("No users found in database. Please run seed data first.", "USER_NOT_FOUND");
+                        user = new User
+                        {
+                            PublicId = Guid.NewGuid(),
+                            SamAccountName = "local.user",
+                            ObjectGuid = Guid.NewGuid(),
+                            Name = "Lokální uživatel",
+                            Email = "local@bookong.local",
+                            OrganizationalUnit = "OU=Local,DC=bookong,DC=local"
+                        };
+                        _unitOfWork.Users.Add(user);
+                        await _unitOfWork.CommitAsync();
                     }
-
-                    _logger.LogDebug("Using fallback seeded user Id={UserId}", user.Id);
                 }
 
-                // Get the book by its public ID
-                var book = await _unitOfWork.Books.GetByPublicIdAsync(dto.BookPublicId);
+                var maturitaBook = await _unitOfWork.MaturitaBooks.GetByPublicIdAsync(dto.BookPublicId);
+                if (maturitaBook is null)
+                {
+                    return GenericResponse.FailureResponse("Maturita book not found", "BOOK_NOT_FOUND");
+                }
+
+                var books = await _unitOfWork.Books.GetAllAsync();
+                var book = books.FirstOrDefault(b => 
+                    b.Name == maturitaBook.Name && 
+                    b.AuthorId == maturitaBook.AuthorId);
 
                 if (book is null)
                 {
-                    _logger.LogWarning("Book with PublicId {BookPublicId} not found", dto.BookPublicId);
-                    return GenericResponse.FailureResponse($"Book with PublicId {dto.BookPublicId} not found", "BOOK_NOT_FOUND");
+                    book = new Book
+                    {
+                        PublicId = Guid.NewGuid(),
+                        Name = maturitaBook.Name,
+                        AuthorId = maturitaBook.AuthorId,
+                        GenreId = maturitaBook.GenreId,
+                        KindId = maturitaBook.KindId,
+                        PeriodId = maturitaBook.PeriodId,
+                        Borrowable = false
+                    };
+                    _unitOfWork.Books.Add(book);
+                    await _unitOfWork.CommitAsync();
                 }
 
-                // Check if the book is already in the selection
                 var allSelections = await _unitOfWork.MaturitaBookSelections.GetAllAsync();
                 var exists = allSelections.Any(m => m.BookId == book.Id && m.UserId == user.Id);
 
                 if (exists)
                 {
-                    _logger.LogInformation("Book {BookId} is already in maturita selection for user {UserId}", book.Id, user.Id);
                     return GenericResponse.SuccessResponse("Book is already in your maturita selection");
                 }
-
-                _logger.LogInformation("Adding book {BookId} to maturita selection for user {UserId}", book.Id, user.Id);
 
                 var selection = new MaturitaBookSelection
                 {
@@ -97,13 +109,12 @@ namespace Bookong.Application.UseCases
                 _unitOfWork.MaturitaBookSelections.Add(selection);
                 await _unitOfWork.CommitAsync();
 
-                _logger.LogInformation("Book {BookId} successfully added to maturita selection for user {UserId}", book.Id, user.Id);
                 return GenericResponse.SuccessResponse("Book successfully added to your maturita selection");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding book {BookPublicId} to maturita selection", dto.BookPublicId);
-                return GenericResponse.FailureResponse("An error occurred while adding the book to your maturita selection", "INTERNAL_ERROR");
+                _logger.LogError(ex, "Error adding book to maturita selection");
+                return GenericResponse.FailureResponse("An error occurred while adding the book", "INTERNAL_ERROR");
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using Bookong.Application.DTOs;
+using Bookong.Application.DTOs;
 using Bookong.Application.UseCases.Interfaces;
 using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
@@ -47,6 +47,47 @@ namespace Bookong.Application.UseCases
             await _unitOfWork.CommitAsync();
 
             return GenericResponse.SuccessResponse("Kniha byla přidána do dostupných.");
+        }
+
+        public async Task<GenericResponse> ExecuteAsync(CreateMaturitaBookDto dto)
+        {
+            // Validate references
+            var author = await _unitOfWork.Authors.GetByIdAsync(dto.AuthorId!.Value);
+            if (author == null) return GenericResponse.FailureResponse("Vybraný autor neexistuje.");
+
+            var genre = await _unitOfWork.Genres.GetByIdAsync(dto.GenreId!.Value);
+            if (genre == null) return GenericResponse.FailureResponse("Vybraný žánr neexistuje.");
+
+            var kind = await _unitOfWork.Kinds.GetByIdAsync(dto.KindId!.Value);
+            if (kind == null) return GenericResponse.FailureResponse("Vybraný druh neexistuje.");
+
+            var period = await _unitOfWork.Periods.GetByIdAsync(dto.PeriodId!.Value);
+            if (period == null) return GenericResponse.FailureResponse("Vybrané období neexistuje.");
+
+            // Check if already exists
+            var existing = await _unitOfWork.MaturitaBooks.FindExistingAsync(
+                dto.Name!,
+                dto.AuthorId.Value,
+                dto.GenreId.Value,
+                dto.KindId.Value,
+                dto.PeriodId.Value);
+
+            if (existing != null)
+                return GenericResponse.FailureResponse("Tato kniha již v seznamu existuje.");
+
+            var maturitaBook = new MaturitaBook
+            {
+                Name = dto.Name!,
+                AuthorId = dto.AuthorId.Value,
+                GenreId = dto.GenreId.Value,
+                KindId = dto.KindId.Value,
+                PeriodId = dto.PeriodId.Value
+            };
+
+            _unitOfWork.MaturitaBooks.Add(maturitaBook);
+            await _unitOfWork.CommitAsync();
+
+            return GenericResponse.SuccessResponse("Kniha byla úspěšně přidána.");
         }
     }
 }

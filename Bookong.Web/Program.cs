@@ -57,6 +57,7 @@ builder.Services.AddScoped<IReturnBookUseCase, ReturnBookUseCase>();
 builder.Services.AddScoped<IProlongBookLoanUseCase, ProlongBookLoanUseCase>();
 // Queries
 builder.Services.AddScoped<IGetMaturitaBooksQuery, GetMaturitaBooksQuery>();
+builder.Services.AddScoped<IGetBookFormOptionsQuery, GetBookFormOptionsQuery>();
 
 // Use Cases
 builder.Services.AddScoped<ICreateMaturitaBookUseCase, CreateMaturitaBookUseCase>();

@@ -19,7 +19,7 @@ namespace Bookong.Application.UseCases.Queries
 
             return maturitaBooks.Select(mb => new BookDetailDto
             {
-                PublicId = Guid.NewGuid(), // Temporary - not used for matching
+                PublicId = mb.PublicId,
                 Title = mb.Name,
                 AuthorId = mb.Author?.PublicId ?? Guid.Empty,
                 AuthorFullName = mb.Author != null 
