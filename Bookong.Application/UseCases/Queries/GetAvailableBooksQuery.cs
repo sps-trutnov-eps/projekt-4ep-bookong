@@ -30,11 +30,12 @@ namespace Bookong.Application.UseCases.Queries
                 {
                     PublicId = b.PublicId,
                     Title = b.Name,
-                    AuthorFullName = $"{b.Author.FirstName} {b.Author.LastName}",
-                    Genre = b.Genre.Name,
-                    Kind = b.Kind.Name,
-                    Borrowable = b.Borrowable,
-                    LoanCount = loansByBookId.ContainsKey(b.Id) ? loansByBookId[b.Id] : 0
+                    AuthorFullName = (b.Author is null)
+                        ? string.Empty
+                        : ($"{b.Author.FirstName} {b.Author.LastName}").Trim(),
+                    Genre = b.Genre?.Name ?? string.Empty,
+                    Kind = b.Kind?.Name ?? string.Empty,
+                    Borrowable = b.Borrowable
                 })
                 .ToList();
 
