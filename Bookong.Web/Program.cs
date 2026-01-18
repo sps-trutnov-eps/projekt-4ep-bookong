@@ -37,6 +37,7 @@ builder.Services.AddScoped<IDeselectMaturitaBookUseCase, DeselectMaturitaBookUse
 builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
 // Queries
 builder.Services.AddScoped<IGetMaturitaBooksQuery, GetMaturitaBooksQuery>();
+builder.Services.AddScoped<IGetBookFormOptionsQuery, GetBookFormOptionsQuery>();
 
 // Use Cases
 builder.Services.AddScoped<ICreateMaturitaBookUseCase, CreateMaturitaBookUseCase>();
