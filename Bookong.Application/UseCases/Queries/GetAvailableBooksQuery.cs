@@ -17,9 +17,12 @@ namespace Bookong.Application.UseCases.Queries
 
         public async Task<IReadOnlyList<BookListItemDto>> ExecuteAsync()
         {
-            // Fix: IBookRepository does not support Include/Where/Select directly.
-            // Use GetAllAsync() and project manually.
             var books = await _uow.Books.GetAllAsync();
+            var allLoans = await _uow.BookLoans.GetAllAsync();
+
+            var loansByBookId = allLoans
+                .GroupBy(bl => bl.BookId)
+                .ToDictionary(g => g.Key, g => g.Count());
 
             var result = books
                 .Where(b => b.Borrowable)
@@ -30,7 +33,8 @@ namespace Bookong.Application.UseCases.Queries
                     AuthorFullName = $"{b.Author.FirstName} {b.Author.LastName}",
                     Genre = b.Genre.Name,
                     Kind = b.Kind.Name,
-                    Borrowable = b.Borrowable
+                    Borrowable = b.Borrowable,
+                    LoanCount = loansByBookId.ContainsKey(b.Id) ? loansByBookId[b.Id] : 0
                 })
                 .ToList();
 
