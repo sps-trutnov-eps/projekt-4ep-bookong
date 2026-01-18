@@ -2,11 +2,10 @@
 @using Bookong.Application.DTOs
 @using Bookong.Application.UseCases.Queries.Interfaces
 @using Bookong.Application.UseCases.Interfaces
+@using Microsoft.Extensions.DependencyInjection
 @inject IGetAllBooksQuery GetAllBooksQuery
-@inject IGetMaturitaBooksQuery GetMaturitaBooksQuery
-@inject ICreateMaturitaBookUseCase CreateMaturitaUseCase
-@inject IDeleteMaturitaBookUseCase DeleteMaturitaUseCase
 @inject IGetBookFormOptionsQuery GetBookFormOptionsQuery
+@inject IServiceScopeFactory ScopeFactory
 @inject IJSRuntime JS
 
 <div class="container my-4">
@@ -255,7 +254,9 @@
         try
         {
             isLoading = true;
-            maturitaBooks = (await GetMaturitaBooksQuery.ExecuteAsync()).ToList();
+            using var scope = ScopeFactory.CreateScope();
+            var query = scope.ServiceProvider.GetRequiredService<IGetMaturitaBooksQuery>();
+            maturitaBooks = (await query.ExecuteAsync()).ToList();
         }
         catch (Exception ex)
         {
@@ -307,12 +308,22 @@
 
     private async Task AddFromLibraryAsync(Guid libraryBookId)
     {
-        await ProcessActionAsync(() => CreateMaturitaUseCase.ExecuteAsync(libraryBookId));
+        await ProcessActionAsync(async () => 
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var useCase = scope.ServiceProvider.GetRequiredService<ICreateMaturitaBookUseCase>();
+            return await useCase.ExecuteAsync(libraryBookId);
+        });
     }
 
     private async Task CreateManualAsync()
     {
-        await ProcessActionAsync(() => CreateMaturitaUseCase.ExecuteAsync(newBookDto));
+        await ProcessActionAsync(async () => 
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var useCase = scope.ServiceProvider.GetRequiredService<ICreateMaturitaBookUseCase>();
+            return await useCase.ExecuteAsync(newBookDto);
+        });
     }
 
     private async Task DeleteBookAsync(Guid maturitaBookId)
@@ -320,7 +331,12 @@
         var confirmed = await JS.InvokeAsync<bool>("confirm", "Opravdu chcete odebrat tuto knihu ze seznamu?");
         if (confirmed)
         {
-            await ProcessActionAsync(() => DeleteMaturitaUseCase.ExecuteAsync(maturitaBookId));
+            await ProcessActionAsync(async () => 
+            {
+                using var scope = ScopeFactory.CreateScope();
+                var useCase = scope.ServiceProvider.GetRequiredService<IDeleteMaturitaBookUseCase>();
+                return await useCase.ExecuteAsync(maturitaBookId);
+            });
         }
     }
 
