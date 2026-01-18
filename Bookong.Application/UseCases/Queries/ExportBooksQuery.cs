@@ -78,21 +78,19 @@ namespace Bookong.Application.UseCases.Queries
                         var qrCodeData = qrGenerator.CreateQrCode(b.Id.ToString(), QRCodeGenerator.ECCLevel.Q);
                         using var qrCode = new PngByteQRCode(qrCodeData);
                         var qrCodeImage = qrCode.GetGraphic(5);
-                        
+
                         using var stream = new MemoryStream(qrCodeImage);
                         stream.Position = 0;
                         var picture = ws.AddPicture(stream)
-                            .MoveTo(ws.Cell(row, 10));
-                        
-                        picture.Width = 100;
-                        picture.Height = 100;
+                            .MoveTo(ws.Cell(row, 10))
+                            .WithSize(100, 100);
                     }
-                    
+
                     ws.Row(row).Height = 75;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    ws.Cell(row, 10).Value = "Chyba QR kódu";
+                    ws.Cell(row, 10).Value = $"Chyba QR: {ex.Message}";
                 }
                 
                 ws.Cell(row, 11).Value = b.Id.ToString();
