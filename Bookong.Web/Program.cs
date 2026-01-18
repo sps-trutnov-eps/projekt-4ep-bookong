@@ -66,6 +66,8 @@ builder.Services.AddScoped<IDeleteMaturitaBookUseCase, DeleteMaturitaBookUseCase
 // Session services
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// Use mock AD service in development, real one in production
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddScoped<IActiveDirectoryService, MockActiveDirectoryService>();
@@ -74,7 +76,6 @@ else
 {
     builder.Services.AddScoped<IActiveDirectoryService, ActiveDirectoryService>();
 }
-
 
 builder.Services.AddHttpContextAccessor();
 
