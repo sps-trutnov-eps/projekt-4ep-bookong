@@ -33,6 +33,15 @@ builder.Services.AddScoped<IGetAllBooksQuery, GetAllBooksQuery>();
 builder.Services.AddScoped<IGetMaturitaBookSelectionQuery, GetMaturitaBookSelectionQuery>();
 builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
 builder.Services.AddScoped<IExportBooksQuery, ExportBooksQuery>();
+
+// Register form options query and create book use case
+builder.Services.AddScoped<IGetFormOptionsQuery, GetFormOptionsQuery>();
+builder.Services.AddScoped<ICreateBookUseCase, CreateBookUseCase>();
+
+// Register duplicate check query
+builder.Services.AddScoped<ICheckDuplicateQuery, CheckDuplicateQuery>();
+
+// Session services
 builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
 builder.Services.AddScoped<ICompleteUserRegistrationUseCase, CompleteUserRegistrationUseCase>();
 builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase>();

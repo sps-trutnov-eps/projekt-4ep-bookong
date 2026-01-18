@@ -6,7 +6,7 @@
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Authorization
 @page "/dashboard"
-@* @attribute [Authorize(Roles = "Admin")] *@
+@attribute [Authorize(Roles = "Admin")]
 
 @layout MainLayout
 @inject IJSRuntime JS
@@ -58,11 +58,16 @@
                 <i class="bi bi-cloud-arrow-down fs-4"></i>
                 <span class="fw-semibold">Export všech knih</span>
             </button>
+
+            <NavLink href="/addbookform" class="btn btn-success btn-lg shadow d-flex align-items-center gap-2 px-4 py-2">
+                <i class="bi bi-plus-circle fs-4"></i>
+                <span class="fw-semibold">Přidat novou knihu</span>
+            </NavLink>
             <!-- Správa maturitních knih -->
-            <a href="/booksteacher" class="btn btn-outline-primary btn-lg shadow d-flex align-items-center gap-2 px-4 py-2" style="text-decoration: none;">
+            <NavLink href="/booksteacher" class="btn btn-outline-primary btn-lg shadow d-flex align-items-center gap-2 px-4 py-2" style="text-decoration: none;">
                 <i class="bi bi-book fs-4"></i>
                 <span class="fw-semibold">Správa maturitních knih</span>
-            </a>
+            </NavLink>
         </div>
 
         @if (isLoading)
