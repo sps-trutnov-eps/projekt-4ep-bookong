@@ -1,0 +1,91 @@
+@using Bookong.Web.Components.Layout
+@using Bookong.Application.DTOs
+@using Bookong.Application.UseCases.Queries.Interfaces
+@using Bookong.Application.Services.Interfaces
+@using Bookong.Domain.Interfaces
+
+@page "/mybooks"
+@layout MainLayout
+@inject IGetUserBookLoansQuery GetUserBookLoansQuery
+@inject ICurrentUserService CurrentUserService
+@inject IUnitOfWork UnitOfWork
+
+<PageTitle>Moje knihy - BooKong</PageTitle>
+
+<main class="container my-4 flex-grow-1">
+    <h1 class="fw-bold text-primary mb-3 page-hero-title">Moje knihy</h1>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Načítání...</span>
+            </div>
+        </div>
+    }
+    else if (borrowedBooks.Count == 0)
+    {
+        <div class="text-center">
+            <p class="text-muted mb-3">Nemáte žádné vypůjčené knihy.</p>
+        </div>
+    }
+    else
+    {
+        <div class="border rounded-3 shadow-sm bg-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Název</th>
+                            <th scope="col">Autor</th>
+                            <th scope="col">Století</th>
+                            <th scope="col">Literatura</th>
+                            <th scope="col">ISBN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var loan in borrowedBooks)
+                        {
+                            <tr>
+                                <td class="fw-medium">@loan.BookTitle</td>
+                                <td>@loan.BookAuthor</td>
+                                <td>@loan.BookPeriod</td>
+                                <td>@loan.BookKind</td>
+                                <td>@loan.BookISBN</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="alert alert-info mt-3" role="alert">@message</div>
+    }
+</main>
+
+@code {
+    private List<BookLoanListItemDto> borrowedBooks = new();
+    private bool isLoading = true;
+    private string message = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userPublicId = await CurrentUserService.GetCurrentUserPublicIdAsync();
+
+        if (userPublicId != null)
+        {
+            var user = await UnitOfWork.Users.GetByPublicIdAsync(userPublicId.Value);
+
+            if (user != null)
+            {
+                var allLoans = await GetUserBookLoansQuery.ExecuteAsync(user.SamAccountName);
+                borrowedBooks = allLoans.Where(loan => !loan.IsReturned).ToList();
+            }
+        }
+
+        isLoading = false;
+    }
+}

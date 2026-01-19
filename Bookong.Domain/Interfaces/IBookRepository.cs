@@ -1,4 +1,4 @@
-﻿using Bookong.Domain.Common.Models;
+using Bookong.Domain.Common.Models;
 using Bookong.Domain.Entities;
 using Bookong.Domain.Queries;
 
@@ -20,6 +20,5 @@ namespace Bookong.Domain.Interfaces
         Task<IEnumerable<Book>> GetByIdsAsync(int[] ids);
 
         Task<int[]> GetAllIdsAsync();
-
     }
 }

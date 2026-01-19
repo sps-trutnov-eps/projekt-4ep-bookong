@@ -28,7 +28,7 @@ namespace Bookong.Application.UseCases
                 : request.Email;
 
             // Validate credentials via Active Directory service
-            var isValid = await _activeDirectoryService.ValidateCredetialsAsync(username, request.Password);
+            var isValid = await _activeDirectoryService.ValidateCredentialsAsync(username, request.Password);
 
             if (!isValid)
             {
