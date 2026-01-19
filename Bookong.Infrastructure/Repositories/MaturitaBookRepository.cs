@@ -1,4 +1,4 @@
-﻿using Bookong.Domain.Common.Models;
+using Bookong.Domain.Common.Models;
 using Bookong.Domain.Entities;
 using Bookong.Domain.Interfaces;
 using Bookong.Domain.Queries;
@@ -42,9 +42,15 @@ namespace Bookong.Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<MaturitaBook?> GetByPublicIdAsync(Guid publicId)
+        public async Task<MaturitaBook?> GetByPublicIdAsync(Guid publicId)
         {
-            throw new NotImplementedException();
+            return await _context.MaturitaBooks
+                .AsNoTracking()
+                .Include(mb => mb.Author)
+                .Include(mb => mb.Genre)
+                .Include(mb => mb.Kind)
+                .Include(mb => mb.Period)
+                .FirstOrDefaultAsync(mb => mb.PublicId == publicId);
         }
 
         public Task<PagedResult<MaturitaBook>> GetFilteredAsync(BookSearchCriteria criteria, int pageNumber = 1, int pageSize = 25)

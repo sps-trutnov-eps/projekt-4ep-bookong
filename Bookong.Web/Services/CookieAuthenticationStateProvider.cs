@@ -98,9 +98,8 @@ namespace Bookong.Web.Services
                 new("display_name", user.Name)
             };
 
-            var role = string.Equals(user.OrganizationalUnit, "Admin", StringComparison.OrdinalIgnoreCase)
-                ? "admin"
-                : "default";
+            var isAdmin = string.Equals(user.OrganizationalUnit, "Admin", StringComparison.OrdinalIgnoreCase);
+            var role = isAdmin ? "Admin" : "Default";
 
             claims.Add(new Claim(ClaimTypes.Role, role));
 

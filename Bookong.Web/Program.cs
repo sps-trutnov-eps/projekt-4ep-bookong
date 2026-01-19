@@ -24,6 +24,9 @@ builder.Services.AddDbContextFactory<BookongDbContext>(options =>
 // Unit of Work
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 
+// Application Services
+builder.Services.AddScoped<IBookQrCodeImageGenerationService, BookQrCodeImageGenerationService>();
+
 // Application UseCases, Queries
 builder.Services.AddScoped<IGetAvailableBooksQuery, GetAvailableBooksQuery>();
 builder.Services.AddScoped<IGetAllBooksQuery, GetAllBooksQuery>();
@@ -31,13 +34,31 @@ builder.Services.AddScoped<IGetMaturitaBookSelectionQuery, GetMaturitaBookSelect
 builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
 builder.Services.AddScoped<IExportBooksQuery, ExportBooksQuery>();
 builder.Services.AddScoped<IImportBooksUseCase, ImportBooksUseCase>();
+
+// Register form options query and create book use case
+builder.Services.AddScoped<IGetFormOptionsQuery, GetFormOptionsQuery>();
+builder.Services.AddScoped<ICreateBookUseCase, CreateBookUseCase>();
+
+// Register duplicate check query
+builder.Services.AddScoped<ICheckDuplicateQuery, CheckDuplicateQuery>();
+
+// Session services
 builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
 builder.Services.AddScoped<ICompleteUserRegistrationUseCase, CompleteUserRegistrationUseCase>();
 builder.Services.AddScoped<ISelectMaturitaBookUseCase, SelectMaturitaBookUseCase>();
 builder.Services.AddScoped<IDeselectMaturitaBookUseCase, DeselectMaturitaBookUseCase>();
 builder.Services.AddScoped<IGetLibraryStatisticsQuery, GetLibraryStatisticsQuery>();
+builder.Services.AddScoped<IExportBooksQuery, ExportBooksQuery>();
+builder.Services.AddScoped<IExportBookQrCodesQuery, ExportBookQrCodesQuery>();
+builder.Services.AddScoped<IGetAllBookLoansQuery, GetAllBookLoansQuery>();
+builder.Services.AddScoped<IGetUserBookLoansQuery, GetUserBookLoansQuery>();
+builder.Services.AddScoped<IGetBookLoanStatusQuery, GetBookLoanStatusQuery>();
+builder.Services.AddScoped<ICreateBookLoanUseCase, CreateBookLoanUseCase>();
+builder.Services.AddScoped<IReturnBookUseCase, ReturnBookUseCase>();
+builder.Services.AddScoped<IProlongBookLoanUseCase, ProlongBookLoanUseCase>();
 // Queries
 builder.Services.AddScoped<IGetMaturitaBooksQuery, GetMaturitaBooksQuery>();
+builder.Services.AddScoped<IGetBookFormOptionsQuery, GetBookFormOptionsQuery>();
 
 // Use Cases
 builder.Services.AddScoped<ICreateMaturitaBookUseCase, CreateMaturitaBookUseCase>();
@@ -46,6 +67,8 @@ builder.Services.AddScoped<IDeleteMaturitaBookUseCase, DeleteMaturitaBookUseCase
 // Session services
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// Use mock AD service in development, real one in production
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddScoped<IActiveDirectoryService, MockActiveDirectoryService>();
@@ -54,7 +77,6 @@ else
 {
     builder.Services.AddScoped<IActiveDirectoryService, ActiveDirectoryService>();
 }
-
 
 builder.Services.AddHttpContextAccessor();
 

@@ -1,0 +1,834 @@
+@page "/addbookform"
+@using System.ComponentModel.DataAnnotations
+@using Bookong.Application.DTOs
+@using Bookong.Application.UseCases.Interfaces
+@using Bookong.Application.UseCases.Queries.Interfaces
+@using System
+
+@inject IGetFormOptionsQuery FormOptionsQuery
+@inject ICreateBookUseCase CreateBookUseCase
+@inject ICheckDuplicateQuery CheckDuplicateQuery
+
+<PageTitle>Přidat knihu</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-book-fill me-2"></i>Přidat novou knihu</h3>
+                </div>
+                <div class="card-body p-4">
+                    @if (submitted)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <strong>Úspěch!</strong> Kniha "<strong>@submittedTitle</strong>" byla úspěšně přidána do databáze.
+                            <button type="button" class="btn-close" @onclick="() => submitted = false"></button>
+                        </div>
+                    }
+
+                    @if (globalError != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            @globalError
+                            <button type="button" class="btn-close" @onclick="() => globalError = null"></button>
+                        </div>
+                    }
+
+                    <EditForm Model="Model" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="alert alert-danger" />
+
+                        <!-- Základní informace -->
+                        <div class="section-card mb-4">
+                            <h5 class="section-title"><i class="bi bi-info-circle me-2"></i>Základní informace</h5>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold required">Název knihy</label>
+                                <InputText class="form-control form-control-lg" @bind-Value="Model.Title" placeholder="Zadejte název knihy" />
+                                <ValidationMessage For="() => Model.Title" class="text-danger small mt-1" />
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label d-flex justify-content-between align-items-center mb-2">
+                                        <span>ISBN</span>
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" @bind="Model.SkipISBN" @oninput="() => { if (Model.SkipISBN) Model.ISBN = null; }">
+                                            <label class="form-check-label small text-muted">Nevyplňovat</label>
+                                        </div>
+                                    </label>
+                                    <InputText class="form-control" @bind-Value="Model.ISBN" placeholder="ISBN" disabled="@Model.SkipISBN" />
+                                    <ValidationMessage For="() => Model.ISBN" class="text-danger small mt-1" />
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label d-flex justify-content-between align-items-center mb-2">
+                                        <span>Počet stran</span>
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" @bind="Model.SkipPages" @oninput="() => { if (Model.SkipPages) Model.Pages = null; }">
+                                            <label class="form-check-label small text-muted">Nevyplňovat</label>
+                                        </div>
+                                    </label>
+                                    <InputNumber TValue="int?" class="form-control" @bind-Value="Model.Pages" min="1" max="10000" placeholder="Počet stran" disabled="@Model.SkipPages" />
+                                    <ValidationMessage For="() => Model.Pages" class="text-danger small mt-1" />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label d-flex justify-content-between align-items-center mb-2">
+                                        <span>Datum vydání</span>
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" @bind="Model.SkipDateRelease" @oninput="() => { if (Model.SkipDateRelease) Model.DateRelease = null; }">
+                                            <label class="form-check-label small text-muted">Nevyplňovat</label>
+                                        </div>
+                                    </label>
+                                    <InputDate class="form-control" @bind-Value="Model.DateRelease" disabled="@Model.SkipDateRelease" />
+                                    <ValidationMessage For="() => Model.DateRelease" class="text-danger small mt-1" />
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label d-flex align-items-center">
+                                        <span class="me-2">Vypůjčitelná</span>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" @bind="Model.Borrowable">
+                                        </div>
+                                    </label>
+                                    <div class="form-text">Zaškrtněte, pokud lze knihu půjčovat</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kategorizace -->
+                        <div class="section-card mb-4">
+                            <h5 class="section-title"><i class="bi bi-tags me-2"></i>Kategorizace</h5>
+
+                            <div class="row">
+                                <!-- Autor -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label mb-0 fw-semibold">Autor</label>
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" checked="@Model.SkipAuthor" @oninput="() => Model.SkipAuthor = !Model.SkipAuthor">
+                                            <label class="form-check-label small text-muted">Nevyplňovat</label>
+                                        </div>
+                                    </div>
+
+                                    @if (!addingAuthor && !isLoading)
+                                    {
+                                        <div class="d-flex gap-2">
+                                            <select class="form-select" disabled="@Model.SkipAuthor" @bind="Model.AuthorId">
+                                                <option value="">-- Vyberte --</option>
+                                                @foreach (var item in Authors)
+                                                {
+                                                    <option value="@item.Id">@item.Name</option>
+                                                }
+                                            </select>
+                                            <button type="button" class="btn btn-outline-secondary btn-add-new" disabled="@Model.SkipAuthor" @onclick="() => ToggleAddAuthor(true)">
+                                                <i class="bi bi-plus-circle me-1"></i>Nový
+                                            </button>
+                                        </div>
+                                    }
+                                    else if (isLoading)
+                                    {
+                                        <div class="form-text"><span class="spinner-border spinner-border-sm me-2"></span>Načítám...</div>
+                                    }
+                                    @if (NewAuthorErrors?.Any() == true)
+                                    {
+                                        <div class="text-danger small mt-1">
+                                            @foreach (var e in NewAuthorErrors)
+                                            {
+                                                <div>@e</div>
+                                            }
+                                        </div>
+                                    }
+
+                                    @if (addingAuthor)
+                                    {
+                                        @RenderAuthorSubform()
+                                    }
+                                    <ValidationMessage For="() => Model.AuthorId" class="text-danger small mt-1" />
+                                </div>
+
+                                <!-- Žánr -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label mb-0 fw-semibold">Žánr</label>
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" checked="@Model.SkipGenre" @oninput="() => Model.SkipGenre = !Model.SkipGenre">
+                                            <label class="form-check-label small text-muted">Nevyplňovat</label>
+                                        </div>
+                                    </div>
+
+                                    @if (!addingGenre && !isLoading)
+                                    {
+                                        <div class="d-flex gap-2">
+                                            <select class="form-select" disabled="@Model.SkipGenre" @bind="Model.GenreId">
+                                                <option value="">-- Vyberte --</option>
+                                                @foreach (var item in Genres)
+                                                {
+                                                    <option value="@item.Id">@item.Name</option>
+                                                }
+                                            </select>
+                                            <button type="button" class="btn btn-outline-secondary btn-add-new" disabled="@Model.SkipGenre" @onclick="() => ToggleAddGenre(true)">
+                                                <i class="bi bi-plus-circle me-1"></i>Nový
+                                            </button>
+                                        </div>
+                                    }
+                                    else if (isLoading)
+                                    {
+                                        <div class="form-text"><span class="spinner-border spinner-border-sm me-2"></span>Načítám...</div>
+                                    }
+                                    @if (NewGenreErrors?.Any() == true)
+                                    {
+                                        <div class="text-danger small mt-1">
+                                            @foreach (var e in NewGenreErrors)
+                                            {
+                                                <div>@e</div>
+                                            }
+                                        </div>
+                                    }
+
+                                    @if (addingGenre)
+                                    {
+                                        @RenderNameSubform("Žánr", NewGenre.Name, (val) => NewGenre.Name = val, NewGenreErrors, ValidateAndAddGenre, () => ToggleAddGenre(false))
+                                    }
+                                    <ValidationMessage For="() => Model.GenreId" class="text-danger small mt-1" />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Literární druh -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label mb-0 fw-semibold">Literární druh</label>
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" checked="@Model.SkipKind" @oninput="() => Model.SkipKind = !Model.SkipKind">
+                                            <label class="form-check-label small text-muted">Nevyplňovat</label>
+                                        </div>
+                                    </div>
+
+                                    @if (!addingKind && !isLoading)
+                                    {
+                                        <div class="d-flex gap-2">
+                                            <select class="form-select" disabled="@Model.SkipKind" @bind="Model.KindId">
+                                                <option value="">-- Vyberte --</option>
+                                                @foreach (var item in Kinds)
+                                                {
+                                                    <option value="@item.Id">@item.Name</option>
+                                                }
+                                            </select>
+                                            <button type="button" class="btn btn-outline-secondary btn-add-new" disabled="@Model.SkipKind" @onclick="() => ToggleAddKind(true)">
+                                                <i class="bi bi-plus-circle me-1"></i>Nový
+                                            </button>
+                                        </div>
+                                    }
+                                    else if (isLoading)
+                                    {
+                                        <div class="form-text"><span class="spinner-border spinner-border-sm me-2"></span>Načítám...</div>
+                                    }
+                                    @if (NewKindErrors?.Any() == true)
+                                    {
+                                        <div class="text-danger small mt-1">
+                                            @foreach (var e in NewKindErrors)
+                                            {
+                                                <div>@e</div>
+                                            }
+                                        </div>
+                                    }
+
+                                    @if (addingKind)
+                                    {
+                                        @RenderNameSubform("Druh", NewKind.Name, (val) => NewKind.Name = val, NewKindErrors, ValidateAndAddKind, () => ToggleAddKind(false))
+                                    }
+                                    <ValidationMessage For="() => Model.KindId" class="text-danger small mt-1" />
+                                </div>
+
+                                <!-- Historické období -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label mb-0 fw-semibold">Historické období</label>
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" checked="@Model.SkipPeriod" @oninput="() => Model.SkipPeriod = !Model.SkipPeriod">
+                                            <label class="form-check-label small text-muted">Nevyplňovat</label>
+                                        </div>
+                                    </div>
+
+                                    @if (!addingPeriod && !isLoading)
+                                    {
+                                        <div class="d-flex gap-2">
+                                            <select class="form-select" disabled="@Model.SkipPeriod" @bind="Model.PeriodId">
+                                                <option value="">-- Vyberte --</option>
+                                                @foreach (var item in Periods)
+                                                {
+                                                    <option value="@item.Id">@item.Name</option>
+                                                }
+                                            </select>
+                                            <button type="button" class="btn btn-outline-secondary btn-add-new" disabled="@Model.SkipPeriod" @onclick="() => ToggleAddPeriod(true)">
+                                                <i class="bi bi-plus-circle me-1"></i>Nový
+                                            </button>
+                                        </div>
+                                    }
+                                    else if (isLoading)
+                                    {
+                                        <div class="form-text"><span class="spinner-border spinner-border-sm me-2"></span>Načítám...</div>
+                                    }
+                                    @if (NewPeriodErrors?.Any() == true)
+                                    {
+                                        <div class="text-danger small mt-1">
+                                            @foreach (var e in NewPeriodErrors)
+                                            {
+                                                <div>@e</div>
+                                            }
+                                        </div>
+                                    }
+
+                                    @if (addingPeriod)
+                                    {
+                                        @RenderNameSubform("Období", NewPeriod.Name, (val) => NewPeriod.Name = val, NewPeriodErrors, ValidateAndAddPeriod, () => ToggleAddPeriod(false))
+                                    }
+                                    <ValidationMessage For="() => Model.PeriodId" class="text-danger small mt-1" />
+                                </div>
+                            </div>
+
+                            <!-- Vydavatel -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label mb-0 fw-semibold">Vydavatel</label>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" checked="@Model.SkipPublisher" @oninput="() => Model.SkipPublisher = !Model.SkipPublisher">
+                                        <label class="form-check-label small text-muted">Nevyplňovat</label>
+                                    </div>
+                                </div>
+
+                                @if (!addingPublisher && !isLoading)
+                                {
+                                    <div class="d-flex gap-2">
+                                        <select class="form-select" disabled="@Model.SkipPublisher" @bind="Model.PublisherId">
+                                            <option value="">-- Vyberte --</option>
+                                            @foreach (var item in Publishers)
+                                            {
+                                                <option value="@item.Id">@item.Name</option>
+                                            }
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary btn-add-new" disabled="@Model.SkipPublisher" @onclick="() => ToggleAddPublisher(true)">
+                                            <i class="bi bi-plus-circle me-1"></i>Nový
+                                        </button>
+                                    </div>
+                                }
+                                else if (isLoading)
+                                {
+                                    <div class="form-text"><span class="spinner-border spinner-border-sm me-2"></span>Načítám...</div>
+                                }
+                                @if (NewPublisherErrors?.Any() == true)
+                                {
+                                    <div class="text-danger small mt-1">
+                                        @foreach (var e in NewPublisherErrors)
+                                        {
+                                            <div>@e</div>
+                                        }
+                                    </div>
+                                }
+
+                                @if (addingPublisher)
+                                {
+                                    @RenderNameSubform("Vydavatel", NewPublisher.Name, (val) => NewPublisher.Name = val, NewPublisherErrors, ValidateAndAddPublisher, () => ToggleAddPublisher(false))
+                                }
+                                <ValidationMessage For="() => Model.PublisherId" class="text-danger small mt-1" />
+                            </div>
+                        </div>
+
+                        <!-- Umístění -->
+                        <div class="section-card mb-4">
+                            <h5 class="section-title"><i class="bi bi-geo-alt me-2"></i>Umístění</h5>
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0 fw-semibold">Sklad</label>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" checked="@Model.SkipWarehouse" @oninput="() => Model.SkipWarehouse = !Model.SkipWarehouse">
+                                    <label class="form-check-label small text-muted">Nevyplňovat</label>
+                                </div>
+                            </div>
+
+                            @if (!addingWarehouse && !isLoading)
+                            {
+                                <div class="d-flex gap-2">
+                                    <select class="form-select" disabled="@Model.SkipWarehouse" @bind="Model.WarehouseId">
+                                        <option value="">-- Vyberte --</option>
+                                        @foreach (var item in Warehouses)
+                                        {
+                                            <option value="@item.Id">@item.Name</option>
+                                        }
+                                    </select>
+                                    <button type="button" class="btn btn-outline-secondary btn-add-new" disabled="@Model.SkipWarehouse" @onclick="() => ToggleAddWarehouse(true)">
+                                        <i class="bi bi-plus-circle me-1"></i>Nový
+                                    </button>
+                                </div>
+                            }
+                            else if (isLoading)
+                            {
+                                <div class="form-text"><span class="spinner-border spinner-border-sm me-2"></span>Načítám...</div>
+                            }
+                            @if (NewWarehouseErrors?.Any() == true)
+                            {
+                                <div class="text-danger small mt-1">
+                                    @foreach (var e in NewWarehouseErrors)
+                                    {
+                                        <div>@e</div>
+                                    }
+                                </div>
+                            }
+
+                            @if (addingWarehouse)
+                            {
+                                @RenderWarehouseSubform()
+                            }
+                            <ValidationMessage For="() => Model.WarehouseId" class="text-danger small mt-1" />
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary btn-lg px-5" disabled="@isLoading">
+                                @if (isLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                <i class="bi bi-save me-2"></i>Uložit knihu
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .section-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+    }
+
+    .section-title {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .required::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-control:disabled {
+        background-color: #e9ecef;
+        opacity: 0.7;
+    }
+
+    .btn-add-new {
+        white-space: nowrap;
+    }
+
+    .subform-card {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 0.75rem;
+    }
+
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+</style>
+
+@code {
+    private CreateBookDto Model { get; set; } = new CreateBookDto();
+    private bool submitted = false;
+    private string? submittedTitle;
+    private string? globalError;
+    private bool isLoading = true;
+
+    private List<SelectItem> Authors = new();
+    private List<SelectItem> Genres = new();
+    private List<SelectItem> Kinds = new();
+    private List<SelectItem> Periods = new();
+    private List<SelectItem> Publishers = new();
+    private List<SelectItem> Warehouses = new();
+
+    private bool addingAuthor, addingGenre, addingKind, addingPeriod, addingPublisher, addingWarehouse;
+
+    private NewAuthorModel NewAuthor { get; set; } = new();
+    private NewNameModel NewGenre { get; set; } = new();
+    private NewNameModel NewKind { get; set; } = new();
+    private NewNameModel NewPeriod { get; set; } = new();
+    private NewNameModel NewPublisher { get; set; } = new();
+    private NewWarehouseModel NewWarehouse { get; set; } = new();
+
+    private List<AuthorTemp> NewAuthorsTemp = new();
+    private List<GenreTemp> NewGenresTemp = new();
+    private List<KindTemp> NewKindsTemp = new();
+    private List<PeriodTemp> NewPeriodsTemp = new();
+    private List<PublisherTemp> NewPublishersTemp = new();
+    private List<WarehouseTemp> NewWarehousesTemp = new();
+
+    private List<string>? NewAuthorErrors, NewGenreErrors, NewKindErrors, NewPeriodErrors, NewPublisherErrors, NewWarehouseErrors;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFromDbAsync();
+    }
+
+    private async Task LoadFromDbAsync()
+    {
+        try
+        {
+            isLoading = true;
+            var opts = await FormOptionsQuery.ExecuteAsync();
+            Authors = opts.Authors.Select(a => new SelectItem(a.Id, a.Name)).ToList();
+            Genres = opts.Genres.Select(g => new SelectItem(g.Id, g.Name)).ToList();
+            Kinds = opts.Kinds.Select(k => new SelectItem(k.Id, k.Name)).ToList();
+            Periods = opts.Periods.Select(p => new SelectItem(p.Id, p.Name)).ToList();
+            Publishers = opts.Publishers.Select(p => new SelectItem(p.Id, p.Name)).ToList();
+            Warehouses = opts.Warehouses.Select(w => new SelectItem(w.Id, w.Name)).ToList();
+        }
+        catch (Exception ex)
+        {
+            globalError = "Chyba při načítání dat: " + ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        Model.NewAuthors = NewAuthorsTemp.Select((a, i) => new NewAuthorDto { TempId = -(i + 1), FirstName = a.FirstName, MiddleName = a.MiddleName, LastName = a.LastName }).ToList();
+        Model.NewGenres = NewGenresTemp.Select((g, i) => new NewNameDto { TempId = -(i + 1), Name = g.Name }).ToList();
+        Model.NewKinds = NewKindsTemp.Select((k, i) => new NewNameDto { TempId = -(i + 1), Name = k.Name }).ToList();
+        Model.NewPeriods = NewPeriodsTemp.Select((p, i) => new NewNameDto { TempId = -(i + 1), Name = p.Name }).ToList();
+        Model.NewPublishers = NewPublishersTemp.Select((p, i) => new NewPublisherDto { TempId = -(i + 1), Name = p.Name }).ToList();
+        Model.NewWarehouses = NewWarehousesTemp.Select((w, i) => new NewWarehouseDto { TempId = -(i + 1), Name = w.Name, Street = w.Street, Number = w.Number, City = w.City, ZipCode = w.ZipCode }).ToList();
+
+        try
+        {
+            var created = await CreateBookUseCase.ExecuteAsync(Model);
+            submittedTitle = Model.Title;
+            submitted = true;
+            globalError = null;
+
+            NewAuthorsTemp.Clear();
+            NewGenresTemp.Clear();
+            NewKindsTemp.Clear();
+            NewPeriodsTemp.Clear();
+            NewPublishersTemp.Clear();
+            NewWarehousesTemp.Clear();
+
+            Model = new CreateBookDto();
+            await LoadFromDbAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (ValidationException vex)
+        {
+            globalError = vex.Message;
+        }
+        catch (Exception ex)
+        {
+            globalError = "Chyba při ukládání: " + ex.Message;
+        }
+    }
+
+    private void ToggleAddAuthor(bool value) { addingAuthor = value; if (!value) NewAuthor = new NewAuthorModel(); NewAuthorErrors = null; }
+    private void ToggleAddGenre(bool value) { addingGenre = value; if (!value) NewGenre = new NewNameModel(); NewGenreErrors = null; }
+    private void ToggleAddKind(bool value) { addingKind = value; if (!value) NewKind = new NewNameModel(); NewKindErrors = null; }
+    private void ToggleAddPeriod(bool value) { addingPeriod = value; if (!value) NewPeriod = new NewNameModel(); NewPeriodErrors = null; }
+    private void ToggleAddPublisher(bool value) { addingPublisher = value; if (!value) NewPublisher = new NewNameModel(); NewPublisherErrors = null; }
+    private void ToggleAddWarehouse(bool value) { addingWarehouse = value; if (!value) NewWarehouse = new NewWarehouseModel(); NewWarehouseErrors = null; }
+
+    private async Task OnAddAuthor()
+    {
+        var temp = new AuthorTemp { FirstName = NewAuthor.FirstName?.Trim() ?? "", MiddleName = NewAuthor.MiddleName?.Trim(), LastName = NewAuthor.LastName?.Trim() ?? "" };
+        try
+        {
+            var exists = await CheckDuplicateQuery.AuthorExistsAsync(temp.FirstName, temp.MiddleName, temp.LastName);
+            if (exists)
+            {
+                var searchName = $"{temp.FirstName} {temp.LastName}".Trim();
+                var existing = Authors.FirstOrDefault(a => string.Equals(a.Name?.Trim(), searchName, StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                {
+                    NewAuthorErrors = new List<string> { $"Autor '{existing.Name}' již existuje. Byl vybrán." };
+                    Model.AuthorId = existing.Id;
+                    ToggleAddAuthor(false);
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+                NewAuthorErrors = new List<string> { "Autor se stejným jménem již existuje." };
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+            NewAuthorsTemp.Add(temp);
+            var fakeId = -(NewAuthorsTemp.Count);
+            Authors.Add(new SelectItem(fakeId, $"{temp.FirstName} {temp.LastName}"));
+            Model.AuthorId = fakeId;
+            NewAuthorErrors = null;
+            ToggleAddAuthor(false);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            NewAuthorErrors = new List<string> { "Chyba: " + ex.Message };
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OnAddGenre() => await OnAddNameEntity("genre", NewGenre.Name, NewGenresTemp, Genres, (id) => Model.GenreId = id, () => ToggleAddGenre(false), errors => NewGenreErrors = errors);
+    private async Task OnAddKind() => await OnAddNameEntity("kind", NewKind.Name, NewKindsTemp, Kinds, (id) => Model.KindId = id, () => ToggleAddKind(false), errors => NewKindErrors = errors);
+    private async Task OnAddPeriod() => await OnAddNameEntity("period", NewPeriod.Name, NewPeriodsTemp, Periods, (id) => Model.PeriodId = id, () => ToggleAddPeriod(false), errors => NewPeriodErrors = errors);
+    private async Task OnAddPublisher() => await OnAddNameEntity("publisher", NewPublisher.Name, NewPublishersTemp, Publishers, (id) => Model.PublisherId = id, () => ToggleAddPublisher(false), errors => NewPublisherErrors = errors);
+
+    private async Task OnAddNameEntity<T>(string entityType, string? name, List<T> tempList, List<SelectItem> selectList, Action<int?> setModelId, Action closeAction, Action<List<string>> setErrors) where T : new()
+    {
+        try
+        {
+            name = name?.Trim() ?? "";
+            var exists = await CheckDuplicateQuery.NameExistsAsync(entityType, name);
+            if (exists)
+            {
+                var existing = selectList.FirstOrDefault(g => string.Equals(g.Name?.Trim(), name, StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                {
+                    setErrors(new List<string> { $"'{existing.Name}' již existuje. Byl vybrán." });
+                    setModelId(existing.Id);
+                    closeAction();
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+                setErrors(new List<string> { $"Položka se stejným názvem již existuje." });
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+            dynamic temp = new T();
+            temp.Name = name;
+            tempList.Add(temp);
+            var fakeId = -(tempList.Count);
+            selectList.Add(new SelectItem(fakeId, name));
+            setModelId(fakeId);
+            setErrors(null);
+            closeAction();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            setErrors(new List<string> { "Chyba: " + ex.Message });
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OnAddWarehouse()
+    {
+        try
+        {
+            var name = NewWarehouse.Name?.Trim() ?? "";
+            var exists = await CheckDuplicateQuery.NameExistsAsync("warehouse", name);
+            if (exists)
+            {
+                var existing = Warehouses.FirstOrDefault(w => string.Equals(w.Name?.Trim(), name, StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                {
+                    NewWarehouseErrors = new List<string> { $"Sklad '{existing.Name}' již existuje. Byl vybrán." };
+                    Model.WarehouseId = existing.Id;
+                    ToggleAddWarehouse(false);
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+                NewWarehouseErrors = new List<string> { "Sklad se stejným názvem již existuje." };
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+            var temp = new WarehouseTemp { Name = name, Street = NewWarehouse.Street?.Trim(), Number = NewWarehouse.Number?.Trim(), City = NewWarehouse.City?.Trim(), ZipCode = NewWarehouse.ZipCode?.Trim() };
+            NewWarehousesTemp.Add(temp);
+            var fakeId = -(NewWarehousesTemp.Count);
+            Warehouses.Add(new SelectItem(fakeId, temp.Name));
+            Model.WarehouseId = fakeId;
+            NewWarehouseErrors = null;
+            ToggleAddWarehouse(false);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            NewWarehouseErrors = new List<string> { "Chyba: " + ex.Message };
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ValidateAndAddAuthor() { NewAuthorErrors = ValidateModel(NewAuthor); if (NewAuthorErrors.Count == 0) await OnAddAuthor(); else await InvokeAsync(StateHasChanged); }
+    private async Task ValidateAndAddGenre() { NewGenreErrors = ValidateModel(NewGenre); if (NewGenreErrors.Count == 0) await OnAddGenre(); else await InvokeAsync(StateHasChanged); }
+    private async Task ValidateAndAddKind() { NewKindErrors = ValidateModel(NewKind); if (NewKindErrors.Count == 0) await OnAddKind(); else await InvokeAsync(StateHasChanged); }
+    private async Task ValidateAndAddPeriod() { NewPeriodErrors = ValidateModel(NewPeriod); if (NewPeriodErrors.Count == 0) await OnAddPeriod(); else await InvokeAsync(StateHasChanged); }
+    private async Task ValidateAndAddPublisher() { NewPublisherErrors = ValidateModel(NewPublisher); if (NewPublisherErrors.Count == 0) await OnAddPublisher(); else await InvokeAsync(StateHasChanged); }
+    private async Task ValidateAndAddWarehouse() { NewWarehouseErrors = ValidateModel(NewWarehouse); if (NewWarehouseErrors.Count == 0) await OnAddWarehouse(); else await InvokeAsync(StateHasChanged); }
+
+    private List<string> ValidateModel(object model)
+    {
+        var results = new List<ValidationResult>();
+        var context = new ValidationContext(model, serviceProvider: null, items: null);
+        Validator.TryValidateObject(model, context, results, validateAllProperties: true);
+        return results.Select(r => r.ErrorMessage ?? "").Where(m => !string.IsNullOrEmpty(m)).ToList();
+    }
+
+    private RenderFragment RenderSelectField(string label, string bindProperty, bool skip, List<SelectItem> items, bool adding, Action toggleSkip, Action toggleAdd, List<string>? errors) => __builder =>
+    {
+        <label class="form-label d-flex justify-content-between align-items-center">
+            <span>@label</span>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" checked="@skip" @oninput="@toggleSkip">
+                <label class="form-check-label small text-muted">Nevyplňovat</label>
+            </div>
+        </label>
+        @if (!adding && !isLoading)
+        {
+            <div class="d-flex gap-2">
+                <select class="form-select" disabled="@skip" @onchange="@(e => SetModelProperty(bindProperty, e.Value?.ToString()))">
+                    <option value="">-- Vyberte --</option>
+                    @foreach (var item in items)
+                    {
+                        <option value="@item.Id">@item.Name</option>
+                    }
+                </select>
+                <button type="button" class="btn btn-outline-secondary btn-add-new" disabled="@skip" @onclick="@toggleAdd">
+                    <i class="bi bi-plus-circle me-1"></i>Nový
+                </button>
+            </div>
+        }
+        else if (isLoading)
+        {
+            <div class="form-text"><span class="spinner-border spinner-border-sm me-2"></span>Načítám...</div>
+        }
+        @if (errors?.Any() == true)
+        {
+            <div class="text-danger small mt-1">
+                @foreach (var e in errors)
+                {
+                    <div>@e</div>
+                }
+            </div>
+        }
+    };
+
+    private void SetModelProperty(string propName, string? value)
+    {
+        var prop = Model.GetType().GetProperty(propName.Replace("Model.", ""));
+        if (prop != null && int.TryParse(value, out var intVal))
+        {
+            prop.SetValue(Model, intVal);
+        }
+    }
+
+    private RenderFragment RenderAuthorSubform() => __builder =>
+    {
+        <div class="subform-card">
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <input type="text" class="form-control" @bind="NewAuthor.FirstName" placeholder="Křestní jméno" />
+                </div>
+                <div class="col-md-4 mb-2">
+                    <input type="text" class="form-control" @bind="NewAuthor.MiddleName" placeholder="Druhé jméno (volitelně)" />
+                </div>
+                <div class="col-md-4 mb-2">
+                    <input type="text" class="form-control" @bind="NewAuthor.LastName" placeholder="Příjmení" />
+                </div>
+            </div>
+            @if (NewAuthorErrors?.Any() == true)
+            {
+                <div class="text-danger small mt-1">
+                    @foreach (var e in NewAuthorErrors)
+                    {
+                        <div>@e</div>
+                    }
+                </div>
+            }
+            <div class="mt-2">
+                <button class="btn btn-success btn-sm me-2" type="button" @onclick="ValidateAndAddAuthor">
+                    <i class="bi bi-check-lg me-1"></i>Přidat
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" @onclick="() => ToggleAddAuthor(false)">
+                    <i class="bi bi-x-lg me-1"></i>Zrušit
+                </button>
+            </div>
+        </div>
+    };
+
+    private RenderFragment RenderNameSubform(string label, string? value, Action<string> setValue, List<string>? errors, Func<Task> onAdd, Action onCancel) => __builder =>
+        {
+            <div class="subform-card">
+                <input type="text" class="form-control mb-2" value="@value" @oninput="@(e => setValue(e.Value?.ToString() ?? ""))" placeholder="@($"Název {label.ToLower()}")" />
+                @if (errors?.Any() == true)
+                {
+                    <div class="text-danger small mt-1">
+                        @foreach (var e in errors)
+                        {
+                            <div>@e</div>
+                        }
+                    </div>
+                }
+                <div class="mt-2">
+                    <button class="btn btn-success btn-sm me-2" type="button" @onclick="onAdd">
+                        <i class="bi bi-check-lg me-1"></i>Přidat
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" @onclick="onCancel">
+                        <i class="bi bi-x-lg me-1"></i>Zrušit
+                    </button>
+                </div>
+            </div>
+        };
+
+    private RenderFragment RenderWarehouseSubform() => __builder =>
+       {
+           <div class="subform-card">
+               <input type="text" class="form-control mb-2" @bind="NewWarehouse.Name" placeholder="Název skladu" />
+               <div class="row">
+                   <div class="col-md-6 mb-2"><input type="text" class="form-control" @bind="NewWarehouse.Street" placeholder="Ulice" /></div>
+                   <div class="col-md-2 mb-2"><input type="text" class="form-control" @bind="NewWarehouse.Number" placeholder="Č." /></div>
+                   <div class="col-md-4 mb-2"><input type="text" class="form-control" @bind="NewWarehouse.City" placeholder="Město" /></div>
+                   <div class="col-md-4 mb-2"><input type="text" class="form-control" @bind="NewWarehouse.ZipCode" placeholder="PSČ" /></div>
+               </div>
+               @if (NewWarehouseErrors?.Any() == true)
+               {
+                   <div class="text-danger small mt-1">
+                       @foreach (var e in NewWarehouseErrors)
+                       {
+                           <div>@e</div>
+                       }
+                   </div>
+               }
+               <div class="mt-2">
+                   <button class="btn btn-success btn-sm me-2" type="button" @onclick="ValidateAndAddWarehouse">
+                       <i class="bi bi-check-lg me-1"></i>Přidat
+                   </button>
+                   <button type="button" class="btn btn-secondary btn-sm" @onclick="() => ToggleAddWarehouse(false)">
+                       <i class="bi bi-x-lg me-1"></i>Zrušit
+                   </button>
+               </div>
+           </div>
+       };
+
+    private record SelectItem(int Id, string Name);
+    private class NewAuthorModel { [Required(ErrorMessage = "Zadejte křestní jméno.")] public string? FirstName { get; set; } public string? MiddleName { get; set; } [Required(ErrorMessage = "Zadejte příjmení.")] public string? LastName { get; set; } }
+    private class NewNameModel { [Required(ErrorMessage = "Zadejte název.")] public string? Name { get; set; } }
+    private class NewWarehouseModel { [Required(ErrorMessage = "Zadejte název skladu.")] public string? Name { get; set; } public string? Street { get; set; } public string? Number { get; set; } public string? City { get; set; } public string? ZipCode { get; set; } }
+    private class AuthorTemp { public string FirstName = ""; public string? MiddleName; public string LastName = ""; }
+    private class GenreTemp { public string Name = ""; }
+    private class KindTemp { public string Name = ""; }
+    private class PeriodTemp { public string Name = ""; }
+    private class PublisherTemp { public string Name = ""; }
+    private class WarehouseTemp { public string Name = ""; public string? Street; public string? Number; public string? City; public string? ZipCode; }
+}

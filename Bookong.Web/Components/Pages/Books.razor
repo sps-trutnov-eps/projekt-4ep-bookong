@@ -95,42 +95,18 @@
                             <th class="d-none d-md-table-cell">Autor</th>
                             <th class="d-none d-lg-table-cell">Žánr</th>
                             <th class="d-none d-xl-table-cell">Typ</th>
-                            <th class="text-end">Akce</th>
                         </tr>
                     </thead>
                     <tbody>
                         @for (int i = 0; i < filteredItems.Count; i++)
                         {
                             var book = filteredItems[i];
-                            var isAvailable = IsBookAvailable(book);
                             <tr>
                                 <td>@(i + 1)</td>
                                 <td class="fw-medium">@book.Title</td>
                                 <td class="d-none d-md-table-cell">@book.AuthorFullName</td>
                                 <td class="d-none d-lg-table-cell">@book.Genre</td>
                                 <td class="d-none d-xl-table-cell">@book.Kind</td>
-                                <td class="text-end">
-                                    <div class="btn-group">
-                                        <a class="btn btn-sm btn-outline-primary" href="@($"/books/{book.PublicId}")">Detail</a>
-                                        <button type="button" class="btn btn-sm btn-outline-success"
-                                                disabled="@(!isAvailable || isProcessing && processingBookId == book.PublicId)"
-                                                @onclick="() => OnAddToSelection(book.PublicId)">
-                                            @if (isProcessing && processingBookId == book.PublicId)
-                                            {
-                                                <span class="spinner-border spinner-border-sm" role="status"></span>
-                                                <span class="ms-1">Přidávám...</span>
-                                            }
-                                            else if (!isAvailable)
-                                            {
-                                                <span title="Kniha není dostupná k maturitě">Nedostupná</span>
-                                            }
-                                            else
-                                            {
-                                                <span>Přidat do seznamu</span>
-                                            }
-                                        </button>
-                                    </div>
-                                </td>
                             </tr>
                         }
                     </tbody>
@@ -143,9 +119,7 @@
 @code {
     private List<BookListItemDto>? items;
     private List<BookListItemDto> filteredItems = new();
-    private bool isProcessing;
     private bool isLoading = true;
-    private Guid processingBookId;
     private string? errorMessage;
 
     // Temporary filter inputs
@@ -163,9 +137,6 @@
     private List<string> authors = new();
     private List<string> genres = new();
     private List<string> types = new();
-
-    // availability - tracks books by composite key (Title, Author, Genre, Kind)
-    private HashSet<string> availableBookKeys = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -196,12 +167,6 @@
                 .OrderBy(t => t)
                 .ToList();
 
-            // Load available books and create composite keys
-            var availableBooks = await GetAvailableMaturitaBooksQuery.ExecuteAsync();
-            availableBookKeys = availableBooks
-                .Select(b => GetBookKey(b.Title, b.AuthorFullName, b.GenreName, b.KindName))
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
             ApplyFilters();
         }
         catch (Exception ex)
@@ -212,66 +177,6 @@
         finally
         {
             isLoading = false;
-        }
-    }
-
-    private string GetBookKey(string? title, string? author, string? genre, string? kind)
-    {
-        return $"{title?.Trim()}|{author?.Trim()}|{genre?.Trim()}|{kind?.Trim()}".ToLowerInvariant();
-    }
-
-    private bool IsBookAvailable(BookListItemDto book)
-    {
-        var key = GetBookKey(book.Title, book.AuthorFullName, book.Genre, book.Kind);
-        return availableBookKeys.Contains(key);
-    }
-
-    private async Task OnAddToSelection(Guid bookId)
-    {
-        if (isProcessing) return;
-
-        // Find the book to check availability
-        var book = items?.FirstOrDefault(b => b.PublicId == bookId);
-        if (book == null) return;
-
-        // protect: ensure book is available
-        if (!IsBookAvailable(book))
-        {
-            errorMessage = "Tato kniha není dostupná k maturitě.";
-            return;
-        }
-
-        try
-        {
-            isProcessing = true;
-            processingBookId = bookId;
-            StateHasChanged();
-
-            var dto = new AddBookToPersonalMaturitaListDto
-            {
-                BookPublicId = bookId
-            };
-
-            var result = await SelectMaturitaBook.Handle(dto);
-
-            if (result.Success)
-            {
-                NavigationManager.NavigateTo("/maturita", true);
-            }
-            else
-            {
-                errorMessage = result.Message;
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error adding book to selection");
-            errorMessage = "Knihu se nepodařilo přidat do seznamu.";
-        }
-        finally
-        {
-            isProcessing = false;
-            StateHasChanged();
         }
     }
 
