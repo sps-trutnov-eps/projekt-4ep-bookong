@@ -3,6 +3,7 @@
 @using Bookong.Application.UseCases.Interfaces
 @using Bookong.Application.DTOs
 @inject IGetAvailableBooksQuery GetAvailableBooks
+@inject IGetMaturitaBooksQuery GetAvailableMaturitaBooksQuery
 @inject ISelectMaturitaBookUseCase SelectMaturitaBook
 @inject NavigationManager NavigationManager
 @inject ILogger<Books> Logger
@@ -94,7 +95,6 @@
                             <th class="d-none d-md-table-cell">Autor</th>
                             <th class="d-none d-lg-table-cell">Žánr</th>
                             <th class="d-none d-xl-table-cell">Typ</th>
-                            <th class="text-end">Akce</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -107,22 +107,6 @@
                                 <td class="d-none d-md-table-cell">@book.AuthorFullName</td>
                                 <td class="d-none d-lg-table-cell">@book.Genre</td>
                                 <td class="d-none d-xl-table-cell">@book.Kind</td>
-                                <td class="text-end">
-                                    <div class="btn-group">
-                                        <a class="btn btn-sm btn-outline-primary" href="@($"/books/{book.PublicId}")">Detail</a>
-                                        <button type="button" class="btn btn-sm btn-outline-success" @onclick="() => OnAddToSelection(book.PublicId)">
-                                            @if (isProcessing && processingBookId == book.PublicId)
-                                            {
-                                                <span class="spinner-border spinner-border-sm" role="status"></span>
-                                                <span class="ms-1">Přidávám...</span>
-                                            }
-                                            else
-                                            {
-                                                <span>Přidat do seznamu</span>
-                                            }
-                                        </button>
-                                    </div>
-                                </td>
                             </tr>
                         }
                     </tbody>
@@ -135,9 +119,7 @@
 @code {
     private List<BookListItemDto>? items;
     private List<BookListItemDto> filteredItems = new();
-    private bool isProcessing;
     private bool isLoading = true;
-    private Guid processingBookId;
     private string? errorMessage;
 
     // Temporary filter inputs
@@ -195,44 +177,6 @@
         finally
         {
             isLoading = false;
-        }
-    }
-
-    private async Task OnAddToSelection(Guid bookId)
-    {
-        if (isProcessing) return;
-
-        try
-        {
-            isProcessing = true;
-            processingBookId = bookId;
-            StateHasChanged();
-
-            var dto = new AddBookToPersonalMaturitaListDto
-            {
-                BookPublicId = bookId
-            };
-
-            var result = await SelectMaturitaBook.Handle(dto);
-
-            if (result.Success)
-            {
-                NavigationManager.NavigateTo("/maturita", true);
-            }
-            else
-            {
-                errorMessage = result.Message;
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error adding book to selection");
-            errorMessage = "Knihu se nepodařilo přidat do seznamu.";
-        }
-        finally
-        {
-            isProcessing = false;
-            StateHasChanged();
         }
     }
 

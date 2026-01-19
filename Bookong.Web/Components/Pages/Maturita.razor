@@ -4,10 +4,14 @@
 @using Bookong.Application.DTOs
 @inject IGetMaturitaBookSelectionQuery GetMaturitaBookSelection
 @inject IDeselectMaturitaBookUseCase DeselectMaturitaBook
+@inject NavigationManager NavigationManager
 @inject ILogger<Maturita> Logger
 
 <div class="container my-4">
-    <h1 class="fw-bold text-primary mb-3 page-hero-title">Maturitní seznam</h1>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="fw-bold text-primary page-hero-title">Maturitní seznam</h1>
+        <a href="/maturitabooks" class="btn btn-primary">Přidat knihu</a>
+    </div>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -79,7 +83,7 @@
     {
         <div class="text-center">
             <p class="text-muted mb-3">Zatím nemáte vybrané žádné knihy k maturitě.</p>
-            <a href="/books" class="btn btn-primary">Přejít na výběr knih</a>
+            <a href="/maturitabooks" class="btn btn-primary">Přejít na výběr knih</a>
         </div>
     }
     else

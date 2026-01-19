@@ -12,7 +12,7 @@ namespace Bookong.Application.Services
             { "nyms", "PZtka" }
         };
 
-        public Task<bool> ValidateCredetialsAsync(string username, string password)
+        public Task<bool> ValidateCredentialsAsync(string username, string password)
         {
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {

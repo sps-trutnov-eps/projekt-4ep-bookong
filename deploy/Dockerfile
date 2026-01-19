@@ -19,6 +19,11 @@ RUN dotnet publish Bookong.Web/Bookong.Web.csproj -c Release -o /out/web \
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
+# Install native dependencies required by System.DirectoryServices.Protocols (LDAP)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libldap-2.5-0 libsasl2-2 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /out/web ./web
 COPY --from=build /out/cli ./cli
 
