@@ -2,7 +2,6 @@
 @using Bookong.Application.UseCases.Queries.Interfaces
 @using Bookong.Application.UseCases.Interfaces
 @using Bookong.Application.DTOs
-@using Bookong.Application.UseCases.Interfaces
 @using Bookong.Domain.Interfaces
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Authorization
@@ -15,6 +14,7 @@
 @inject NavigationManager Navigation
 @inject IGetLibraryStatisticsQuery LibraryStatsQuery
 @inject IExportBooksQuery ExportBooksQuery
+@inject IExportBookQrCodesQuery ExportBookQrCodes
 @inject IImportBooksUseCase ImportBooksUseCase
 @inject IGetAvailableBooksQuery GetAvailableBooks
 @inject IGetAllBookLoansQuery GetAllBookLoans
@@ -344,11 +344,12 @@
             <div class="alert alert-warning">
                 Nepodařilo se načíst statistiky.
             </div>
-        }
-    </div>
-</div>
+                }
+            </div>
+        </div>
+        </div>
 
-<!-- Wave Container -->
+        <!-- Wave Container -->
 <div class="position-relative w-100 overflow-hidden" style="line-height: 0;">
     <!-- Primary Wave -->
     <svg class="w-100 d-block" style="height: 5rem;" viewBox="0 0 1200 120" preserveAspectRatio="none">
@@ -1042,11 +1043,11 @@ var dto = new CreateBookLoanDto
         catch (Exception ex)
         {
             Logger.LogError(ex, "Chyba při importu souboru");
-            errorMessage = $"Chyba při importu: {ex.Message}";
-        }
-    }
-}
-    private async Task ExportBookQrCode(int bookId)
+                    errorMessage = $"Chyba při importu: {ex.Message}";
+                }
+            }
+
+            private async Task ExportBookQrCode(int bookId)
     {
         try
         {
