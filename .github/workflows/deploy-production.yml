@@ -1,0 +1,33 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:  # Umožní ruční spuštění z GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -e
+            APP_DIR="${HOME}/bookong-production-deployment"
+            
+            if [ ! -d "$APP_DIR" ]; then
+              echo "Error: Deployment directory $APP_DIR does not exist."
+              echo "Please create it manually and add .env.production file first."
+              exit 1
+            fi
+            
+            cd "$APP_DIR"
+            git fetch origin
+            git checkout -B main origin/main
+            bash deploy/deploy.sh production

@@ -1,0 +1,142 @@
+
+@rendermode InteractiveServer
+@using Bookong.Web.Services
+@inject NavigationManager Navigation
+@inject AuthJsInterop AuthApi
+@inject IJSRuntime JSRuntime
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<header class="fixed-top bg-primary position-sticky">
+    <nav class="navbar navbar-dark container-fluid px-2 px-md-3">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <!-- Logo + Name -->
+            <NavLink href="/" class="navbar-brand d-flex align-items-center gap-2 me-auto">
+                <img src="img/bookong-monke-book.png" alt="BooKong Logo" 
+                     class="d-inline-block align-text-top" 
+                     style="height: 50px; width: auto; margin-top: -8px; margin-bottom: -8px;" />
+                <span class="fw-bold fs-5 mb-0 text-white d-none d-sm-inline">BooKong</span>
+                <span class="fw-bold fs-6 mb-0 text-white d-inline d-sm-none">BooKong</span>
+            </NavLink>
+
+            <!-- Desktop Navigation (hidden on mobile) -->
+            <ul class="navbar-nav d-none d-lg-flex flex-row gap-3 mb-0">
+                <li class="nav-item">
+                    <AuthorizeView>
+                        <Authorized>
+                            <button class="btn btn-outline-light fw-medium px-3 py-1 rounded" @onclick="HandleLogout">
+                                Odhlásit
+                            </button>
+                        </Authorized>
+                        <NotAuthorized>
+                            <NavLink href="/login" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">
+                                Přihlásit
+                            </NavLink>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </li>
+
+                <li class="nav-item">
+                    <NavLink href="/portalpage" ActiveClass="active-link" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Domů</NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink href="/users" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Uživatelé</NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink href="/books" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Knihy</NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink href="/mybooks" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Moje knihy</NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink href="/maturita" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Maturita</NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink href="/statistics" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Statistiky</NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink href="/materials" class="nav-link text-white fw-medium px-2 py-2 rounded hover-bg-light">Materiály</NavLink>
+                </li>
+            </ul>
+
+            <!-- Burger menu button (visible on mobile/tablet) -->
+            <button class="navbar-toggler d-lg-none border-0 p-2" type="button" id="menuToggle"
+                    aria-label="Toggle navigation" @onclick="OpenMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Full-screen overlay menu -->
+    <div class="overlay-menu @(isMenuOpen ? "active" : "")" id="overlayMenu">
+        <!-- Header with BooKong title and close button -->
+        <div class="overlay-header">
+            <div class="overlay-title">
+                <img src="img/bookong-monke-book.png" alt="BooKong Logo" />
+                <span>BooKong</span>
+            </div>
+            <button class="close-btn" id="closeMenu" aria-label="Close menu" @onclick="CloseMenu">
+                <span>&times;</span>
+            </button>
+        </div>
+        
+        <div class="overlay-content">
+            <!-- Welcome text -->
+            <div class="overlay-welcome">
+                Vítejte v našem školním knihovním systému
+            </div>
+            
+            <!-- Navigation Links -->
+            <nav class="overlay-nav">
+                <ul class="overlay-nav-list">
+                    <li><NavLink href="/portalpage" class="overlay-nav-link text-white">Domů</NavLink></li>
+                    <li><NavLink href="/users" class="overlay-nav-link text-white">Uživatelé</NavLink></li>
+                    <li><NavLink href="/books" class="overlay-nav-link text-white">Knihy</NavLink></li>
+                    <li><NavLink href="/mybooks" class="overlay-nav-link text-white" @onclick="CloseMenu">Moje knihy</NavLink></li>
+                    <li><NavLink href="/maturita" class="overlay-nav-link text-white">Seznamy</NavLink></li>
+                    <li><NavLink href="/statistics" class="overlay-nav-link text-white">Statistiky</NavLink></li>
+                    <li><NavLink href="/loans" class="overlay-nav-link text-white">Výpůjčky</NavLink></li>
+                    <li><NavLink href="/materials" class="overlay-nav-link text-white">Materiály</NavLink></li>
+                    <li>
+                        <AuthorizeView>
+                            <Authorized>
+                                <button class="overlay-nav-link text-white btn btn-link p-0" @onclick="HandleLogout">Odhlásit</button>
+                            </Authorized>
+                            <NotAuthorized>
+                                <NavLink href="/login" class="overlay-nav-link text-white">Přihlásit</NavLink>
+                            </NotAuthorized>
+                        </AuthorizeView>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        
+        <!-- Footer decoration -->
+        <div class="overlay-footer">
+            <span class="text-white">Školní knihovna • 2025</span>
+        </div>
+    </div>
+</header>
+
+@code {
+    private async Task HandleLogout()
+    {
+        await AuthApi.LogoutAsync();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+
+    private bool isMenuOpen = false;
+
+    private async Task OpenMenu()
+    {
+        isMenuOpen = true;
+        await JSRuntime.InvokeVoidAsync("toggleBodyLock", true);
+        StateHasChanged();
+    }
+
+    private async Task CloseMenu()
+    {
+        isMenuOpen = false;
+        await JSRuntime.InvokeVoidAsync("toggleBodyLock", false);
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,375 @@
+@page "/booksteacher"
+@using Bookong.Application.DTOs
+@using Bookong.Application.UseCases.Queries.Interfaces
+@using Bookong.Application.UseCases.Interfaces
+@using Microsoft.Extensions.DependencyInjection
+@inject IGetAllBooksQuery GetAllBooksQuery
+@inject IGetBookFormOptionsQuery GetBookFormOptionsQuery
+@inject IServiceScopeFactory ScopeFactory
+@inject IJSRuntime JS
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-6 fw-semibold mb-0">Správa maturitních knih – učitel</h1>
+        <button class="btn btn-success" @onclick="OpenAddModal">
+            + Přidat novou knihu
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @successMessage
+            <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+        </div>
+    }
+
+    <!-- Seznam maturitních knih -->
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Načítání...</span>
+            </div>
+        </div>
+    }
+    else if (maturitaBooks == null || !maturitaBooks.Any())
+    {
+        <div class="text-center">
+            <p class="text-muted mb-3">Zatím nebyly přidány žádné maturitní knihy.</p>
+        </div>
+    }
+    else
+    {
+        <div class="border rounded-3 shadow-sm bg-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Název knihy</th>
+                            <th>Autor</th>
+                            <th>Žánr</th>
+                            <th>Typ</th>
+                            <th>Období</th>
+                            <th class="text-center" style="width:150px;">Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var book in maturitaBooks)
+                        {
+                            <tr>
+                                <td>@book.Title</td>
+                                <td>@book.AuthorFullName</td>
+                                <td>@book.GenreName</td>
+                                <td>@book.KindName</td>
+                                <td>@book.PeriodName</td>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-danger btn-sm"
+                                            disabled="@isProcessing"
+                                            @onclick="() => DeleteBookAsync(book.PublicId)">
+                                        Odebrat
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@if (showAddModal)
+{
+    <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Přidat knihu k maturitě</h5>
+                    <button type="button" class="btn-close" @onclick="CloseAddModal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs mb-3">
+                        <li class="nav-item">
+                            <button class="nav-link @(!isManualMode ? "active" : "")" @onclick="() => SetMode(false)">
+                                Vybrat z knihovny
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link @(isManualMode ? "active" : "")" @onclick="() => SetMode(true)">
+                                Vytvořit ručně
+                            </button>
+                        </li>
+                    </ul>
+
+                    @if (!isManualMode)
+                    {
+                        <!-- Search Library -->
+                        <div class="mb-3">
+                            <input class="form-control" placeholder="Hledat knihu v knihovně..." 
+                                   @bind="librarySearchText" @bind:event="oninput" />
+                        </div>
+
+                        <div class="list-group overflow-auto" style="max-height: 400px;">
+                            @if (filteredLibraryBooks.Any())
+                            {
+                                @foreach (var libBook in filteredLibraryBooks)
+                                {
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="fw-bold">@libBook.Title</div>
+                                            <div class="small text-muted">@libBook.AuthorFullName | @libBook.Genre | @libBook.Kind</div>
+                                        </div>
+                                        <button class="btn btn-sm btn-primary" 
+                                                disabled="@isProcessing"
+                                                @onclick="() => AddFromLibraryAsync(libBook.PublicId)">
+                                            Přidat
+                                        </button>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-muted text-center py-3">Žádné knihy nenalezeny.</div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Manual Entry Form -->
+                        <EditForm Model="@newBookDto" OnValidSubmit="CreateManualAsync">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <div class="mb-3">
+                                <label class="form-label">Název díla</label>
+                                <InputText class="form-control" @bind-Value="newBookDto.Name" />
+                                <ValidationMessage For="@(() => newBookDto.Name)" />
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Autor</label>
+                                    <InputSelect class="form-select" @bind-Value="newBookDto.AuthorId">
+                                        <option value="">-- Vyberte autora --</option>
+                                        @foreach (var a in options.Authors)
+                                        {
+                                            <option value="@a.Id">@a.FullName</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => newBookDto.AuthorId)" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Žánr</label>
+                                    <InputSelect class="form-select" @bind-Value="newBookDto.GenreId">
+                                        <option value="">-- Vyberte žánr --</option>
+                                        @foreach (var g in options.Genres)
+                                        {
+                                            <option value="@g.Id">@g.Name</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => newBookDto.GenreId)" />
+                                </div>
+                            </div>
+                             <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Literární druh</label>
+                                    <InputSelect class="form-select" @bind-Value="newBookDto.KindId">
+                                        <option value="">-- Vyberte druh --</option>
+                                        @foreach (var k in options.Kinds)
+                                        {
+                                            <option value="@k.Id">@k.Name</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => newBookDto.KindId)" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Literární období</label>
+                                    <InputSelect class="form-select" @bind-Value="newBookDto.PeriodId">
+                                        <option value="">-- Vyberte období --</option>
+                                        @foreach (var p in options.Periods)
+                                        {
+                                            <option value="@p.Id">@p.Name</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => newBookDto.PeriodId)" />
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-secondary" @onclick="CloseAddModal">Zrušit</button>
+                                <button type="submit" class="btn btn-success" disabled="@isProcessing">
+                                    @if(isProcessing) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                                    Vytvořit
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<BookDetailDto> maturitaBooks = new();
+    private List<BookListItemDto> allLibraryBooks = new();
+    
+    private bool isLoading = true;
+    private bool isProcessing = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    // Modal
+    private bool showAddModal = false;
+    private bool isManualMode = false;
+    private string librarySearchText = "";
+    private CreateMaturitaBookDto newBookDto = new();
+    private BookFormOptionsDto options = new();
+
+    // Computed property for filtered library books
+    private IEnumerable<BookListItemDto> filteredLibraryBooks => 
+        string.IsNullOrWhiteSpace(librarySearchText) 
+            ? allLibraryBooks.Take(50) 
+            : allLibraryBooks.Where(b => 
+                (b.Title?.Contains(librarySearchText, StringComparison.OrdinalIgnoreCase) ?? false) || 
+                (b.AuthorFullName?.Contains(librarySearchText, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMaturitaBooksAsync();
+    }
+
+    private async Task LoadMaturitaBooksAsync()
+    {
+        try
+        {
+            isLoading = true;
+            using var scope = ScopeFactory.CreateScope();
+            var query = scope.ServiceProvider.GetRequiredService<IGetMaturitaBooksQuery>();
+            maturitaBooks = (await query.ExecuteAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Nepodařilo se načíst maturitní knihy.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OpenAddModal()
+    {
+        showAddModal = true;
+        errorMessage = null;
+        successMessage = null;
+        newBookDto = new(); 
+        isManualMode = false;
+
+        // Lazy load library books and options if not loaded
+        if (!allLibraryBooks.Any())
+        {
+            try 
+            {
+                allLibraryBooks = (await GetAllBooksQuery.ExecuteAsync()).ToList();
+            }
+            catch { errorMessage = "Nepodařilo se načíst knihy z knihovny."; }
+        }
+
+        if (!options.Authors.Any())
+        {
+             try
+             {
+                 options = await GetBookFormOptionsQuery.ExecuteAsync();
+             }
+             catch { errorMessage = "Nepodařilo se načíst možnosti pro formulář."; }
+        }
+    }
+
+    private void CloseAddModal()
+    {
+        showAddModal = false;
+    }
+
+    private void SetMode(bool manual)
+    {
+        isManualMode = manual;
+    }
+
+    private async Task AddFromLibraryAsync(Guid libraryBookId)
+    {
+        await ProcessActionAsync(async () => 
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var useCase = scope.ServiceProvider.GetRequiredService<ICreateMaturitaBookUseCase>();
+            return await useCase.ExecuteAsync(libraryBookId);
+        });
+    }
+
+    private async Task CreateManualAsync()
+    {
+        await ProcessActionAsync(async () => 
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var useCase = scope.ServiceProvider.GetRequiredService<ICreateMaturitaBookUseCase>();
+            return await useCase.ExecuteAsync(newBookDto);
+        });
+    }
+
+    private async Task DeleteBookAsync(Guid maturitaBookId)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Opravdu chcete odebrat tuto knihu ze seznamu?");
+        if (confirmed)
+        {
+            await ProcessActionAsync(async () => 
+            {
+                using var scope = ScopeFactory.CreateScope();
+                var useCase = scope.ServiceProvider.GetRequiredService<IDeleteMaturitaBookUseCase>();
+                return await useCase.ExecuteAsync(maturitaBookId);
+            });
+        }
+    }
+
+    private async Task ProcessActionAsync(Func<Task<GenericResponse>> action)
+    {
+        if (isProcessing) return;
+        isProcessing = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await action();
+            if (result.Success)
+            {
+                successMessage = result.Message;
+                // If in modal, close it
+                if (showAddModal) CloseAddModal();
+                // Refresh list
+                await LoadMaturitaBooksAsync();
+            }
+            else
+            {
+                errorMessage = result.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Došlo k neočekávané chybě: " + ex.Message;
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+}
