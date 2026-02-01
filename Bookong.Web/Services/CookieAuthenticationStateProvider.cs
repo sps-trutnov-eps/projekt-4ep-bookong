@@ -99,7 +99,7 @@ namespace Bookong.Web.Services
             };
 
             var isAdmin = string.Equals(user.OrganizationalUnit, "Admin", StringComparison.OrdinalIgnoreCase);
-            var role = isAdmin ? "Admin" : "Default";
+            var role = isAdmin ? "admin" : "user";
 
             claims.Add(new Claim(ClaimTypes.Role, role));
 
