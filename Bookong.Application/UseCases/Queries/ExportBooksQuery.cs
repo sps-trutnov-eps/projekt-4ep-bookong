@@ -2,18 +2,18 @@ using Bookong.Application.DTOs;
 using Bookong.Application.UseCases.Queries.Interfaces;
 using Bookong.Domain.Interfaces;
 using ClosedXML.Excel;
-using QRCoder;
-
 
 namespace Bookong.Application.UseCases.Queries
 {
     public class ExportBooksQuery : IExportBooksQuery
     {
         private readonly IUnitOfWork _uow;
+        private readonly IBookQrCodeImageGenerationService _qrCodeService;
 
-        public ExportBooksQuery(IUnitOfWork uow)
+        public ExportBooksQuery(IUnitOfWork uow, IBookQrCodeImageGenerationService qrCodeService)
         {
             _uow = uow;
+            _qrCodeService = qrCodeService;
         }
 
         public async Task<IEnumerable<BookExportDto>> ExecuteAsync(int[] ids)
@@ -73,18 +73,12 @@ namespace Bookong.Application.UseCases.Queries
                 
                 try
                 {
-                    using (var qrGenerator = new QRCodeGenerator())
-                    {
-                        var qrCodeData = qrGenerator.CreateQrCode(b.Id.ToString(), QRCodeGenerator.ECCLevel.Q);
-                        using var qrCode = new PngByteQRCode(qrCodeData);
-                        var qrCodeImage = qrCode.GetGraphic(5);
-
-                        using var stream = new MemoryStream(qrCodeImage);
-                        stream.Position = 0;
-                        var picture = ws.AddPicture(stream)
-                            .MoveTo(ws.Cell(row, 10))
-                            .WithSize(100, 100);
-                    }
+                    var qrCodeImage = _qrCodeService.GenerateQrCodeImage(b.Id);
+                    using var stream = new MemoryStream(qrCodeImage);
+                    stream.Position = 0;
+                    var picture = ws.AddPicture(stream)
+                        .MoveTo(ws.Cell(row, 10))
+                        .WithSize(100, 100);
 
                     ws.Row(row).Height = 75;
                 }
