@@ -1,8 +1,6 @@
 using Bookong.Application.DTOs;
 using Bookong.Application.UseCases.Queries.Interfaces;
 using Bookong.Domain.Interfaces;
-using Bookong.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Bookong.Application.UseCases.Queries
 {
@@ -30,11 +28,11 @@ namespace Bookong.Application.UseCases.Queries
                 {
                     PublicId = b.PublicId,
                     Title = b.Name,
-                    AuthorFullName = (b.Author is null)
-                        ? string.Empty
-                        : ($"{b.Author.FirstName} {b.Author.LastName}").Trim(),
-                    Genre = b.Genre?.Name ?? string.Empty,
-                    Kind = b.Kind?.Name ?? string.Empty,
+                    AuthorFullName = b.Author != null 
+                        ? $"{b.Author.FirstName} {b.Author.LastName}" 
+                        : "Neznámý autor",
+                    Genre = b.Genre?.Name ?? "Nezařazeno",
+                    Kind = b.Kind?.Name ?? "Nezařazeno",
                     Borrowable = b.Borrowable
                 })
                 .ToList();

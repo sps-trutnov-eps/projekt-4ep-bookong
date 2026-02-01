@@ -1,18 +1,21 @@
 @using Bookong.Web.Components.Layout
 @using Bookong.Application.UseCases.Queries.Interfaces
-@using Bookong.Application.DTOs
 @using Bookong.Application.UseCases.Interfaces
+@using Bookong.Application.DTOs
 @using Bookong.Domain.Interfaces
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
 @page "/dashboard"
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "admin")]
 
 @layout MainLayout
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
 @inject IGetLibraryStatisticsQuery LibraryStatsQuery
 @inject IExportBooksQuery ExportBooksQuery
 @inject IExportBookQrCodesQuery ExportBookQrCodes
+@inject IImportBooksUseCase ImportBooksUseCase
 @inject IGetAvailableBooksQuery GetAvailableBooks
 @inject IGetAllBookLoansQuery GetAllBookLoans
 @inject IGetBookLoanStatusQuery GetBookLoanStatus
@@ -40,6 +43,14 @@
                 <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
             </div>
         }
+
+        <div class="mb-5 d-flex justify-content-center gap-3 flex-wrap">
+            <!-- Import knih -->
+            <label for="importFile" class="btn btn-success btn-lg shadow d-flex align-items-center gap-2 px-4 py-2" style="cursor: pointer;">
+                <i class="bi bi-cloud-arrow-up fs-4"></i>
+                <span class="fw-semibold">Import knih z Excelu</span>
+            </label>
+            <InputFile id="importFile" OnChange="HandleImport" accept=".xlsx,.xls" style="display: none;" />
 
         <!-- QR Scanner and Manual Input Buttons -->
         <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center mb-4">
@@ -333,11 +344,12 @@
             <div class="alert alert-warning">
                 Nepodařilo se načíst statistiky.
             </div>
-        }
-    </div>
-</div>
+                }
+            </div>
+        </div>
+        </div>
 
-<!-- Wave Container -->
+        <!-- Wave Container -->
 <div class="position-relative w-100 overflow-hidden" style="line-height: 0;">
     <!-- Primary Wave -->
     <svg class="w-100 d-block" style="height: 5rem;" viewBox="0 0 1200 120" preserveAspectRatio="none">
@@ -985,7 +997,57 @@ var dto = new CreateBookLoanDto
         }
     }
 
-    private async Task ExportBookQrCode(int bookId)
+    private async Task HandleImport(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        
+        if (file == null)
+        {
+            errorMessage = "Nebyl vybrán žádný soubor.";
+            return;
+        }
+
+        const long maxFileSize = 10 * 1024 * 1024;
+        if (file.Size > maxFileSize)
+        {
+            errorMessage = "Soubor je příliš velký. Maximum je 10 MB.";
+            return;
+        }
+
+        try
+        {
+            Logger.LogInformation("=== IMPORT SOUBORU - START ===");
+            Logger.LogInformation($"Název souboru: {file.Name}");
+            Logger.LogInformation($"Velikost: {file.Size} bytes");
+            Logger.LogInformation($"Content Type: {file.ContentType}");
+
+            errorMessage = null;
+            StateHasChanged();
+
+            using var stream = file.OpenReadStream(maxFileSize);
+            var response = await ImportBooksUseCase.ImportFromExcelAsync(stream, file.Name);
+
+            Logger.LogInformation("=== IMPORT SOUBORU - KONEC ===");
+
+            if (response.Success)
+            {
+                await JS.InvokeVoidAsync("alert", $"✅ {response.Message}");
+                Navigation.NavigateTo("/dashboard", forceLoad: true);
+            }
+            else
+            {
+                errorMessage = response.Message;
+                Logger.LogError($"Import selhal: {response.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Chyba při importu souboru");
+                    errorMessage = $"Chyba při importu: {ex.Message}";
+                }
+            }
+
+            private async Task ExportBookQrCode(int bookId)
     {
         try
         {
